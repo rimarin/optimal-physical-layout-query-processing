@@ -1,7 +1,18 @@
 #include "FixedGrid.h"
 
-std::vector<Point> FixedGrid::mapPointsToCells(const std::vector<Point>& points) {
-    std::map<std::pair<int, int>, std::vector<Point>> cellMap;
+namespace common {
+
+FixedGrid::FixedGrid(std::pair<std::string, std::string> partitionColumns, int size) {
+    columns = partitionColumns;
+    setCellSize(size);
+}
+
+void FixedGrid::setCellSize(int size){
+    cellSize = size;
+}
+
+std::vector<std::tuple<>> FixedGrid::mapPointsToCells(const std::vector<Point>& points) {
+    std::map<Point, std::vector<Point>> cellMap;
 
     for (const Point& point : points) {
         double x = point.first;
@@ -13,5 +24,11 @@ std::vector<Point> FixedGrid::mapPointsToCells(const std::vector<Point>& points)
         cellMap[cellCoordinates].push_back(point);
     }
 
-    return cellMap;
+    std::vector<std::tuple<anything>> cellsList = {};
+    for (const auto &s : cellMap)
+        cellsList.push_back(s.second);
+
+    return cellsList;
+}
+
 }
