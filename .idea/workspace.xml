@@ -20,10 +20,14 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1f756ec4-243b-4ede-9070-cb8b0a2b7124" name="Changes" comment="feat: create class DataWriter with test file generation&#10;&#10;Design class for writing data and generate a parquet file">
-      <change afterPath="$PROJECT_DIR$/src/common/FixedGrid.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/common/FixedGrid.h" afterDir="false" />
+    <list default="true" id="1f756ec4-243b-4ede-9070-cb8b0a2b7124" name="Changes" comment="feat: start FixedGrid implementation&#10;&#10;Sketch function for mapping 2d points to cells.">
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/common/FixedGrid.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/FixedGrid.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/common/FixedGrid.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/FixedGrid.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/storage/DataWriter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/storage/DataWriter.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/storage/DataWriter.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/storage/DataWriter.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,6 +40,9 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
   </component>
   <component name="ProjectApplicationVersion">
     <option name="ide" value="CLion" />
@@ -66,7 +73,7 @@
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;CMakeSettings&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
@@ -109,7 +116,9 @@
       <option name="presentableId" value="Default" />
       <updated>1694512557153</updated>
       <workItem from="1694512558352" duration="936000" />
-      <workItem from="1694628559652" duration="1584000" />
+      <workItem from="1694628559652" duration="1692000" />
+      <workItem from="1694848361711" duration="1219000" />
+      <workItem from="1694849587501" duration="3685000" />
     </task>
     <task id="LOCAL-00001" summary="feat: create class DataWriter with test file generation&#10;&#10;Design class for writing data and generate a parquet file">
       <option name="closed" value="true" />
@@ -127,7 +136,15 @@
       <option name="project" value="LOCAL" />
       <updated>1694518364685</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="feat: start FixedGrid implementation&#10;&#10;Sketch function for mapping 2d points to cells.">
+      <option name="closed" value="true" />
+      <created>1694633754745</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1694633754745</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -142,6 +159,23 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="feat: create class DataWriter with test file generation&#10;&#10;Design class for writing data and generate a parquet file" />
     <MESSAGE value="build: add .idea config&#10;&#10;Track idea config since it is using by Clion" />
-    <option name="LAST_COMMIT_MESSAGE" value="build: add .idea config&#10;&#10;Track idea config since it is using by Clion" />
+    <MESSAGE value="feat: start FixedGrid implementation&#10;&#10;Sketch function for mapping 2d points to cells." />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: start FixedGrid implementation&#10;&#10;Sketch function for mapping 2d points to cells." />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/common/FixedGrid.h</url>
+          <line>17</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/main.cpp</url>
+          <line>12</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
