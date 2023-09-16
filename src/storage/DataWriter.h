@@ -1,5 +1,5 @@
-#ifndef OPTIMAL_PHYSICAL_LAYOUT_QUERY_PROCESSING_DATAWRITER_H
-#define OPTIMAL_PHYSICAL_LAYOUT_QUERY_PROCESSING_DATAWRITER_H
+#ifndef STORAGE_DATAWRITER_H
+#define STORAGE_DATAWRITER_H
 
 #include <arrow/api.h>
 #include <arrow/csv/api.h>
@@ -10,13 +10,14 @@
 #include <parquet/api/reader.h>
 #include <parquet/api/writer.h>
 
-namespace oplqp {
+namespace storage {
 
-    class DataWriter {
-    public: DataWriter();
-    public: static arrow::Status GenInitialFile();
-
+class DataWriter {
+    public: explicit DataWriter(std::filesystem::path &outputFolder);
+    public: arrow::Status WriteTable(const std::shared_ptr<arrow::Table>& table, std::string &filename);
+    public: static std::shared_ptr<arrow::Table> GenerateExampleTable();
+    private: std::filesystem::path outFolder;
     };
-} // oplqp
+} // storage
 
-#endif //OPTIMAL_PHYSICAL_LAYOUT_QUERY_PROCESSING_DATAWRITER_H
+#endif //STORAGE_DATAWRITER_H
