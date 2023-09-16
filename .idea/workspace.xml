@@ -20,14 +20,16 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1f756ec4-243b-4ede-9070-cb8b0a2b7124" name="Changes" comment="feat: start FixedGrid implementation&#10;&#10;Sketch function for mapping 2d points to cells.">
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+    <list default="true" id="1f756ec4-243b-4ede-9070-cb8b0a2b7124" name="Changes" comment="feat: update main&#10;&#10;Specify folder and table name and write out results">
+      <change afterPath="$PROJECT_DIR$/include/partitioning/Partitioning.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/include/storage/DataWriter.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/partitioning/FixedGrid.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/FixedGrid.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/FixedGrid.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/FixedGrid.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/FixedGrid.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/common/FixedGrid.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/common/FixedGrid.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/partitioning/FixedGrid.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/storage/DataWriter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/storage/DataWriter.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/storage/DataWriter.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/storage/DataWriter.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/storage/DataWriter.h" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -82,6 +84,10 @@
       <recent name="$PROJECT_DIR$/src" />
       <recent name="$PROJECT_DIR$/src/storage" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/include/partitioning" />
+      <recent name="$PROJECT_DIR$/include/storage" />
+    </key>
   </component>
   <component name="RunManager" selected="CMake Application.oplqp">
     <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
@@ -118,7 +124,7 @@
       <workItem from="1694512558352" duration="936000" />
       <workItem from="1694628559652" duration="1692000" />
       <workItem from="1694848361711" duration="1219000" />
-      <workItem from="1694849587501" duration="3685000" />
+      <workItem from="1694849587501" duration="13983000" />
     </task>
     <task id="LOCAL-00001" summary="feat: create class DataWriter with test file generation&#10;&#10;Design class for writing data and generate a parquet file">
       <option name="closed" value="true" />
@@ -144,7 +150,31 @@
       <option name="project" value="LOCAL" />
       <updated>1694633754745</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="feat: parametrize FixedGrid &#10;&#10;Accept cell size as param, function to update the attribute">
+      <option name="closed" value="true" />
+      <created>1694853467367</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1694853467367</updated>
+    </task>
+    <task id="LOCAL-00005" summary="feat: reorganize DataWriter &#10;&#10;Create storage namespace, separate logic for data generation and file writing">
+      <option name="closed" value="true" />
+      <created>1694853510333</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1694853510333</updated>
+    </task>
+    <task id="LOCAL-00006" summary="feat: update main&#10;&#10;Specify folder and table name and write out results">
+      <option name="closed" value="true" />
+      <created>1694853544044</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1694853544044</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -160,20 +190,18 @@
     <MESSAGE value="feat: create class DataWriter with test file generation&#10;&#10;Design class for writing data and generate a parquet file" />
     <MESSAGE value="build: add .idea config&#10;&#10;Track idea config since it is using by Clion" />
     <MESSAGE value="feat: start FixedGrid implementation&#10;&#10;Sketch function for mapping 2d points to cells." />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: start FixedGrid implementation&#10;&#10;Sketch function for mapping 2d points to cells." />
+    <MESSAGE value="feat: parametrize FixedGrid &#10;&#10;Accept cell size as param, function to update the attribute" />
+    <MESSAGE value="feat: reorganize DataWriter &#10;&#10;Create storage namespace, separate logic for data generation and file writing" />
+    <MESSAGE value="feat: update main&#10;&#10;Specify folder and table name and write out results" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: update main&#10;&#10;Specify folder and table name and write out results" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/common/FixedGrid.h</url>
-          <line>17</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/main.cpp</url>
-          <line>12</line>
-          <option name="timeStamp" value="5" />
+          <url>file://$PROJECT_DIR$/src/storage/DataWriter.cpp</url>
+          <line>48</line>
+          <option name="timeStamp" value="9" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
