@@ -19,7 +19,7 @@ int main() {
 
     std::string fixedGridFolder = "test/fixedGrid/";
     outputFolder = std::filesystem::current_path().parent_path() / fixedGridFolder;
-    std::vector<std::string> partitioningColumns = {"day", "month"};
+    std::vector<std::string> partitioningColumns = {"Day", "Month"};
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> partitioningMethod = std::make_shared<partitioning::FixedGrid>(partitioningColumns, 2);
     arrow::Status statusFixedGrid = dataWriter.WriteTable(*exampleTable, tableName, outputFolder,
                                                           partitioningMethod);

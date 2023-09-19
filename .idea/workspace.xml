@@ -20,16 +20,11 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1f756ec4-243b-4ede-9070-cb8b0a2b7124" name="Changes" comment="feat: update main&#10;&#10;Specify folder and table name and write out results">
-      <change afterPath="$PROJECT_DIR$/include/partitioning/Partitioning.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/include/storage/DataWriter.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/partitioning/FixedGrid.cpp" afterDir="false" />
+    <list default="true" id="1f756ec4-243b-4ede-9070-cb8b0a2b7124" name="Changes" comment="feat: refactor structure, add base class partitioning&#10;&#10;Add base class partitioning, pass partitioning method to dataWriter">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/FixedGrid.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/FixedGrid.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/partitioning/FixedGrid.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/partitioning/FixedGrid.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/partitioning/FixedGrid.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/storage/DataWriter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/storage/DataWriter.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/storage/DataWriter.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/partitioning/FixedGrid.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/partitioning/FixedGrid.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -90,11 +85,6 @@
     </key>
   </component>
   <component name="RunManager" selected="CMake Application.oplqp">
-    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="oplqp" type="CMakeListConfigurationType" factoryName="CMakeListConfigurationFactory" temporary="true">
       <method v="2" />
     </configuration>
@@ -124,7 +114,9 @@
       <workItem from="1694512558352" duration="936000" />
       <workItem from="1694628559652" duration="1692000" />
       <workItem from="1694848361711" duration="1219000" />
-      <workItem from="1694849587501" duration="13983000" />
+      <workItem from="1694849587501" duration="14179000" />
+      <workItem from="1695115710915" duration="4397000" />
+      <workItem from="1695146528406" duration="3323000" />
     </task>
     <task id="LOCAL-00001" summary="feat: create class DataWriter with test file generation&#10;&#10;Design class for writing data and generate a parquet file">
       <option name="closed" value="true" />
@@ -174,7 +166,15 @@
       <option name="project" value="LOCAL" />
       <updated>1694853544044</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="feat: refactor structure, add base class partitioning&#10;&#10;Add base class partitioning, pass partitioning method to dataWriter">
+      <option name="closed" value="true" />
+      <created>1694869386849</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1694869386849</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -193,7 +193,8 @@
     <MESSAGE value="feat: parametrize FixedGrid &#10;&#10;Accept cell size as param, function to update the attribute" />
     <MESSAGE value="feat: reorganize DataWriter &#10;&#10;Create storage namespace, separate logic for data generation and file writing" />
     <MESSAGE value="feat: update main&#10;&#10;Specify folder and table name and write out results" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: update main&#10;&#10;Specify folder and table name and write out results" />
+    <MESSAGE value="feat: refactor structure, add base class partitioning&#10;&#10;Add base class partitioning, pass partitioning method to dataWriter" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: refactor structure, add base class partitioning&#10;&#10;Add base class partitioning, pass partitioning method to dataWriter" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
