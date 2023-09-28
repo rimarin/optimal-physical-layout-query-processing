@@ -10,10 +10,11 @@
 
 
 int main() {
-    std::string noPartitionFolder = "test/noPartition/";
     auto dataWriter = storage::DataWriter();
     arrow::Result<std::shared_ptr<arrow::Table>> exampleTable = dataWriter.GenerateExampleTable();
     std::string tableName = "test";
+
+    std::string noPartitionFolder = "test/noPartition/";
     std::filesystem::path outputFolder = std::filesystem::current_path().parent_path() / noPartitionFolder;
     // arrow::Status statusNoPartition = dataWriter.WriteTable(*exampleTable, tableName, outputFolder, nullptr);
 

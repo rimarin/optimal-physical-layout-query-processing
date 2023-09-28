@@ -1,9 +1,11 @@
+#include <utility>
+
 #include "../../include/partitioning/FixedGrid.h"
 
 namespace partitioning {
 
 FixedGrid::FixedGrid(std::vector<std::string> partitionColumns, int size) {
-    columns = partitionColumns;
+    columns = std::move(partitionColumns);
     setCellSize(size);
 }
 
@@ -11,17 +13,17 @@ void FixedGrid::setCellSize(int size){
     cellSize = size;
 }
 
-arrow::Status PointsToCell(arrow::compute::KernelContext* ctx, const arrow::compute::ExecSpan& batch,
+arrow::Status FixedGrid::PointsToCell(arrow::compute::KernelContext* ctx, const arrow::compute::ExecSpan& batch,
                              arrow::compute::ExecResult* out) {
-    const auto* x = batch[0].array.GetValues<int64_t>(1);
-    const auto* y = batch[1].array.GetValues<int64_t>(1);
+    auto* x = batch[0].array.GetValues<int64_t>(1);
+    auto* y = batch[1].array.GetValues<int64_t>(1);
+    const auto* cellSize = batch[2].array.GetValues<int64_t>(1);
     auto* out_values = out->array_span_mutable()->GetValues<int64_t>(1);
+
+    // Calculate the cell index
     for (int64_t i = 0; i < batch.length; ++i) {
-        // TODO: map the x, y coords to the index of the cell, the code should look something like this:
-        //    int gridX = static_cast<int>(x / cellSize);
-        //    int gridY = static_cast<int>(y / cellSize);
-        //    Point cellCoordinates = std::make_pair(gridX, gridY);
-        *out_values++ = *x++ + *y++;
+        *out_values++ = static_cast<int64_t>(*y / static_cast<int64_t>(*cellSize)) * *cellSize +
+                static_cast<int64_t>(*x / static_cast<int64_t>(*cellSize));
     }
     return arrow::Status::OK();
 }
@@ -29,8 +31,22 @@ arrow::Status PointsToCell(arrow::compute::KernelContext* ctx, const arrow::comp
 arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> FixedGrid::partition(std::shared_ptr<arrow::Table> table){
     std::map<Point, std::vector<arrow::Table>> cellToTables;
 
-    // Add a new custom Compute function to the registry
-    // More details here: https://github.com/apache/arrow/blob/fa4310635c784f03fe825ecc818efa3eca361ec0/cpp/examples/arrow/udf_example.cc#L78
+    // One idea was adding a custom group_by aggregation function and extract the matching values for each group
+    // using the method hash_list(). However, this is not a viable approach since "Grouped Aggregations are not
+    // invocable via CallFunction." https://arrow.apache.org/docs/cpp/compute.html
+
+    // The solution approach is the following:
+    // 1. We create a new custom method and add it to the compute registry of Arrow.
+    //    This custom function takes two column values as a parameter and returns the corresponding partition in
+    //    the FixedGrid.
+    // 2. We apply a projection to the table. The projection calls the custom method to generate a new column with
+    //    the partition id.
+    // 3. We extract the distinct values of partitions ids.
+    // 4. For each distinct partition we filter the table by partition_id (the newly created column)
+    // 5. The filtered data of each partition_id is exported to a different parquet file
+
+    // 1. Add a new custom Compute function to the registry
+    // More details here: https://github.com/apache/arrow/blob/fa4310635c784f03fe825ecc818efa3eca361ec0/cpp/examples/arrow/udf_example.cc
     const std::string computeFunctionName = "partition_fixed_grid";
     const arrow::compute::FunctionDoc computeFunctionDoc{
             "Given two values, computes the index of the corresponding cell in a fixed grid 2-dim space",
@@ -49,35 +65,50 @@ arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> FixedGrid::partition(s
     auto registry = arrow::compute::GetFunctionRegistry();
     ARROW_RETURN_NOT_OK(registry->AddFunction(std::move(func)));
 
+    std::shared_ptr<arrow::ChunkedArray> column1 = table->GetColumnByName(columns.at(0));
+    std::shared_ptr<arrow::ChunkedArray> column2 = table->GetColumnByName(columns.at(1));
+
+    // 2. Project the computed partition id to a new column
+
+    arrow::NumericBuilder<arrow::Int64Type> int64_builder;
+    std::vector<int64_t> int64_values = {1, 2, 3, 4, 5, 6, 7, 8};
+    ARROW_RETURN_NOT_OK(int64_builder.AppendValues({cellSize}));
+    std::shared_ptr<arrow::Array> gridSize;
+    ARROW_RETURN_NOT_OK(int64_builder.Finish(&gridSize));
+    int64_builder.Reset();
+
+    arrow::Datum fixedGridCellIds;
+    ARROW_ASSIGN_OR_RAISE(fixedGridCellIds,
+                          arrow::compute::CallFunction(computeFunctionName, {column1, column2, gridSize}));
+    std::shared_ptr<arrow::Array> partitionIds = std::move(fixedGridCellIds).make_array();
+
     // Wrap the Table in a Dataset, so we can use a Scanner
     // more info here: https://arrow.apache.org/docs/cpp/dataset.html#projecting-columns
-    std::shared_ptr<arrow::dataset::Dataset> dataset = std::make_shared<arrow::dataset::InMemoryDataset>(table);
-    // Build ScannerOptions for a Scanner and call the above defined function
-    auto options = std::make_shared<arrow::dataset::ScanOptions>();
-    options->projection = arrow::compute::CallFunction("partition_fixed_grid",
-           {arrow::compute::field_ref(columns[0]),
-            arrow::compute::field_ref(columns[1])});
+    auto dataset = std::make_shared<arrow::dataset::InMemoryDataset>(std::move(table));
 
-    arrow::Int32Type partitionNumber;
-    ARROW_ASSIGN_OR_RAISE(partitionNumber,
-                          arrow::compute::CallFunction("partition_fixed_grid", {numbers_array, increment}));
-    std::shared_ptr<arrow::Array> incremented_array = std::move(incremented_datum).make_array();
+    ARROW_ASSIGN_OR_RAISE(auto scanBuilder, dataset->NewScan());
 
-    ARROW_ASSIGN_OR_RAISE(auto scan_builder, table->NewScan());
+    ARROW_RETURN_NOT_OK(scanBuilder->Project(
+            {
+            arrow::Expression(*arrow::compute::CallFunction(computeFunctionName,
+                                                            {column1, column2, gridSize}))
+            },
+            {"partition"}));
+
     std::vector<std::string> names;
     std::vector<arrow::compute::Expression> exprs;
     // Read all the original columns.
     for (const auto& field : dataset->schema()->fields()) {
         names.push_back(field->name());
-        exprs.push_back(cp::field_ref(field->name()));
+        exprs.push_back(arrow::compute::field_ref(field->name()));
     }
     // Also derive a new column.
     // TODO: handle column computeFunctionName collision
     names.emplace_back("partition");
-    exprs.push_back(cp::greater(cp::field_ref("b"), cp::literal(1)));
-    ARROW_RETURN_NOT_OK(scan_builder->Project(exprs, names));
-    ARROW_ASSIGN_OR_RAISE(auto scanner, scan_builder->Finish());
-    return scanner->ToTable();
+    exprs.emplace_back(*arrow::compute::CallFunction(computeFunctionName, {column1, column2}));
+    ARROW_RETURN_NOT_OK(scanBuilder->Project(exprs, names));
+    ARROW_ASSIGN_OR_RAISE(auto scanner, scanBuilder->Finish());
+    auto tbl = scanner->ToTable();
 
     return arrow::Status::OK();
 }

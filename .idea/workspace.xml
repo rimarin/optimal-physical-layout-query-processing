@@ -20,7 +20,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1f756ec4-243b-4ede-9070-cb8b0a2b7124" name="Changes" comment="feat: refactor structure, add base class partitioning&#10;&#10;Add base class partitioning, pass partitioning method to dataWriter">
+    <list default="true" id="1f756ec4-243b-4ede-9070-cb8b0a2b7124" name="Changes" comment="feat: partially implement column projection with partitioning result&#10;&#10;Current idea for implementing the partitioning: take the two columns specified, apply projection with a custom user-defined function and copy the result in a new column.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/include/partitioning/FixedGrid.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/partitioning/FixedGrid.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
@@ -55,25 +55,25 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
-    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/brancaleone/Projects/optimal-physical-layout-query-processing&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "git-widget-placeholder": "master",
+    "last_opened_file_path": "/home/brancaleone/Projects/optimal-physical-layout-query-processing",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "CMakeSettings",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src" />
@@ -116,7 +116,9 @@
       <workItem from="1694848361711" duration="1219000" />
       <workItem from="1694849587501" duration="14179000" />
       <workItem from="1695115710915" duration="4397000" />
-      <workItem from="1695146528406" duration="3323000" />
+      <workItem from="1695146528406" duration="3679000" />
+      <workItem from="1695211899147" duration="2423000" />
+      <workItem from="1695881951823" duration="13432000" />
     </task>
     <task id="LOCAL-00001" summary="feat: create class DataWriter with test file generation&#10;&#10;Design class for writing data and generate a parquet file">
       <option name="closed" value="true" />
@@ -174,7 +176,23 @@
       <option name="project" value="LOCAL" />
       <updated>1694869386849</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="fix: fix column names&#10;&#10;First letter of the column names should be capitalized">
+      <option name="closed" value="true" />
+      <created>1695149901038</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1695149901038</updated>
+    </task>
+    <task id="LOCAL-00009" summary="feat: partially implement column projection with partitioning result&#10;&#10;Current idea for implementing the partitioning: take the two columns specified, apply projection with a custom user-defined function and copy the result in a new column.">
+      <option name="closed" value="true" />
+      <created>1695149979700</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1695149979700</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -194,7 +212,9 @@
     <MESSAGE value="feat: reorganize DataWriter &#10;&#10;Create storage namespace, separate logic for data generation and file writing" />
     <MESSAGE value="feat: update main&#10;&#10;Specify folder and table name and write out results" />
     <MESSAGE value="feat: refactor structure, add base class partitioning&#10;&#10;Add base class partitioning, pass partitioning method to dataWriter" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: refactor structure, add base class partitioning&#10;&#10;Add base class partitioning, pass partitioning method to dataWriter" />
+    <MESSAGE value="fix: fix column names&#10;&#10;First letter of the column names should be capitalized" />
+    <MESSAGE value="feat: partially implement column projection with partitioning result&#10;&#10;Current idea for implementing the partitioning: take the two columns specified, apply projection with a custom user-defined function and copy the result in a new column." />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: partially implement column projection with partitioning result&#10;&#10;Current idea for implementing the partitioning: take the two columns specified, apply projection with a custom user-defined function and copy the result in a new column." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -203,6 +223,26 @@
           <url>file://$PROJECT_DIR$/src/storage/DataWriter.cpp</url>
           <line>48</line>
           <option name="timeStamp" value="9" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/partitioning/FixedGrid.cpp</url>
+          <line>110</line>
+          <option name="timeStamp" value="11" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/partitioning/FixedGrid.cpp</url>
+          <line>17</line>
+          <option name="timeStamp" value="12" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/partitioning/FixedGrid.cpp</url>
+          <line>49</line>
+          <option name="timeStamp" value="13" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/partitioning/FixedGrid.cpp</url>
+          <line>88</line>
+          <option name="timeStamp" value="14" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
