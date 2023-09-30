@@ -8,31 +8,30 @@
 namespace storage {
 
     arrow::Result<std::shared_ptr<arrow::Table>> DataWriter::GenerateExampleTable() {
-        arrow::Int8Builder int8builder;
-        int8_t days_raw[5] = {1, 12, 17, 23, 28};
-        ARROW_RETURN_NOT_OK(int8builder.AppendValues(days_raw, 5));
+        arrow::Int32Builder int32builder;
+        int32_t days_raw[5] = {1, 12, 17, 23, 28};
+        ARROW_RETURN_NOT_OK(int32builder.AppendValues(days_raw, 5));
         std::shared_ptr<arrow::Array> days;
-        ARROW_ASSIGN_OR_RAISE(days, int8builder.Finish());
+        ARROW_ASSIGN_OR_RAISE(days, int32builder.Finish());
 
-        int8_t months_raw[5] = {1, 3, 5, 7, 1};
-        ARROW_RETURN_NOT_OK(int8builder.AppendValues(months_raw, 5));
+        int32_t months_raw[5] = {1, 3, 5, 7, 1};
+        ARROW_RETURN_NOT_OK(int32builder.AppendValues(months_raw, 5));
         std::shared_ptr<arrow::Array> months;
-        ARROW_ASSIGN_OR_RAISE(months, int8builder.Finish());
+        ARROW_ASSIGN_OR_RAISE(months, int32builder.Finish());
 
-        arrow::Int16Builder int16builder;
-        int16_t years_raw[5] = {1990, 2000, 1995, 2000, 1995};
-        ARROW_RETURN_NOT_OK(int16builder.AppendValues(years_raw, 5));
+        int32_t years_raw[5] = {1990, 2000, 1995, 2000, 1995};
+        ARROW_RETURN_NOT_OK(int32builder.AppendValues(years_raw, 5));
         std::shared_ptr<arrow::Array> years;
-        ARROW_ASSIGN_OR_RAISE(years, int16builder.Finish());
+        ARROW_ASSIGN_OR_RAISE(years, int32builder.Finish());
 
         std::vector<std::shared_ptr<arrow::Array>> columns = {days, months, years};
 
         std::shared_ptr<arrow::Field> field_day, field_month, field_year;
         std::shared_ptr<arrow::Schema> schema;
 
-        field_day = arrow::field("Day", arrow::int8());
-        field_month = arrow::field("Month", arrow::int8());
-        field_year = arrow::field("Year", arrow::int16());
+        field_day = arrow::field("Day", arrow::int32());
+        field_month = arrow::field("Month", arrow::int32());
+        field_year = arrow::field("Year", arrow::int32());
 
         schema = arrow::schema({field_day, field_month, field_year});
 
