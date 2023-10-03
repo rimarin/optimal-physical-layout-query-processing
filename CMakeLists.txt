@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.26)
 
 project(oplqp)
 add_subdirectory(src)
+add_subdirectory(test)
 
 find_package(Arrow REQUIRED)
 find_package(ArrowDataset REQUIRED)
