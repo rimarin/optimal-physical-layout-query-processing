@@ -1,4 +1,4 @@
-#include "../../include/storage/DataWriter.h"
+#include "../include/storage/DataWriter.h"
 #include <arrow/api.h>
 #include <arrow/csv/api.h>
 #include <arrow/io/api.h>
@@ -44,12 +44,13 @@ namespace storage {
                                          std::string &filename,
                                          std::filesystem::path &outputFolder,
                                          const std::shared_ptr<partitioning::MultiDimensionalPartitioning> &partitioningMethod) {
-        auto partitions = partitioningMethod->partition(table);
-        std::string outPath = outputFolder.string().append(filename.append(".parquet"));
-        auto outfile = arrow::io::FileOutputStream::Open(outPath);
-        PARQUET_THROW_NOT_OK(
-                parquet::arrow::WriteTable(*table, arrow::default_memory_pool(), *outfile, 5));
-
+        auto partitions = partitioningMethod->partition(table).ValueOrDie();
+        for (int i = 0; i < partitions.size(); ++i) {
+            std::string outPath = outputFolder.string();
+            outPath.append(filename.append(std::to_string(i))).append(".parquet");
+            auto outfile = arrow::io::FileOutputStream::Open(outPath);
+            PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, arrow::default_memory_pool(), *outfile, 5));
+        }
         return arrow::Status::OK();
     }
 
