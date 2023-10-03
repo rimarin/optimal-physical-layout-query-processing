@@ -8,10 +8,14 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <unistd.h>
 #include <set>
 
 #include <arrow/api.h>
 #include <arrow/compute/api.h>
+#include <arrow/compute/api_aggregate.h>
+#include <arrow/compute/api_scalar.h>
+#include <arrow/compute/api_vector.h>
 #include <arrow/dataset/api.h>
 #include <arrow/dataset/dataset.h>
 #include <arrow/dataset/dataset_writer.h>
@@ -20,10 +24,12 @@
 #include <arrow/dataset/file_ipc.h>
 #include <arrow/dataset/file_parquet.h>
 #include <arrow/dataset/partition.h>
+#include <arrow/dataset/plan.h>
 #include <arrow/dataset/scanner.h>
 #include <arrow/filesystem/filesystem.h>
 #include <arrow/csv/api.h>
 #include <arrow/io/api.h>
+#include <arrow/io/interfaces.h>
 #include <arrow/io/memory.h>
 #include <arrow/ipc/api.h>
 #include <arrow/ipc/writer.h>
@@ -31,8 +37,10 @@
 #include <arrow/result.h>
 #include <arrow/status.h>
 #include <arrow/table.h>
+#include <arrow/util/vector.h>
 
-#include "../../include/partitioning/Partitioning.h"
+#include "Partitioning.h"
+#include "../storage/DataWriter.h"
 
 typedef std::pair<double, double> Point;
 
