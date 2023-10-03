@@ -45,10 +45,10 @@ namespace storage {
                                          std::filesystem::path &outputFolder,
                                          const std::shared_ptr<partitioning::MultiDimensionalPartitioning> &partitioningMethod) {
         auto partitions = partitioningMethod->partition(table).ValueOrDie();
+        std::string outPath = outputFolder.string();
         for (int i = 0; i < partitions.size(); ++i) {
-            std::string outPath = outputFolder.string();
-            outPath.append(filename.append(std::to_string(i))).append(".parquet");
-            auto outfile = arrow::io::FileOutputStream::Open(outPath);
+            std::string outFilename = outPath + filename + std::to_string(i) + ".parquet";
+            auto outfile = arrow::io::FileOutputStream::Open(outFilename);
             PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*partitions.at(i), arrow::default_memory_pool(), *outfile, 5));
         }
         return arrow::Status::OK();
