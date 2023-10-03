@@ -49,7 +49,7 @@ namespace storage {
             std::string outPath = outputFolder.string();
             outPath.append(filename.append(std::to_string(i))).append(".parquet");
             auto outfile = arrow::io::FileOutputStream::Open(outPath);
-            PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, arrow::default_memory_pool(), *outfile, 5));
+            PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*partitions.at(i), arrow::default_memory_pool(), *outfile, 5));
         }
         return arrow::Status::OK();
     }
