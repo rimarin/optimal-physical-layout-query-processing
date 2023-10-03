@@ -20,11 +20,11 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1f756ec4-243b-4ede-9070-cb8b0a2b7124" name="Changes" comment="feat: partially implement column projection with partitioning result&#10;&#10;Current idea for implementing the partitioning: take the two columns specified, apply projection with a custom user-defined function and copy the result in a new column.">
+    <list default="true" id="1f756ec4-243b-4ede-9070-cb8b0a2b7124" name="Changes" comment="feat: update data types for data generator&#10;&#10;Switch all to int16_t">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/include/partitioning/FixedGrid.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/partitioning/FixedGrid.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/partitioning/FixedGrid.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/partitioning/FixedGrid.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/storage/DataWriter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/storage/DataWriter.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -88,11 +88,6 @@
     <configuration name="oplqp" type="CMakeListConfigurationType" factoryName="CMakeListConfigurationFactory" temporary="true">
       <method v="2" />
     </configuration>
-    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="oplqp" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="oplqp" TARGET_NAME="oplqp" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="oplqp" RUN_TARGET_NAME="oplqp">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -124,7 +119,8 @@
       <workItem from="1695146528406" duration="3679000" />
       <workItem from="1695211899147" duration="2423000" />
       <workItem from="1695881951823" duration="13432000" />
-      <workItem from="1696065509957" duration="13198000" />
+      <workItem from="1696065509957" duration="13465000" />
+      <workItem from="1696252991170" duration="8236000" />
     </task>
     <task id="LOCAL-00001" summary="feat: create class DataWriter with test file generation&#10;&#10;Design class for writing data and generate a parquet file">
       <option name="closed" value="true" />
@@ -198,7 +194,23 @@
       <option name="project" value="LOCAL" />
       <updated>1695149979700</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="feat: partially implement column projection with partitioning result&#10;&#10;Current idea for implementing the partitioning: take the two columns specified, apply projection with a custom user-defined function and copy the result in a new column.">
+      <option name="closed" value="true" />
+      <created>1696082623991</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1696082623991</updated>
+    </task>
+    <task id="LOCAL-00011" summary="feat: update data types for data generator&#10;&#10;Switch all to int16_t">
+      <option name="closed" value="true" />
+      <created>1696082667954</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1696082667954</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -220,15 +232,21 @@
     <MESSAGE value="feat: refactor structure, add base class partitioning&#10;&#10;Add base class partitioning, pass partitioning method to dataWriter" />
     <MESSAGE value="fix: fix column names&#10;&#10;First letter of the column names should be capitalized" />
     <MESSAGE value="feat: partially implement column projection with partitioning result&#10;&#10;Current idea for implementing the partitioning: take the two columns specified, apply projection with a custom user-defined function and copy the result in a new column." />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: partially implement column projection with partitioning result&#10;&#10;Current idea for implementing the partitioning: take the two columns specified, apply projection with a custom user-defined function and copy the result in a new column." />
+    <MESSAGE value="feat: update data types for data generator&#10;&#10;Switch all to int16_t" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: update data types for data generator&#10;&#10;Switch all to int16_t" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/src/partitioning/FixedGrid.cpp</url>
-          <line>118</line>
+          <line>135</line>
           <option name="timeStamp" value="39" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/partitioning/FixedGrid.cpp</url>
+          <line>110</line>
+          <option name="timeStamp" value="43" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
