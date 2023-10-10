@@ -1,0 +1,13 @@
+// Generate the TPC-H benchmark database from DuckDB
+// https://duckdb.org/docs/extensions/tpch.html
+// https://duckdb.org/docs/sql/statements/export.html
+
+// Install/load the tpch extension
+INSTALL tpch;
+LOAD tpch;
+
+// Generate data for scale factor 1, use:
+CALL dbgen(sf=1);
+
+// Export the entire database to parquet files
+EXPORT DATABASE 'tpch' (FORMAT PARQUET);
