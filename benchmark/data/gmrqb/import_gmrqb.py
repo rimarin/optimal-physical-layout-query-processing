@@ -20,6 +20,9 @@ def convert_to_parquet(input_file, output_file):
     # set threads=1;
     # set temp_directory = '/home/brancaleone/Downloads/genometmp';
     # duckdb.sql(f'COPY (SELECT * FROM read_csv_auto(\'{input_file}\')) TO \'{output_file}\' (FORMAT \'PARQUET\', ROW_GROUP_SIZE 50000)')
+    duckdb.sql('set memory_limit="4GB"')
+    duckdb.sql('set temp_directory="/home/brancaleone/tmp"')
+    duckdb.sql('set threads=1')
     total_rows = 149485603
     chunk_size = 10000000
     num_chunks = int(total_rows / chunk_size)
