@@ -28,8 +28,8 @@ os.system(f'export DSS_QUERY=$(pwd)/templates')
 
 i = 1
 for template in templates:
-    os.system(f'echo "-- == Template {template} =="  >> {output_file}')
+    os.system(f'echo "\n-- == Template {template} =="  >> {output_file}')
     for _ in range(num_queries_per_template):
-        os.system(f'echo "-- Query {i}" >> {output_file}')
+        os.system(f'echo "\n\n-- Query {i}" >> {output_file}')
         os.system(f'./qgen {template} >> {output_file}')
         i += 1
