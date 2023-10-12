@@ -6,9 +6,15 @@
 #include "partitioning/FixedGrid.h"
 #include "partitioning/NoPartitioning.h"
 #include "storage/DataWriter.h"
+#include "storage/DataReader.h"
 
 
 int main() {
+
+    std::string parquetFile = "test/NoPartition/test0.parquet";
+    std::filesystem::path inputFile = std::filesystem::current_path().parent_path() / parquetFile;
+    arrow::Result<std::shared_ptr<arrow::Table>> tableFromDisk = storage::DataReader::ReadTable(inputFile).ValueOrDie();
+
     arrow::Result<std::shared_ptr<arrow::Table>> exampleTable = storage::DataWriter::GenerateExampleTable().ValueOrDie();
     std::string tableName = "test";
 
@@ -21,6 +27,6 @@ int main() {
     outputFolder = std::filesystem::current_path().parent_path() / fixedGridFolder;
     std::vector<std::string> partitioningColumns = {"Day", "Month"};
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> fixedGridPartitioning = std::make_shared<partitioning::FixedGrid>(partitioningColumns, 20);
-    arrow::Status statusFixedGrid = storage::DataWriter::WriteTable(*exampleTable, tableName, outputFolder,fixedGridPartitioning);
+    arrow::Status statusFixedGrid = storage::DataWriter::WriteTable(*tableFromDisk, tableName, outputFolder,fixedGridPartitioning);
     return 0;
 }
