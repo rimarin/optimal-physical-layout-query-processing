@@ -3,8 +3,8 @@
 
 #include <arrow/io/api.h>
 
-#include "partitioning/FixedGrid.h"
-#include "partitioning/KDTree.h"
+#include "partitioning/FixedGridPartitioning.h"
+#include "partitioning/KDTreePartitioning.h"
 #include "partitioning/NoPartitioning.h"
 #include "storage/DataWriter.h"
 #include "storage/DataReader.h"
@@ -27,12 +27,12 @@ int main() {
     std::string fixedGridFolder = "test/FixedGrid/";
     outputFolder = std::filesystem::current_path().parent_path() / fixedGridFolder;
     std::vector<std::string> partitioningColumns = {"Day", "Month"};
-    std::shared_ptr<partitioning::MultiDimensionalPartitioning> fixedGridPartitioning = std::make_shared<partitioning::FixedGrid>(partitioningColumns, 20);
+    std::shared_ptr<partitioning::MultiDimensionalPartitioning> fixedGridPartitioning = std::make_shared<partitioning::FixedGridPartitioning>(partitioningColumns, 20);
     arrow::Status statusFixedGrid = storage::DataWriter::WriteTable(*tableFromDisk, tableName, outputFolder,fixedGridPartitioning);
 
     std::string kdTreeFolder = "test/KDTree/";
     outputFolder = std::filesystem::current_path().parent_path() / kdTreeFolder;
-    std::shared_ptr<partitioning::MultiDimensionalPartitioning> kdTreePartitioning = std::make_shared<partitioning::KDTree>(partitioningColumns);
+    std::shared_ptr<partitioning::MultiDimensionalPartitioning> kdTreePartitioning = std::make_shared<partitioning::KDTreePartitioning>(partitioningColumns);
     arrow::Status statusKDTree = storage::DataWriter::WriteTable(*tableFromDisk, tableName, outputFolder,kdTreePartitioning);
     return 0;
 }
