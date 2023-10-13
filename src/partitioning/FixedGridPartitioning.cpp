@@ -52,9 +52,17 @@ arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> FixedGridPartitioning:
     auto func = std::make_shared<arrow::compute::ScalarFunction>(computeFunctionName,
                                                                                arrow::compute::Arity::Ternary(),
                                                                                computeFunctionDoc);
-    auto typeColumn1 = table->schema()->GetFieldByName(columns[0])->type();
-    auto typeColumn2 = table->schema()->GetFieldByName(columns[1])->type();
-    arrow::compute::ScalarKernel kernel({typeColumn1, typeColumn2, arrow::int64()},
+    std::vector<arrow::compute::InputType> inputTypes;
+    std::vector<arrow::Datum> columnData;
+    for (const auto &column: columns){
+        // Infer the data types of the columns
+        inputTypes.emplace_back(table->schema()->GetFieldByName(column)->type());
+        // Extract column data by getting the chunks and casting them to an arrow array
+        std::shared_ptr<arrow::ChunkedArray> chunkedColumn = table->GetColumnByName(column);
+        columnData.emplace_back(chunkedColumn->chunk(0));
+    }
+    inputTypes.emplace_back(arrow::int64());
+    arrow::compute::ScalarKernel kernel(inputTypes,
                                         arrow::int64(), ColumnsToPartitionId);
     kernel.mem_allocation = arrow::compute::MemAllocation::PREALLOCATE;
     kernel.null_handling = arrow::compute::NullHandling::INTERSECTION;
@@ -62,24 +70,18 @@ arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> FixedGridPartitioning:
     auto registry = arrow::compute::GetFunctionRegistry();
     ARROW_RETURN_NOT_OK(registry->AddFunction(std::move(func)));
 
-    // Extract column data by getting the chunks and casting them to an arrow array
-    std::shared_ptr<arrow::ChunkedArray> column1 = table->GetColumnByName(columns.at(0));
-    std::shared_ptr<arrow::ChunkedArray> column2 = table->GetColumnByName(columns.at(1));
-    std::shared_ptr<arrow::Array> column1Data = column1->chunk(0);
-    std::shared_ptr<arrow::Array> column2Data = column2->chunk(0);
-
     // Repeat the cellSize values into an array, needed because CallFunction wants same-size columnArrays as args
     std::vector<int64_t> cellSizeValues;
-    cellSizeValues.insert(cellSizeValues.end(), column1->length(), cellSize);
+    cellSizeValues.insert(cellSizeValues.end(), table->GetColumnByName(columns.at(0))->length(), cellSize);
     arrow::NumericBuilder<arrow::Int64Type> array_builder;
     ARROW_RETURN_NOT_OK(array_builder.AppendValues(cellSizeValues));
     std::shared_ptr<arrow::Array> cellSizeArray;
     ARROW_RETURN_NOT_OK(array_builder.Finish(&cellSizeArray));
     array_builder.Reset();
+    columnData.emplace_back(cellSizeArray);
 
     // 2. Invoke the custom method
-    arrow::Result<arrow::Datum> fixedGridCellIds = arrow::compute::CallFunction(computeFunctionName,
-                                                                                 {column1Data, column2Data, cellSizeArray});
+    arrow::Result<arrow::Datum> fixedGridCellIds = arrow::compute::CallFunction(computeFunctionName, columnData);
     auto hallo = fixedGridCellIds->ToString();
     std::shared_ptr<arrow::Array> partitionIds = std::move(fixedGridCellIds)->make_array();
     auto test = partitionIds->ToString();
