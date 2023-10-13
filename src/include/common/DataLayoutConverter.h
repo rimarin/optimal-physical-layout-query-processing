@@ -1,0 +1,10 @@
+#ifndef OPLQP_ROWSCOLUMNSCONVERTER_H
+#define OPLQP_ROWSCOLUMNSCONVERTER_H
+
+
+class RowsColumnsConverter {
+
+};
+
+
+#endif //OPLQP_ROWSCOLUMNSCONVERTER_H
