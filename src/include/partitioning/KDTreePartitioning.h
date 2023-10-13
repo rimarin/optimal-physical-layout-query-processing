@@ -1,5 +1,5 @@
-#ifndef PARTITIONING_KDTREE_H
-#define PARTITIONING_KDTREE_H
+#ifndef PARTITIONING_KDTREEPARTITIONING_H
+#define PARTITIONING_KDTREEPARTITIONING_H
 
 #include <iostream>
 #include <map>
@@ -20,14 +20,14 @@
 
 namespace partitioning {
 
-    class KDTree : public MultiDimensionalPartitioning {
+    class KDTreePartitioning : public MultiDimensionalPartitioning {
     public:
-        KDTree(std::vector<std::string> partitionColumns);
-        virtual ~KDTree() = default;
+        KDTreePartitioning(std::vector<std::string> partitionColumns);
+        virtual ~KDTreePartitioning() = default;
         arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> partition(std::shared_ptr<arrow::Table> table);
     private:
         std::vector<std::string> columns;
     };
 }
 
-#endif //PARTITIONING_KDTREE_H
+#endif //PARTITIONING_KDTREEPARTITIONING_H
