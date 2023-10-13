@@ -22,10 +22,10 @@ typedef std::pair<double, double> Point;
 
 namespace partitioning {
 
-    class FixedGrid : public MultiDimensionalPartitioning {
+    class FixedGridPartitioning : public MultiDimensionalPartitioning {
     public:
-        FixedGrid(std::vector<std::string> partitionColumns, int size);
-        virtual ~FixedGrid() = default;
+        FixedGridPartitioning(std::vector<std::string> partitionColumns, int size);
+        virtual ~FixedGridPartitioning() = default;
         void setCellSize(int cellSize);
         arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> partition(std::shared_ptr<arrow::Table> table);
     private:

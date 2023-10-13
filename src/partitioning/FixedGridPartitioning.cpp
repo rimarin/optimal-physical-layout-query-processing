@@ -1,18 +1,18 @@
-#include "../include/partitioning/FixedGrid.h"
+#include "../include/partitioning/FixedGridPartitioning.h"
 
 namespace partitioning {
 
-FixedGrid::FixedGrid(std::vector<std::string> partitionColumns, int size) {
+FixedGridPartitioning::FixedGridPartitioning(std::vector<std::string> partitionColumns, int size) {
     columns = std::move(partitionColumns);
     setCellSize(size);
 }
 
-void FixedGrid::setCellSize(int size){
+void FixedGridPartitioning::setCellSize(int size){
     cellSize = size;
 }
 
-arrow::Status FixedGrid::PointsToCell(arrow::compute::KernelContext* ctx, const arrow::compute::ExecSpan& batch,
-                             arrow::compute::ExecResult* out) {
+arrow::Status FixedGridPartitioning::PointsToCell(arrow::compute::KernelContext* ctx, const arrow::compute::ExecSpan& batch,
+                                                  arrow::compute::ExecResult* out) {
     auto* x = batch[0].array.GetValues<int32_t>(1);
     auto* y = batch[1].array.GetValues<int32_t>(1);
     const auto* cellSize = batch[2].array.GetValues<int64_t>(1);
@@ -27,7 +27,7 @@ arrow::Status FixedGrid::PointsToCell(arrow::compute::KernelContext* ctx, const 
     return arrow::Status::OK();
 }
 
-arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> FixedGrid::partition(std::shared_ptr<arrow::Table> table){
+arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> FixedGridPartitioning::partition(std::shared_ptr<arrow::Table> table){
     std::map<Point, std::vector<arrow::Table>> cellToTables;
 
     // One idea was adding a custom group_by aggregation function and extract the matching values for each group
