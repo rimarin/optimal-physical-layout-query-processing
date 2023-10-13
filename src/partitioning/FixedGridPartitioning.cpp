@@ -11,8 +11,8 @@ void FixedGridPartitioning::setCellSize(int size){
     cellSize = size;
 }
 
-arrow::Status FixedGridPartitioning::PointsToCell(arrow::compute::KernelContext* ctx, const arrow::compute::ExecSpan& batch,
-                                                  arrow::compute::ExecResult* out) {
+arrow::Status FixedGridPartitioning::ColumnsToPartitionId(arrow::compute::KernelContext* ctx, const arrow::compute::ExecSpan& batch,
+                                                          arrow::compute::ExecResult* out) {
     auto* x = batch[0].array.GetValues<int32_t>(1);
     auto* y = batch[1].array.GetValues<int32_t>(1);
     const auto* cellSize = batch[2].array.GetValues<int64_t>(1);
@@ -28,8 +28,6 @@ arrow::Status FixedGridPartitioning::PointsToCell(arrow::compute::KernelContext*
 }
 
 arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> FixedGridPartitioning::partition(std::shared_ptr<arrow::Table> table){
-    std::map<Point, std::vector<arrow::Table>> cellToTables;
-
     // One idea was adding a custom group_by aggregation function and extract the matching values for each group
     // using the method hash_list(). However, this is not a viable approach since "Grouped Aggregations are not
     // invocable via CallFunction." https://arrow.apache.org/docs/cpp/compute.html
@@ -57,7 +55,7 @@ arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> FixedGridPartitioning:
     auto typeColumn1 = table->schema()->GetFieldByName(columns[0])->type();
     auto typeColumn2 = table->schema()->GetFieldByName(columns[1])->type();
     arrow::compute::ScalarKernel kernel({typeColumn1, typeColumn2, arrow::int64()},
-                                        arrow::int64(), PointsToCell);
+                                        arrow::int64(), ColumnsToPartitionId);
     kernel.mem_allocation = arrow::compute::MemAllocation::PREALLOCATE;
     kernel.null_handling = arrow::compute::NullHandling::INTERSECTION;
     ARROW_RETURN_NOT_OK(func->AddKernel(std::move(kernel)));
@@ -67,8 +65,8 @@ arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> FixedGridPartitioning:
     // Extract column data by getting the chunks and casting them to an arrow array
     std::shared_ptr<arrow::ChunkedArray> column1 = table->GetColumnByName(columns.at(0));
     std::shared_ptr<arrow::ChunkedArray> column2 = table->GetColumnByName(columns.at(1));
-    std::shared_ptr<arrow::Int64Array> column1Data = std::static_pointer_cast<arrow::Int64Array>(column1->chunk(0));
-    std::shared_ptr<arrow::Int64Array> column2Data = std::static_pointer_cast<arrow::Int64Array>(column2->chunk(0));
+    std::shared_ptr<arrow::Array> column1Data = column1->chunk(0);
+    std::shared_ptr<arrow::Array> column2Data = column2->chunk(0);
 
     // Repeat the cellSize values into an array, needed because CallFunction wants same-size columnArrays as args
     std::vector<int64_t> cellSizeValues;
@@ -80,7 +78,7 @@ arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> FixedGridPartitioning:
     array_builder.Reset();
 
     // 2. Invoke the custom method
-    arrow::Result<arrow::Datum> fixedGridCellIds =  arrow::compute::CallFunction(computeFunctionName,
+    arrow::Result<arrow::Datum> fixedGridCellIds = arrow::compute::CallFunction(computeFunctionName,
                                                                                  {column1Data, column2Data, cellSizeArray});
     auto hallo = fixedGridCellIds->ToString();
     std::shared_ptr<arrow::Array> partitionIds = std::move(fixedGridCellIds)->make_array();

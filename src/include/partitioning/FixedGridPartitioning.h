@@ -31,8 +31,8 @@ namespace partitioning {
     private:
         int cellSize;
         std::vector<std::string> columns;
-        static arrow::Status PointsToCell(arrow::compute::KernelContext* ctx, const arrow::compute::ExecSpan& batch,
-                                   arrow::compute::ExecResult* out);
+        static arrow::Status ColumnsToPartitionId(arrow::compute::KernelContext* ctx, const arrow::compute::ExecSpan& batch,
+                                                  arrow::compute::ExecResult* out);
     };
 }
 
