@@ -12,10 +12,12 @@ using arrow::Int64Builder;
 using arrow::ListBuilder;
 
 // While we want to use columnar data structures to build efficient operations, we
-// often receive data in a row-wise fashion from other systems. In the following,
-// we want give a brief introduction into the classes provided by Apache Arrow by
-// showing how to transform row-wise data into a columnar table.
+// often receive data in a row-wise fashion from other systems.
+// Here some method can be used to transform row-wise data into a columnar table.
 //
+// TODO: THIS UTILITY IS NOT USABLE YET, JUST AN EXAMPLE
+// TODO: make the struct / schema generic, in a way that infers the data types from the input
+//  table read from parquet
 // The table contains an id for a product, the number of components in the product
 // and the cost of each component.
 //
@@ -41,7 +43,7 @@ struct data_row {
 // `arrow::ListBuilder` that builds the array of offsets and a nested
 // `arrow::DoubleBuilder` that constructs the underlying values array that
 // is referenced by the offsets in the former array.
-arrow::Result<std::shared_ptr<arrow::Table>> VectorToColumnarTable(
+arrow::Result<std::shared_ptr<arrow::Table>> RowsToColumnarTable(
         const std::vector<struct data_row>& rows) {
     // The builders are more efficient using
     // arrow::jemalloc::MemoryPool::default_pool() as this can increase the size of
@@ -102,7 +104,7 @@ arrow::Result<std::shared_ptr<arrow::Table>> VectorToColumnarTable(
     return table;
 }
 
-arrow::Result<std::vector<data_row>> ColumnarTableToVector(
+arrow::Result<std::vector<data_row>> ColumnarTableToRows(
         const std::shared_ptr<arrow::Table>& table) {
     // To convert an Arrow table back into the same row-wise representation as in the
     // above section, we first will check that the table conforms to our expected
@@ -162,9 +164,9 @@ arrow::Status RunRowConversion() {
     std::shared_ptr<arrow::Table> table;
     std::vector<data_row> converted_rows;
 
-    ARROW_ASSIGN_OR_RAISE(table, VectorToColumnarTable(original_rows));
+    ARROW_ASSIGN_OR_RAISE(table, RowsToColumnarTable(original_rows));
 
-    ARROW_ASSIGN_OR_RAISE(converted_rows, ColumnarTableToVector(table));
+    ARROW_ASSIGN_OR_RAISE(converted_rows, ColumnarTableToRows(table));
 
     assert(original_rows.size() == converted_rows.size());
 
