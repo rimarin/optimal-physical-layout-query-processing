@@ -18,8 +18,6 @@
 #include "Partitioning.h"
 #include "../storage/DataWriter.h"
 
-typedef std::pair<double, double> Point;
-
 namespace partitioning {
 
     class FixedGridPartitioning : public MultiDimensionalPartitioning {

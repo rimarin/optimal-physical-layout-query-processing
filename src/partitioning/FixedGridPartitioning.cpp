@@ -82,9 +82,8 @@ arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> FixedGridPartitioning:
 
     // 2. Invoke the custom method
     arrow::Result<arrow::Datum> fixedGridCellIds = arrow::compute::CallFunction(computeFunctionName, columnData);
-    auto hallo = fixedGridCellIds->ToString();
     std::shared_ptr<arrow::Array> partitionIds = std::move(fixedGridCellIds)->make_array();
-    auto test = partitionIds->ToString();
+    auto partitionIdsString = partitionIds->ToString();
 
     // 3. Extract the partition ids
     // Create a new table with the current schema + a new column with the partition ids
