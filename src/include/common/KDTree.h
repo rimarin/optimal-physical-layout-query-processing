@@ -25,7 +25,9 @@ namespace common {
         std::shared_ptr<KDNode> left;
         std::shared_ptr<KDNode> right;
 
+        // Leaf node constructor, has associated points
         KDNode(std::vector<Point> &values) : left(nullptr), right(nullptr), splitValue(0), data(values) {};
+        // Empty node constructor, only define a split value
         KDNode(double &splitNum) : left(nullptr), right(nullptr), splitValue(splitNum), data({}) {};
     };
 
@@ -35,7 +37,7 @@ namespace common {
         std::shared_ptr<KDNode> buildTree(std::vector<Point> points, int depth);
         virtual ~KDTree() = default;
         std::shared_ptr<KDNode> getRoot();
-        std::vector<std::shared_ptr<KDNode>> getLeaves(std::shared_ptr<KDNode> node);
+        std::vector<std::shared_ptr<KDNode>> getLeaves();
     private:
         std::shared_ptr<KDNode> root;
         std::vector<std::shared_ptr<KDNode>> leaves;

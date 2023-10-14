@@ -10,7 +10,7 @@ namespace partitioning {
 
     arrow::Status KDTreePartitioning::ColumnsToPartitionId(arrow::compute::KernelContext *ctx, const arrow::compute::ExecSpan &batch,
                                                            arrow::compute::ExecResult *out) {
-        // Extract column vectors from the batch, convert them from arrow array to std vector of double
+        // Extract column vectors from the batch, convert them from arrow array to std vector of points
         std::vector<common::Point> partitioningColumnValues = {};
         for(const auto & batchValue : batch.values){
             auto columnArray = batchValue.array.ToArray();
@@ -32,10 +32,13 @@ namespace partitioning {
             }
             points.emplace_back(point);
         }
-        std::shared_ptr<common::KDTree> kdTree = std::make_shared<common::KDTree>(points);
-        std::shared_ptr<common::KDNode> root = kdTree->getRoot();
-        std::vector<std::shared_ptr<common::KDNode>> leaves = kdTree->getLeaves(root);
 
+        // Build a kd-tree on the vector of points
+        std::shared_ptr<common::KDTree> kdTree = std::make_shared<common::KDTree>(points);
+        // Retrieve the leaves, where the points have partitioned and stored
+        std::vector<std::shared_ptr<common::KDNode>> leaves = kdTree->getLeaves();
+
+        // Build a hashmap to link each point to the partition induced by the kd-tree
         std::map<common::Point, int64_t> pointToPartitionId;
         for (int i = 0; i < leaves.size(); i++){
             auto partitionedPoints = leaves[i]->data;
@@ -44,6 +47,10 @@ namespace partitioning {
             }
         }
 
+        // We need to return a vector of partition id for the passed columns
+        // However, the partition id have to be aligned with the initial sorting of the points
+        // Therefore, iterate over points (as passed in the first place) and assign to the return value
+        // the mapped partition
         auto* out_values = out->array_span_mutable()->GetValues<int64_t>(1);
         for (int i = 0; i < numRows; i++){
             out_values[i] = pointToPartitionId[points[i]];
@@ -82,13 +89,13 @@ namespace partitioning {
         auto registry = arrow::compute::GetFunctionRegistry();
         ARROW_RETURN_NOT_OK(registry->AddFunction(std::move(func)));
 
-        // 2. Invoke the custom method
+        // Invoke the custom method
         arrow::Result<arrow::Datum> KDTreePartitionIds = arrow::compute::CallFunction(computeFunctionName, columnData);
         auto hallo = KDTreePartitionIds->ToString();
         std::shared_ptr<arrow::Array> partitionIds = std::move(KDTreePartitionIds)->make_array();
         auto test = partitionIds->ToString();
 
-        // 3. Extract the partition ids
+        // Extract the partition ids
         // Create a new table with the current schema + a new column with the partition ids
         ARROW_ASSIGN_OR_RAISE(std::shared_ptr<arrow::Table> combined, table->CombineChunks());
         std::vector<std::shared_ptr<arrow::Array>> columnArrays;
