@@ -1,35 +1,44 @@
 #include "include/common/KDTree.h"
 
-namespace partitioning {
+namespace common {
 
-KDTree::KDTree(std::vector<arrow::Array> pointList) {
-    pointList = std::move(pointList);
-}
+    KDTree::KDTree(std::vector<Point> &points) {
+        root = buildTree(points, 0);
+        auto right = root->right;
+        auto left = root->left;
+    }
 
-KDTree buildTreeRecursive(std::vector<arrow::Array> values, int n_dimensions){
-    if (values.size() <= 1) return nullptr;
+    std::shared_ptr<KDNode> KDTree::buildTree(std::vector<Point> points, int depth){
+        if (points.empty()) {
+            return nullptr;
+        }
+        if (points.size() == 2){
+            auto node = std::make_shared<KDNode>(points);
+            leaves.emplace_back(node);
+            return node;
+        }
+        int axis = depth % points.size();
+        std::sort(points.begin(), points.end(),
+                  [&](const Point & a, const Point & b) {
+                      return a[axis] < b[axis];
+                  });
+        int medianIdx = points.size() / 2;
+        auto node = std::make_shared<KDNode>(points[medianIdx][axis]);
+        std::vector<Point> leftPts(medianIdx);
+        std::copy(points.begin(), points.begin() + medianIdx, leftPts.begin());
+        std::vector<Point> rightPts(points.size() - medianIdx);
+        std::copy(points.begin() + medianIdx, points.end(), rightPts.begin());
+        node->left = buildTree(leftPts, depth + 1);
+        node->right = buildTree(rightPts, depth + 1);
+        return node;
+    }
 
-    // Get axis to split along
-    int axis = depth % dim;
+    std::shared_ptr<KDNode> KDTree::getRoot() {
+        return root;
+    }
 
-    int** sorted = sortAlongDim (values, axis);
-
-    int mid = len / 2;
-    Node* curr = new Node ();
-    curr.point[0] = sorted [0][mid];
-    curr.point[1] = sorted [1][mid];
-
-    int** leftHalf = values;
-    int** rightHalf = &(values [mid]);
-
-    curr.left = createtreeRecursive (leftHalf, mid, dim, depth + 1);
-    curr.right = createtreeRecursive (rightHalf, len - mid, dim, depth + 1);
-
-    return curr;
-}
-
-std::vector<struct KDNode> getLeaves(){
-
-}
+    std::vector<std::shared_ptr<KDNode>> KDTree::getLeaves(std::shared_ptr<KDNode> node) {
+        return leaves;
+    }
 
 }

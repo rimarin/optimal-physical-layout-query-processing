@@ -15,22 +15,32 @@
 #include <arrow/status.h>
 #include <arrow/table.h>
 
-namespace partitioning {
+namespace common {
+
+    using Point = std::vector<double>;
+
+    struct KDNode {
+        double splitValue;
+        std::vector<Point> data;
+        std::shared_ptr<KDNode> left;
+        std::shared_ptr<KDNode> right;
+
+        KDNode(std::vector<Point> &values) : left(nullptr), right(nullptr), splitValue(0), data(values) {};
+        KDNode(double &splitNum) : left(nullptr), right(nullptr), splitValue(splitNum), data({}) {};
+    };
 
     class KDTree {
     public:
-        KDTree(std::vector<arrow::Array> values);
+        KDTree(std::vector<Point> &points);
+        std::shared_ptr<KDNode> buildTree(std::vector<Point> points, int depth);
         virtual ~KDTree() = default;
-        std::vector<struct KDNode> getLeaves();
+        std::shared_ptr<KDNode> getRoot();
+        std::vector<std::shared_ptr<KDNode>> getLeaves(std::shared_ptr<KDNode> node);
     private:
-        KDTree buildTreeRecursive(std::vector<arrow::Array> values);
-        std::vector<arrow::Array> pointList;
+        std::shared_ptr<KDNode> root;
+        std::vector<std::shared_ptr<KDNode>> leaves;
     };
 
-    struct KDNode {
-        arrow::Array *data;
-        struct KDNode *left, *right;
-    };
 }
 
 #endif //PARTITIONING_KDTREE_H
