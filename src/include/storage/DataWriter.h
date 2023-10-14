@@ -23,6 +23,7 @@ class DataWriter {
                                         std::filesystem::path &outputFolder,
                                         const std::shared_ptr<partitioning::MultiDimensionalPartitioning> &partitioningMethod);
         static arrow::Result<std::shared_ptr<arrow::Table>> GenerateExampleTable();
+        static arrow::Result<std::shared_ptr<arrow::Table>> GenerateKDTreeExampleTable();
 };
 } // storage
 

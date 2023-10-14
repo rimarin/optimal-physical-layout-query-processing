@@ -53,6 +53,33 @@ namespace storage {
         return table;
     }
 
+    arrow::Result<std::shared_ptr<arrow::Table>> DataWriter::GenerateKDTreeExampleTable() {
+        arrow::DoubleBuilder doubleBuilder;
+        double_t student_id_raw[8] = {16, 45, 21, 7, 74, 34, 111, 91};
+        ARROW_RETURN_NOT_OK(doubleBuilder.AppendValues(student_id_raw, 8));
+        std::shared_ptr<arrow::Array> student_id;
+        ARROW_ASSIGN_OR_RAISE(student_id, doubleBuilder.Finish());
+
+        double_t age_raw[8] = {30, 21, 18, 27, 41, 37, 23, 22};
+        ARROW_RETURN_NOT_OK(doubleBuilder.AppendValues(age_raw, 8));
+        std::shared_ptr<arrow::Array> age;
+        ARROW_ASSIGN_OR_RAISE(age, doubleBuilder.Finish());
+
+        std::vector<std::shared_ptr<arrow::Array>> columns = {student_id, age};
+
+        std::shared_ptr<arrow::Field> field_student_id, field_age;
+        std::shared_ptr<arrow::Schema> schema;
+
+        field_student_id = arrow::field("Student_id", arrow::float64());
+        field_age = arrow::field("Age", arrow::float64());
+
+        schema = arrow::schema({field_student_id, field_age});
+
+        std::shared_ptr<arrow::Table> table;
+        table = arrow::Table::Make(schema, columns);
+        return table;
+    }
+
     arrow::Status DataWriter::WriteTable(const std::shared_ptr<arrow::Table>& table,
                                          std::string &filename,
                                          std::filesystem::path &outputFolder,
