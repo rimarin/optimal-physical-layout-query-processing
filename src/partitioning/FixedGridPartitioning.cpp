@@ -37,9 +37,7 @@ namespace partitioning {
         //    This custom function takes as parameters two column values + the cell size and returns the corresponding
         //    partition id (that is the cell index) in the FixedGrid.
         // 2. Invoke the custom method passing the columns to generate a vector of corresponding partition ids
-        // 3. We extract the distinct values of partitions ids.
-        // 4. We split the table into a set of different tables, one for each partition:
-        //    For each distinct partition_id we filter the table by that partition_id (the newly created column)
+        // 3. Pass the table and the partition ids to a helper function to split the table according to the ids
 
         // 1. Add a new custom Compute function to the registry
         // More details here: https://github.com/apache/arrow/blob/fa4310635c784f03fe825ecc818efa3eca361ec0/cpp/examples/arrow/udf_example.cc
@@ -80,52 +78,12 @@ namespace partitioning {
         array_builder.Reset();
         columnData.emplace_back(cellSizeArray);
 
-        // 2. Invoke the custom method
+        // Invoke the custom method
         arrow::Result<arrow::Datum> fixedGridCellIds = arrow::compute::CallFunction(computeFunctionName, columnData);
         std::shared_ptr<arrow::Array> partitionIds = std::move(fixedGridCellIds)->make_array();
         auto partitionIdsString = partitionIds->ToString();
-
-        // 3. Extract the partition ids
-        // Create a new table with the current schema + a new column with the partition ids
-        ARROW_ASSIGN_OR_RAISE(std::shared_ptr<arrow::Table> combined, table->CombineChunks());
-        std::vector<std::shared_ptr<arrow::Array>> columnArrays;
-        std::vector<std::shared_ptr<arrow::Field>> columnFields;
-        for (int i=0; i < table->num_columns(); ++i) {
-            columnArrays.push_back(combined->columns().at(i)->chunk(0));
-            columnFields.push_back(table->schema()->field(i));
-        }
-        columnFields.push_back(arrow::field("partition_id", arrow::int64()));
-        columnArrays.push_back(partitionIds);
-        std::shared_ptr<arrow::Schema> newSchema = arrow::schema(columnFields);
-        std::shared_ptr<arrow::RecordBatch> batch = arrow::RecordBatch::Make(newSchema, table->num_rows(), std::move(columnArrays));
-        auto newTablePreview = batch->ToString();
-        // Retrieve the distinct partition ids
-        auto arrow_array = std::static_pointer_cast<arrow::Int64Array>(partitionIds);
-        std::set<int64_t> uniquePartitionIds;
-        for (int64_t i = 0; i < partitionIds->length(); ++i)
-        {
-            uniquePartitionIds.insert(arrow_array->Value(i));
-        }
-
-        // 4. For each distinct partition_id we filter the table by that partition_id (the newly created column)
-        std::vector<std::shared_ptr<arrow::Table>> partitionedTables = {};
-        // Construct new table with the partitioning column from the record batches and
-        // wrap the Table in a Dataset, so we can use a Scanner
-        ARROW_ASSIGN_OR_RAISE(auto writeTable, arrow::Table::FromRecordBatches({batch}));
-        std::shared_ptr<arrow::dataset::Dataset> dataset = std::make_shared<arrow::dataset::InMemoryDataset>(writeTable);
-        for (const auto &partitionId: uniquePartitionIds){
-            // Build ScannerOptions for a Scanner to do a basic filter operation
-            auto options = std::make_shared<arrow::dataset::ScanOptions>();
-            options->filter = arrow::compute::equal(
-                    arrow::compute::field_ref("partition_id"),
-                    arrow::compute::literal(partitionId)); // Change for your use case
-            auto builder = arrow::dataset::ScannerBuilder(dataset, options);
-            auto scanner = builder.Finish();
-            std::shared_ptr<arrow::Table> partitionedTable = scanner.ValueOrDie()->ToTable().ValueOrDie();
-            partitionedTables.push_back(partitionedTable);
-        }
-
-        return partitionedTables;
+        // Call the splitting method to divide the tables into sub-tables according to the partition ids
+        return partitioning::MultiDimensionalPartitioning::splitPartitions(table, partitionIds);
     }
 
 }
