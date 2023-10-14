@@ -36,11 +36,13 @@ def convert_to_parquet(input_file, output_file):
 
 
 if __name__ == "__main__":
+    # Download the benchmark suite from:
+    # https://web.archive.org/web/20230323205030/https://www2.informatik.hu-berlin.de/~sprengsz/mdrq/
     input_file = "chr22_feature.vectors"
     output_file = "genome.csv"
+    output_file_parquet = "genome.parquet"
 
-    convert_to_csv(input_file, output_file)
-    print("1000genome feature vectors converted to CSV file", output_file)
-    output_file_parquet = output_file.split('.')[0] + '.parquet'
+    # convert_to_csv(input_file, output_file)
+    # print("1000genome feature vectors converted to CSV file", output_file)
     convert_to_parquet(output_file, output_file_parquet)
     print("CSV file converted to parquet", output_file_parquet)
