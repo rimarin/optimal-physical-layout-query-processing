@@ -37,6 +37,6 @@ int main() {
     outputFolder = std::filesystem::current_path().parent_path() / kdTreeFolder;
     std::vector<std::string> KDTreePartitioningColumns = {"Age", "Student_id"};
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> kdTreePartitioning = std::make_shared<partitioning::KDTreePartitioning>(KDTreePartitioningColumns);
-    arrow::Status statusKDTree = storage::DataWriter::WriteTable(*kdTreeExampleTable, exampleTableName, outputFolder,kdTreePartitioning);
+    arrow::Status statusKDTree = storage::DataWriter::WriteTable(*kdTreeExampleTable, kdTreeTableName, outputFolder,kdTreePartitioning);
     return 0;
 }

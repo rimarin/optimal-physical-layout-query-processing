@@ -17,6 +17,7 @@
 
 #include "Partitioning.h"
 #include "../storage/DataWriter.h"
+#include "../common/KDTree.h"
 
 namespace partitioning {
 
@@ -27,6 +28,8 @@ namespace partitioning {
         arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> partition(std::shared_ptr<arrow::Table> table);
     private:
         std::vector<std::string> columns;
+        static arrow::Status ColumnsToPartitionId(arrow::compute::KernelContext* ctx, const arrow::compute::ExecSpan& batch,
+                                                                  arrow::compute::ExecResult* out);
     };
 }
 
