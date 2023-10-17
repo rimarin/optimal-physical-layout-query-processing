@@ -3,6 +3,7 @@
 
 #include <arrow/io/api.h>
 
+#include "include/partitioning/NoPartitioning.h"
 #include "include/storage/DataWriter.h"
 #include "include/storage/DataReader.h"
 #include "fixture.cpp"
