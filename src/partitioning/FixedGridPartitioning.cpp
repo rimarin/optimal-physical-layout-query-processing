@@ -8,7 +8,7 @@ namespace partitioning {
     }
 
     void FixedGridPartitioning::setCellSize(int size){
-        cellSize = size;
+        partitionSize = size;
     }
 
     arrow::Status FixedGridPartitioning::ColumnsToPartitionId(arrow::compute::KernelContext* ctx, const arrow::compute::ExecSpan& batch,
@@ -70,7 +70,7 @@ namespace partitioning {
 
         // Repeat the cellSize values into an array, needed because CallFunction wants same-size columnArrays as args
         std::vector<int64_t> cellSizeValues;
-        cellSizeValues.insert(cellSizeValues.end(), table->GetColumnByName(columns.at(0))->length(), cellSize);
+        cellSizeValues.insert(cellSizeValues.end(), table->GetColumnByName(columns.at(0))->length(), partitionSize);
         arrow::NumericBuilder<arrow::Int64Type> array_builder;
         ARROW_RETURN_NOT_OK(array_builder.AppendValues(cellSizeValues));
         std::shared_ptr<arrow::Array> cellSizeArray;
