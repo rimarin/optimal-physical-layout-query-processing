@@ -5,7 +5,7 @@
 #include <iostream>
 #include <vector>
 
-#include "include/common/DataLayoutConverter.h"
+#include "../include/common/DataLayoutConverter.h"
 
 using arrow::DoubleBuilder;
 using arrow::Int64Builder;

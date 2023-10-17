@@ -7,7 +7,7 @@
 
 namespace storage {
 
-    arrow::Result<std::shared_ptr<arrow::Table>> DataWriter::GenerateExampleTable() {
+    arrow::Result<std::shared_ptr<arrow::Table>> DataWriter::GenerateExampleWeatherTable() {
         arrow::Int32Builder int32builder;
         int32_t days_raw[5] = {1, 12, 17, 23, 28};
         ARROW_RETURN_NOT_OK(int32builder.AppendValues(days_raw, 5));
@@ -53,7 +53,7 @@ namespace storage {
         return table;
     }
 
-    arrow::Result<std::shared_ptr<arrow::Table>> DataWriter::GenerateKDTreeExampleTable() {
+    arrow::Result<std::shared_ptr<arrow::Table>> DataWriter::GenerateExampleSchoolTable() {
         arrow::DoubleBuilder doubleBuilder;
         double_t student_id_raw[8] = {16, 45, 21, 7, 74, 34, 111, 91};
         ARROW_RETURN_NOT_OK(doubleBuilder.AppendValues(student_id_raw, 8));
@@ -88,7 +88,7 @@ namespace storage {
         auto debug = table->ToString();
         std::string outPath = outputFolder.string();
         for (int i = 0; i < partitions.size(); ++i) {
-            std::string outFilename = outPath + filename + std::to_string(i) + ".parquet";
+            std::string outFilename = outPath + "/" + filename + std::to_string(i) + ".parquet";
             auto outfile = arrow::io::FileOutputStream::Open(outFilename);
             PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*partitions.at(i), arrow::default_memory_pool(), *outfile, table->num_rows()));
         }

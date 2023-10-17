@@ -1,4 +1,4 @@
-#include "include/common/KDTree.h"
+#include "../include/common/KDTree.h"
 
 namespace common {
 
@@ -14,6 +14,7 @@ namespace common {
         }
         // When we reach the desired leaf size (which is the number of rows per parquet partition)
         // We should store the node and exit the recursion
+        // TODO: parametrize according to rows per partition or partition size
         if (points.size() == 2){
             auto node = std::make_shared<KDNode>(points);
             leaves.emplace_back(node);
