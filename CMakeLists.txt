@@ -19,6 +19,7 @@ set(SOURCES
     src/storage/DataReader.cpp
     src/partitioning/NoPartitioning.cpp
     src/partitioning/FixedGridPartitioning.cpp
+    src/partitioning/GridFilePartitioning.cpp
     src/partitioning/KDTreePartitioning.cpp
     src/partitioning/QuadTreePartitioning.cpp)
 add_executable(oplqp ${SOURCES})
