@@ -15,6 +15,7 @@ int main() {
     std::string datasetFolder = "../data/";
     std::string taxiFolder = datasetFolder + "taxi/";
 
+    std::cout << "[Apply partitioning]" << std::endl;
     // For each dataset
         // Read all parquet files in folder, with something like this:
         // https://stackoverflow.com/questions/69486535/how-to-read-multiple-parquet-files-or-a-directory-using-apache-arrow-in-cpp

@@ -14,9 +14,11 @@ namespace partitioning {
         // Assign them to partition i
         // Keep track of maximum value of all dimensions for such set of points
         // Next loop start from there and pick again n points
+        std::cout << "[GridFilePartitioning] Mapped columns to partition ids" << std::endl;
     }
 
     arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> GridFilePartitioning::partition(std::shared_ptr<arrow::Table> table){
+        std::cout << "[GridFilePartitioning] Applying partitioning technique" << std::endl;
         // Add a new custom Compute function to the registry
         const std::string computeFunctionName = "partition_grid_file";
         const arrow::compute::FunctionDoc computeFunctionDoc{

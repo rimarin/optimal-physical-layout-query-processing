@@ -24,10 +24,12 @@ namespace partitioning {
             auto grid_y = *y++ / *cellSize;
             out_values[i] = grid_y * *cellSize + grid_x;
         }
+        std::cout << "[FixedGridPartitioning] Mapped columns to partition ids" << std::endl;
         return arrow::Status::OK();
     }
 
     arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> FixedGridPartitioning::partition(std::shared_ptr<arrow::Table> table){
+        std::cout << "[FixedGridPartitioning] Applying partitioning technique" << std::endl;
         // One idea was adding a custom group_by aggregation function and extract the matching values for each group
         // using the method hash_list(). However, this is not a viable approach since "Grouped Aggregations are not
         // invocable via CallFunction." https://arrow.apache.org/docs/cpp/compute.html

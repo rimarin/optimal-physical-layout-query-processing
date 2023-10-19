@@ -1,10 +1,12 @@
 #ifndef PARTITIONING_PARTITIONING_H
 #define PARTITIONING_PARTITIONING_H
 
+#include <iostream>
+#include <set>
+
 #include <arrow/api.h>
 #include <arrow/dataset/api.h>
 #include <arrow/compute/api.h>
-#include <set>
 
 
 namespace partitioning {
@@ -64,6 +66,7 @@ namespace partitioning {
             std::shared_ptr<arrow::Table> partitionedTable = scanner.ValueOrDie()->ToTable().ValueOrDie();
             partitionedTables.push_back(partitionedTable);
         }
+        std::cout << "[Partitioning] Split table into " << partitionedTables.size() << " partitions" << std::endl;
         return partitionedTables;
     }
 }

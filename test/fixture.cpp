@@ -27,7 +27,6 @@ public:
         auto path =  std::filesystem::current_path() / folder;
         for (const auto & folderIter : std::filesystem::directory_iterator(path))
         {
-            std::cout << folderIter.path() << std::endl;
             if (folderIter.path().extension() == ".parquet")
             {
                 std::filesystem::remove(folderIter.path());

@@ -55,11 +55,12 @@ namespace partitioning {
         for (int i = 0; i < numRows; i++){
             out_values[i] = pointToPartitionId[points[i]];
         }
-
+        std::cout << "[QuadTreePartitioning] Mapped columns to partition ids" << std::endl;
         return arrow::Status::OK();
     }
 
     arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> QuadTreePartitioning::partition(std::shared_ptr<arrow::Table> table){
+        std::cout << "[QuadTreePartitioning] Applying partitioning technique" << std::endl;
         const std::string computeFunctionName = "partition_quadtree";
         const arrow::compute::FunctionDoc computeFunctionDoc{
                 "Given n columns, builds a QuadTree to partition the data and return the partition id",

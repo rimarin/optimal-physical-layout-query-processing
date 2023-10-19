@@ -1,7 +1,10 @@
-#include "../include/storage/DataReader.h"
+#include <iostream>
+#include <filesystem>
+
 #include <arrow/io/api.h>
 #include <parquet/arrow/reader.h>
-#include <filesystem>
+
+#include "../include/storage/DataReader.h"
 
 namespace storage {
 
@@ -16,6 +19,7 @@ namespace storage {
         std::shared_ptr<arrow::Table> table;
         arrow::Status result;
         result = arrow_reader->ReadTable(&table);
+        std::cout << "[DataReader] Read table from file " << inputFile.string() << std::endl;
         return table;
     }
 

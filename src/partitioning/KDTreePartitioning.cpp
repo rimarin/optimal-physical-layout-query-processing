@@ -55,11 +55,12 @@ namespace partitioning {
         for (int i = 0; i < numRows; i++){
             out_values[i] = pointToPartitionId[points[i]];
         }
-
+        std::cout << "[KDTreePartitioning] Mapped columns to partition ids" << std::endl;
         return arrow::Status::OK();
     }
 
     arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> KDTreePartitioning::partition(std::shared_ptr<arrow::Table> table){
+        std::cout << "[KDTreePartitioning] Applying partitioning technique" << std::endl;
         const std::string computeFunctionName = "partition_kdtree";
         const arrow::compute::FunctionDoc computeFunctionDoc{
                 "Given n columns, builds a kd-tree to partition the data and return the partition id",

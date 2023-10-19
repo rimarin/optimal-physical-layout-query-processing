@@ -1,9 +1,12 @@
-#include "../include/storage/DataWriter.h"
+#include <iostream>
+#include <filesystem>
+
 #include <arrow/api.h>
 #include <arrow/csv/api.h>
 #include <arrow/io/api.h>
 #include <parquet/arrow/writer.h>
-#include <filesystem>
+
+#include "../include/storage/DataWriter.h"
 
 namespace storage {
 
@@ -50,6 +53,7 @@ namespace storage {
 
         std::shared_ptr<arrow::Table> table;
         table = arrow::Table::Make(schema, columns);
+        std::cout << "[DataWriter] Generated ExampleWeatherTable" << std::endl;
         return table;
     }
 
@@ -77,6 +81,7 @@ namespace storage {
 
         std::shared_ptr<arrow::Table> table;
         table = arrow::Table::Make(schema, columns);
+        std::cout << "[DataWriter] Generated ExampleSchoolTable" << std::endl;
         return table;
     }
 
@@ -91,6 +96,7 @@ namespace storage {
             std::string outFilename = outPath + "/" + filename + std::to_string(i) + ".parquet";
             auto outfile = arrow::io::FileOutputStream::Open(outFilename);
             PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*partitions.at(i), arrow::default_memory_pool(), *outfile, table->num_rows()));
+            std::cout << "[DataWriter] Written table to " << outFilename << std::endl;
         }
         return arrow::Status::OK();
     }
