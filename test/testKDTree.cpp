@@ -13,16 +13,16 @@
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningKDTree) {
     cleanUpFolder(kdTreeFolder);
-    arrow::Result<std::shared_ptr<arrow::Table>> kdTreeExampleTable = storage::DataWriter::GenerateExampleSchoolTable().ValueOrDie();
+    arrow::Result<std::shared_ptr<arrow::Table>> table = storage::DataWriter::GenerateExampleSchoolTable().ValueOrDie();
     std::filesystem::path outputFolder = std::filesystem::current_path() / kdTreeFolder;
-    std::vector<std::string> KDTreePartitioningColumns = {"Age", "Student_id"};
+    std::vector<std::string> partitioningColumns = {"Age", "Student_id"};
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> kdTreePartitioning = std::make_shared<partitioning::KDTreePartitioning>(
-            KDTreePartitioningColumns);
-    arrow::Status statusKDTree = storage::DataWriter::WriteTable(*kdTreeExampleTable, example2TableName, outputFolder,
+            partitioningColumns);
+    arrow::Status statusKDTree = storage::DataWriter::WriteTable(*table, datasetSchoolName, outputFolder,
                                                                  kdTreePartitioning);
     int numPartitions = 4;
     for (int i = 0; i < numPartitions; ++i) {
-        auto expectedPath = std::filesystem::current_path() / kdTreeFolder / (example2TableName + std::to_string(i) + ".parquet");
+        auto expectedPath = std::filesystem::current_path() / kdTreeFolder / (datasetSchoolName + std::to_string(i) + ".parquet");
         ASSERT_EQ(std::filesystem::exists(expectedPath), true);
     }
 }
