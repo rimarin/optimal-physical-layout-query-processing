@@ -14,7 +14,13 @@ namespace partitioning {
         // Assign them to partition i
         // Keep track of maximum value of all dimensions for such set of points
         // Next loop start from there and pick again n points
+
+        auto* out_values = out->array_span_mutable()->GetValues<int64_t>(1);
+        for (int64_t i = 0; i < batch[0].array.length; ++i) {
+            out_values[i] = 0;
+        }
         std::cout << "[GridFilePartitioning] Mapped columns to partition ids" << std::endl;
+        return arrow::Status::OK();
     }
 
     arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> GridFilePartitioning::partition(std::shared_ptr<arrow::Table> table){

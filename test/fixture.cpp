@@ -1,4 +1,6 @@
 #include <filesystem>
+#include <arrow/table.h>
+#include <arrow/result.h>
 #include "gtest/gtest.h"
 
 
@@ -34,12 +36,19 @@ public:
         }
     }
 
-    // shared user data
-    std::string example1TableName = "weather";
-    std::string example2TableName = "school";
+    arrow::Result<std::shared_ptr<arrow::Table>> getDataset(std::string datasetName){
+        return arrow::Status::OK();
+    }
 
+    // Dataset names
+    std::string datasetWeatherName = "weather";
+    std::string datasetSchoolName = "school";
+
+    // Folder names
     std::string noPartitionFolder = "NoPartition";
     std::string fixedGridFolder = "FixedGrid";
+    std::string gridFileFolder = "GridFile";
     std::string kdTreeFolder = "KDTree";
+    std::string strTreeFolder = "STRTree";
     std::string quadTreeFolder = "QuadTree";
 };
