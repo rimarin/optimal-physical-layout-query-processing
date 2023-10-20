@@ -21,7 +21,8 @@ set(SOURCES
     src/partitioning/FixedGridPartitioning.cpp
     src/partitioning/GridFilePartitioning.cpp
     src/partitioning/KDTreePartitioning.cpp
-    src/partitioning/QuadTreePartitioning.cpp)
+    src/partitioning/QuadTreePartitioning.cpp
+    src/partitioning/STRTreePartitioning.cpp)
 add_executable(oplqp ${SOURCES})
 
 target_link_libraries(oplqp PRIVATE Arrow::arrow_shared parquet arrow_dataset)

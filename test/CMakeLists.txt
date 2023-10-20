@@ -14,9 +14,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(SOURCES
         fixture.cpp
         testFixedGrid.cpp
+        testGridFile.cpp
         testKDTree.cpp
         testQuadTree.cpp
         testReadWrite.cpp
+        testSTRTree.cpp
         ../src/common/DataLayoutConverter.cpp
         ../src/common/KDTree.cpp
         ../src/common/QuadTree.cpp
@@ -26,7 +28,8 @@ set(SOURCES
         ../src/partitioning/FixedGridPartitioning.cpp
         ../src/partitioning/GridFilePartitioning.cpp
         ../src/partitioning/KDTreePartitioning.cpp
-        ../src/partitioning/QuadTreePartitioning.cpp)
+        ../src/partitioning/QuadTreePartitioning.cpp
+        ../src/partitioning/STRTreePartitioning.cpp)
 add_executable(oplqp_test ${SOURCES})
 
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
