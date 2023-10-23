@@ -8,3 +8,13 @@
 /dataSources.local.xml
 cmake-build-debug
 .idea/
+/benchmark/datasets/osm
+/benchmark/datasets/taxi
+/benchmark/datasets/tpch
+/test/_lib
+/test/FixedGrid
+/test/GridFile
+/test/KDTree
+/test/NoPartition
+/test/QuadTree
+/test/STRTree
