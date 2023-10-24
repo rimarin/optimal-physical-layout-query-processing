@@ -8,6 +8,7 @@
 /dataSources.local.xml
 cmake-build-debug
 .idea/
+/benchmark/lib
 /benchmark/datasets/osm
 /benchmark/datasets/taxi
 /benchmark/datasets/tpch

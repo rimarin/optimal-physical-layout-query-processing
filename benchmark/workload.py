@@ -1,4 +1,5 @@
 import abc
+import duckdb
 import os
 
 from path import Path
@@ -10,7 +11,7 @@ class Workload(abc.ABC):
     QUERIES_FOLDER = Path('queries/')
 
     def __init__(self):
-        pass
+        self.total_rows = None
 
     @abc.abstractmethod
     def get_name(self):
@@ -19,6 +20,11 @@ class Workload(abc.ABC):
     @abc.abstractmethod
     def get_table_name(self):
         pass
+
+    def get_total_rows(self):
+        if not self.total_rows:
+            self.total_rows = len(duckdb.sql(f'SELECT * FROM read_parquet(\'{self.get_files_pattern()}\')'))
+        return self.total_rows
 
     def get_dataset_folder(self):
         return os.path.abspath(os.path.join(self.DATASETS_FOLDER, self.get_name()))
