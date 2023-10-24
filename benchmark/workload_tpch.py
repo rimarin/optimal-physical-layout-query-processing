@@ -75,7 +75,7 @@ class TPCHWorkload(Workload):
                 from_clause = f'FROM read_parquet(\'{self.get_files_pattern()}\')'
                 query = re.sub('from?(.*?)where', f'{from_clause} where', query, flags=re.DOTALL)
                 num_rows = len(duckdb.sql(f'{query}'))
-                selectivity = num_rows / self.total_rows
+                selectivity = (num_rows / self.get_total_rows()) * 100
                 with open(self.get_queries_folder() + f'{str(template)}_{str(selectivity)}.sql', 'a') as query_file:
                     query_file.write(query)
 
