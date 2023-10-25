@@ -70,7 +70,7 @@ class TaxiWorkload(Workload):
         templates = [_ for _ in range(1, 7+1)]
         for template in templates:
             selectivities = [0.001, 0.01, 0.1, 1, 10]
-            tolerance = 0.1  # 10 % tolerance
+            tolerance = 0.2  # 20 % tolerance
             with open(os.path.join(self.get_queries_folder(), f'{str(template)}.sql'), 'r') as template_file:
                 query_template = template_file.read()
             from_clause = f'FROM read_parquet(\'{self.get_dataset_folder()}/{self.get_table_name()}*.parquet\')'
@@ -87,6 +87,7 @@ class TaxiWorkload(Workload):
                 query_selectivity = num_tuples / self.get_total_rows()
                 for selectivity in selectivities:
                     if (selectivity - (selectivity * tolerance)) < query_selectivity < (selectivity + (selectivity * tolerance)):
+                        print(f"Found a valid query candidate! {final_query}")
                         with open(self.get_queries_folder() + f'{str(template)}_{str(query_selectivity)}.sql', 'w') as query_file:
                             query_file.write(final_query)
                         selectivities.remove(selectivity)
