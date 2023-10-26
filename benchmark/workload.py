@@ -35,6 +35,9 @@ class Workload(abc.ABC):
     def get_queries_folder(self):
         return os.path.abspath(os.path.join(self.QUERIES_FOLDER, self.get_name()))
 
+    def get_generated_queries_folder(self):
+        return os.path.abspath(os.path.join(self.get_queries_folder(), 'generated'))
+
     @abc.abstractmethod
     def generate_dataset(self, **params):
         pass
