@@ -88,8 +88,9 @@ namespace storage {
     arrow::Status DataWriter::WriteTable(const std::shared_ptr<arrow::Table>& table,
                                          std::string &filename,
                                          std::filesystem::path &outputFolder,
-                                         const std::shared_ptr<partitioning::MultiDimensionalPartitioning> &partitioningMethod) {
-        auto partitions = partitioningMethod->partition(table).ValueOrDie();
+                                         const std::shared_ptr<partitioning::MultiDimensionalPartitioning> &partitioningMethod,
+                                         int partitionSize) {
+        auto partitions = partitioningMethod->partition(table, partitionSize).ValueOrDie();
         auto debug = table->ToString();
         std::string outPath = outputFolder.string();
         for (int i = 0; i < partitions.size(); ++i) {

@@ -28,6 +28,8 @@ namespace common {
                       return a[dimension] < b[dimension];
                   });
         // Pick the median point for the split
+        // Data partitioning kd-tree: pick median
+        // Space partitioning kd-tree: (max-min) / 2
         int medianIdx = points.size() / 2;
         // Create a split node (no data is passed, only the split value)
         auto node = std::make_shared<KDNode>(points[medianIdx][dimension]);

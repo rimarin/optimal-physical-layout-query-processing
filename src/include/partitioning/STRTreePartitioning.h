@@ -24,7 +24,8 @@ namespace partitioning {
     public:
         STRTreePartitioning(std::vector<std::string> partitionColumns, int size);
         virtual ~STRTreePartitioning() = default;
-        arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> partition(std::shared_ptr<arrow::Table> table);
+        arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> partition(std::shared_ptr<arrow::Table> table,
+                                                                            int partitionSize);
     private:
         int partitionSize;
         std::vector<std::string> columns;

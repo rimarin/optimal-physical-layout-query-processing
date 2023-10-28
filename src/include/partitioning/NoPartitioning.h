@@ -9,7 +9,8 @@ namespace partitioning {
     public:
         NoPartitioning();
         ~NoPartitioning() override = default;
-        arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> partition(std::shared_ptr<arrow::Table> table) override;
+        arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> partition(std::shared_ptr<arrow::Table> table,
+                                                                            int partitionSize) override;
     };
 }
 

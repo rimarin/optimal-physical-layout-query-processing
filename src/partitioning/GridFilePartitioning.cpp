@@ -2,18 +2,15 @@
 
 namespace partitioning {
 
-    GridFilePartitioning::GridFilePartitioning(std::vector<std::string> partitionColumns, int size) {
+    GridFilePartitioning::GridFilePartitioning(std::vector<std::string> partitionColumns) {
         columns = std::move(partitionColumns);
-        partitionSize = size;
     }
 
     arrow::Status GridFilePartitioning::ColumnsToPartitionId(arrow::compute::KernelContext* ctx, const arrow::compute::ExecSpan& batch,
                                                               arrow::compute::ExecResult* out) {
-        // Extract each column and sort data
-        // Pick first n points, where n is the partition size
-        // Assign them to partition i
-        // Keep track of maximum value of all dimensions for such set of points
-        // Next loop start from there and pick again n points
+        // Implementation based on:
+        // "The Grid File: An Adaptable, Symmetric Multikey File Structure", https://doi.org/10.1145/348.318586
+        //
 
         auto* out_values = out->array_span_mutable()->GetValues<int64_t>(1);
         for (int64_t i = 0; i < batch[0].array.length; ++i) {
@@ -23,7 +20,8 @@ namespace partitioning {
         return arrow::Status::OK();
     }
 
-    arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> GridFilePartitioning::partition(std::shared_ptr<arrow::Table> table){
+    arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> GridFilePartitioning::partition(std::shared_ptr<arrow::Table> table,
+                                                                                              int partitionSize){
         std::cout << "[GridFilePartitioning] Applying partitioning technique" << std::endl;
         // Add a new custom Compute function to the registry
         const std::string computeFunctionName = "partition_grid_file";

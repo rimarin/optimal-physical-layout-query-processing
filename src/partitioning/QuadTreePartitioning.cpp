@@ -59,7 +59,8 @@ namespace partitioning {
         return arrow::Status::OK();
     }
 
-    arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> QuadTreePartitioning::partition(std::shared_ptr<arrow::Table> table){
+    arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> QuadTreePartitioning::partition(std::shared_ptr<arrow::Table> table,
+                                                                                              int partitionSize){
         std::cout << "[QuadTreePartitioning] Applying partitioning technique" << std::endl;
         const std::string computeFunctionName = "partition_quadtree";
         const arrow::compute::FunctionDoc computeFunctionDoc{

@@ -25,7 +25,8 @@ namespace partitioning {
     public:
         KDTreePartitioning(std::vector<std::string> partitionColumns);
         virtual ~KDTreePartitioning() = default;
-        arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> partition(std::shared_ptr<arrow::Table> table);
+        arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> partition(std::shared_ptr<arrow::Table> table,
+                                                                            int partitionSize);
     private:
         std::vector<std::string> columns;
         static arrow::Status ColumnsToPartitionId(arrow::compute::KernelContext* ctx, const arrow::compute::ExecSpan& batch,

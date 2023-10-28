@@ -2,13 +2,8 @@
 
 namespace partitioning {
 
-    FixedGridPartitioning::FixedGridPartitioning(std::vector<std::string> partitionColumns, int size) {
+    FixedGridPartitioning::FixedGridPartitioning(std::vector<std::string> partitionColumns) {
         columns = std::move(partitionColumns);
-        setCellSize(size);
-    }
-
-    void FixedGridPartitioning::setCellSize(int size){
-        partitionSize = size;
     }
 
     arrow::Status FixedGridPartitioning::ColumnsToPartitionId(arrow::compute::KernelContext* ctx, const arrow::compute::ExecSpan& batch,
@@ -28,7 +23,8 @@ namespace partitioning {
         return arrow::Status::OK();
     }
 
-    arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> FixedGridPartitioning::partition(std::shared_ptr<arrow::Table> table){
+    arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> FixedGridPartitioning::partition(std::shared_ptr<arrow::Table> table,
+                                                                                               int partitionSize){
         std::cout << "[FixedGridPartitioning] Applying partitioning technique" << std::endl;
         // One idea was adding a custom group_by aggregation function and extract the matching values for each group
         // using the method hash_list(). However, this is not a viable approach since "Grouped Aggregations are not

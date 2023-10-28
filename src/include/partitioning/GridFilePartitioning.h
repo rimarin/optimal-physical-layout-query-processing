@@ -22,11 +22,11 @@ namespace partitioning {
 
     class GridFilePartitioning : public MultiDimensionalPartitioning {
     public:
-        GridFilePartitioning(std::vector<std::string> partitionColumns, int size);
+        GridFilePartitioning(std::vector<std::string> partitionColumns);
         virtual ~GridFilePartitioning() = default;
-        arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> partition(std::shared_ptr<arrow::Table> table);
+        arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> partition(std::shared_ptr<arrow::Table> table,
+                                                                            int partitionSize);
     private:
-        int partitionSize;
         std::vector<std::string> columns;
         static arrow::Status ColumnsToPartitionId(arrow::compute::KernelContext* ctx, const arrow::compute::ExecSpan& batch,
                                                   arrow::compute::ExecResult* out);

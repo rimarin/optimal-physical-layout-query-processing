@@ -9,11 +9,10 @@ namespace partitioning {
 
     arrow::Status STRTreePartitioning::ColumnsToPartitionId(arrow::compute::KernelContext* ctx, const arrow::compute::ExecSpan& batch,
                                                               arrow::compute::ExecResult* out) {
-        // Extract each column and sort data
-        // Pick first n points, where n is the partition size
-        // Assign them to partition i
-        // Keep track of maximum value of all dimensions for such set of points
-        // Next loop start from there and pick again n points
+        // Preprocess the data file so that the T rectangles are
+        //ordered in [r/b] consecutive groups of b rectangles,
+        //where each group of b is intended to be placed in
+        //the same leaf level node
 
         auto* out_values = out->array_span_mutable()->GetValues<int64_t>(1);
         for (int64_t i = 0; i < batch[0].array.length; ++i) {
@@ -23,7 +22,8 @@ namespace partitioning {
         return arrow::Status::OK();
     }
 
-    arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> STRTreePartitioning::partition(std::shared_ptr<arrow::Table> table){
+    arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> STRTreePartitioning::partition(std::shared_ptr<arrow::Table> table,
+                                                                                             int partitionSize){
         std::cout << "[STRTreePartitioning] Applying partitioning technique" << std::endl;
         // Add a new custom Compute function to the registry
         const std::string computeFunctionName = "partition_strtree";
