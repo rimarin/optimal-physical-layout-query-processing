@@ -16,7 +16,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningQuadTree){
     std::filesystem::path outputFolder = std::filesystem::current_path() / quadTreeFolder;
     std::vector<std::string> partitioningColumns = {"Age", "Student_id"};
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> quadTreePartitioning = std::make_shared<partitioning::QuadTreePartitioning>(partitioningColumns);
-    arrow::Status statusQuadTree = storage::DataWriter::WriteTable(*table, datasetSchoolName, outputFolder, quadTreePartitioning);
+    arrow::Status statusQuadTree = storage::DataWriter::WriteTable(*table, datasetSchoolName, outputFolder, quadTreePartitioning, partitionSize);
     int numPartitions = 5;
     for (int i = 0; i < numPartitions; ++i) {
         auto expectedPath = std::filesystem::current_path() / quadTreeFolder / (datasetSchoolName + std::to_string(i) + ".parquet");

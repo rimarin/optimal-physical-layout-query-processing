@@ -51,4 +51,7 @@ public:
     std::string kdTreeFolder = "KDTree";
     std::string strTreeFolder = "STRTree";
     std::string quadTreeFolder = "QuadTree";
+
+    // Partitioning config
+    int partitionSize = 20;
 };

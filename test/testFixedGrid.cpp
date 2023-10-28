@@ -15,8 +15,8 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningFixedGrid){
     arrow::Result<std::shared_ptr<arrow::Table>> table = storage::DataWriter::GenerateExampleWeatherTable().ValueOrDie();
     std::filesystem::path outputFolder = std::filesystem::current_path() / fixedGridFolder;
     std::vector<std::string> partitioningColumns = {"Day", "Month"};
-    std::shared_ptr<partitioning::MultiDimensionalPartitioning> fixedGridPartitioning = std::make_shared<partitioning::FixedGridPartitioning>(partitioningColumns, 20);
-    arrow::Status statusFixedGrid = storage::DataWriter::WriteTable(*table, datasetWeatherName, outputFolder, fixedGridPartitioning);
+    std::shared_ptr<partitioning::MultiDimensionalPartitioning> fixedGridPartitioning = std::make_shared<partitioning::FixedGridPartitioning>(partitioningColumns);
+    arrow::Status statusFixedGrid = storage::DataWriter::WriteTable(*table, datasetWeatherName, outputFolder, fixedGridPartitioning, partitionSize);
     auto expectedPath = std::filesystem::current_path() / fixedGridFolder / (datasetWeatherName + "0.parquet");
     ASSERT_EQ(std::filesystem::exists(expectedPath), true);
     std::shared_ptr<arrow::Table> partition0 = storage::DataReader::ReadTable(expectedPath).ValueOrDie();

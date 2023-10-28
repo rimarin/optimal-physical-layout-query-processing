@@ -19,7 +19,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningKDTree) {
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> kdTreePartitioning = std::make_shared<partitioning::KDTreePartitioning>(
             partitioningColumns);
     arrow::Status statusKDTree = storage::DataWriter::WriteTable(*table, datasetSchoolName, outputFolder,
-                                                                 kdTreePartitioning);
+                                                                 kdTreePartitioning, partitionSize);
     int numPartitions = 4;
     for (int i = 0; i < numPartitions; ++i) {
         auto expectedPath = std::filesystem::current_path() / kdTreeFolder / (datasetSchoolName + std::to_string(i) + ".parquet");
