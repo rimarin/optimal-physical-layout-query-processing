@@ -9,10 +9,12 @@ namespace partitioning {
 
     arrow::Status STRTreePartitioning::ColumnsToPartitionId(arrow::compute::KernelContext* ctx, const arrow::compute::ExecSpan& batch,
                                                               arrow::compute::ExecResult* out) {
+        // Implementation based on:
+        // STR: A Simple and Efficient Algorithm for R-Tree Packing, https://dl.acm.org/doi/10.5555/870314
         // Preprocess the data file so that the T rectangles are
-        //ordered in [r/b] consecutive groups of b rectangles,
-        //where each group of b is intended to be placed in
-        //the same leaf level node
+        // ordered in [r/b] consecutive groups of b rectangles,
+        // where each group of b is intended to be placed in
+        // the same leaf level node
 
         auto* out_values = out->array_span_mutable()->GetValues<int64_t>(1);
         for (int64_t i = 0; i < batch[0].array.length; ++i) {

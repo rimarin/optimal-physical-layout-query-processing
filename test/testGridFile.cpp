@@ -13,10 +13,9 @@
 TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFile){
     cleanUpFolder(gridFileFolder);
     arrow::Result<std::shared_ptr<arrow::Table>> table = storage::DataWriter::GenerateExampleSchoolTable().ValueOrDie();
-    std::filesystem::path outputFolder = std::filesystem::current_path() / gridFileFolder;
     std::vector<std::string> partitioningColumns = {"Age", "Student_id"};
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> gridFilePartitioning = std::make_shared<partitioning::GridFilePartitioning>(partitioningColumns);
-    arrow::Status statusGridFile = storage::DataWriter::WriteTable(*table, datasetSchoolName, outputFolder, gridFilePartitioning, partitionSize);
+    arrow::Status statusGridFile = storage::DataWriter::WriteTable(*table, datasetSchoolName, gridFileFolder, gridFilePartitioning, partitionSize);
     /*
     int numPartitions = 5;
     for (int i = 0; i < numPartitions; ++i) {
