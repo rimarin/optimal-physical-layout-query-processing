@@ -74,7 +74,7 @@ class TaxiWorkload(Workload):
             '13': 'trip_distance',
             '14': 'trip_distance'
         }
-        templates = [_ for _ in range(4, 7 + 1)]
+        templates = [_ for _ in range(1, 7 + 1)]
         num_queries_per_template = 500
         for template in templates:
             with open(os.path.join(self.get_queries_folder(), f'{str(template)}.sql'), 'r') as template_file:
@@ -83,7 +83,7 @@ class TaxiWorkload(Workload):
             query = re.sub('FROM?(.*?)WHERE', f'{from_clause} where', query_template, flags=re.DOTALL)
             used_placeholders = re.findall('\':(\d+)\'', query)
             for i in range(num_queries_per_template):
-                values_to_use = []
+                final_query = query[:]
                 for used_placeholder in used_placeholders:
                     value_range = value_ranges[placeholders[used_placeholder]]
                     range_start, range_end = value_range[0], value_range[1]
@@ -92,23 +92,34 @@ class TaxiWorkload(Workload):
                                         .strftime("%Y%m%d%H:%M:%S") + "'")
                     else:
                         random_value = random.uniform(range_start, range_end)
-                    values_to_use.append(random_value)
-                final_query = query[:]
-                for i in range(1, len(values_to_use) + 1):
-                    final_query = re.sub(f'\':{i}\'', f'{values_to_use[i - 1]}', final_query, flags=re.DOTALL)
+                    final_query = re.sub(f'\':{used_placeholder}\'', f'{random_value}', final_query, flags=re.DOTALL)
                 print(f'Executing query: {final_query}')
                 try:
                     num_tuples = len(duckdb.sql(final_query))
                 except Exception as e:
                     print(f"Error {str(e)} while executing query: {final_query}")
                     continue
-                query_selectivity = (num_tuples / self.get_total_rows()) * 100
-                if query_selectivity != 0 and 0.001 < query_selectivity < 10:
+                rounding_digits = 4
+                query_selectivity = round((num_tuples / self.get_total_rows()) * 100, rounding_digits)
+                min_selectivity, max_selectivity = 0.001, 10
+                if query_selectivity != 0 and min_selectivity < query_selectivity < max_selectivity:
                     with open(os.path.join(self.get_generated_queries_folder(), f'{str(template)}_{str(query_selectivity)}.sql'),
                               'w') as query_file:
                         query_file.write(final_query)
+
+    def rename_files_to_rounded(self):
+        digits = 4
+        for f in os.listdir(self.get_generated_queries_folder()):
+            if not f.startswith('.'):
+                num = float(f.split('_')[1].split('.sql')[0])
+                os.rename(os.path.join(self.get_generated_queries_folder(), f),
+                          os.path.join(self.get_generated_queries_folder(), f.replace(str(num),
+                                                                                      str(round(num, digits)))))
 
     def is_dataset_generated(self) -> bool:
         first_file = os.path.join(self.get_dataset_folder(), self.get_table_name() + f'_{self.start_year}-01.parquet')
         last_file = os.path.join(self.get_dataset_folder(), self.get_table_name() + f'_{self.end_year}-12.parquet')
         return os.path.exists(first_file) and os.path.exists(last_file)
+
+    def is_query_workload_generated(self) -> bool:
+        return True
