@@ -21,17 +21,20 @@ def run_benchmarks():
     taxi = TaxiWorkload()
     if not taxi.is_dataset_generated():
         taxi.generate_dataset()
-    taxi.generate_queries()
+    if not taxi.is_query_workload_generated():
+        taxi.generate_queries()
 
-    # tpch = TPCHWorkload()
-    # if not tpch.is_dataset_generated():
-    #    tpch.generate_dataset()
-    # queries = tpch.generate_queries()
+    tpch = TPCHWorkload()
+    if not tpch.is_dataset_generated():
+        tpch.generate_dataset()
+    if not tpch.is_query_workload_generated():
+        tpch.generate_queries()
 
-    # osm = OSMWorkload()
-    # if not osm.is_dataset_generated():
-    #    osm.generate_dataset()
-    # queries = osm.generate_queries()
+    osm = OSMWorkload()
+    if not osm.is_dataset_generated():
+        osm.generate_dataset()
+    if not osm.is_query_workload_generated():
+        osm.generate_queries()
 
 
 if __name__ == "__main__":
