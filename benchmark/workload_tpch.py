@@ -68,16 +68,28 @@ class TPCHWorkload(Workload):
         templates_folder = os.path.join(self.get_queries_folder())
         os.system(f'cd {templates_folder}; export DSS_QUERY={templates_folder}')
 
-        for _ in range(num_queries_per_template*len(templates)):
-            for template in templates:
+        for template in templates:
+            for i in range(num_queries_per_template):
                 query = subprocess.check_output(f'cd {self.get_queries_folder()};'
                                                 f'./qgen {template}', shell=True).decode('utf-8')
                 from_clause = f'FROM read_parquet(\'{self.get_files_pattern()}\')'
                 query = re.sub('from?(.*?)where', f'{from_clause} where', query, flags=re.DOTALL)
-                num_rows = len(duckdb.sql(f'{query}'))
-                selectivity = (num_rows / self.get_total_rows()) * 100
-                with open(self.get_queries_folder() + f'{str(template)}_{str(selectivity)}.sql', 'a') as query_file:
-                    query_file.write(query)
+                print(f'Executing query: {query}')
+                try:
+                    num_tuples = len(duckdb.sql(query))
+                except Exception as e:
+                    print(f"Error {str(e)} while executing query: {query}")
+                    continue
+                rounding_digits = 4
+                query_selectivity = round((num_tuples / self.get_total_rows()) * 100, rounding_digits)
+                min_selectivity, max_selectivity = 0, 50
+                if query_selectivity != 0 and min_selectivity < query_selectivity < max_selectivity:
+                    with open(os.path.join(self.get_generated_queries_folder(), f'{str(template)}_{str(query_selectivity)}.sql'),
+                              'w') as query_file:
+                        query_file.write(query)
 
     def is_dataset_generated(self) -> bool:
         return os.path.exists(os.path.join(self.get_dataset_folder(), self.get_table_name() + '.parquet'))
+
+    def is_query_workload_generated(self) -> bool:
+        return True
