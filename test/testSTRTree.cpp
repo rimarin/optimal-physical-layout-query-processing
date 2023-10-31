@@ -16,7 +16,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningSTRTree){
     std::filesystem::path outputFolder = std::filesystem::current_path() / strTreeFolder;
     std::vector<std::string> partitioningColumns = {"Age", "Student_id"};
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> strTreePartitioning = std::make_shared<partitioning::STRTreePartitioning>(partitioningColumns, 5);
-    arrow::Status statusGridFile = storage::DataWriter::WriteTable(*table, datasetSchoolName, outputFolder, strTreePartitioning, partitionSize);
+    arrow::Status statusGridFile = storage::DataWriter::WriteTable(*table, datasetSchoolName, outputFolder, strTreePartitioning, partitionSizeTest);
     /*
     int numPartitions = 5;
     for (int i = 0; i < numPartitions; ++i) {

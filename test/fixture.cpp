@@ -40,7 +40,8 @@ public:
     std::filesystem::path datasetsFolder = benchmarkFolder / "datasets";
 
     // Partitioning config
-    int partitionSize = 20000;
+    int partitionSizeTest = 20;
+    int partitionSizeReal = 20000;
     std::string parquetFileExtension = ".parquet";
     std::string fileExtension = parquetFileExtension;
 

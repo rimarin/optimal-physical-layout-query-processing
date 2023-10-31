@@ -15,8 +15,8 @@ TEST_F(TestOptimalLayoutFixture, TestGenerateParquetExamples){
     arrow::Result<std::shared_ptr<arrow::Table>> weatherTable = storage::DataWriter::GenerateExampleWeatherTable().ValueOrDie();
     arrow::Result<std::shared_ptr<arrow::Table>> schoolTable = storage::DataWriter::GenerateExampleSchoolTable().ValueOrDie();
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> noPartitioning = std::make_shared<partitioning::NoPartitioning>();
-    arrow::Status statusNoPartitionWeather = storage::DataWriter::WriteTable(*weatherTable, datasetWeatherName, noPartitionFolder, noPartitioning, partitionSize);
-    arrow::Status statusNoPartitionSchool = storage::DataWriter::WriteTable(*schoolTable, datasetSchoolName, noPartitionFolder, noPartitioning, partitionSize);
+    arrow::Status statusNoPartitionWeather = storage::DataWriter::WriteTable(*weatherTable, datasetWeatherName, noPartitionFolder, noPartitioning, partitionSizeTest);
+    arrow::Status statusNoPartitionSchool = storage::DataWriter::WriteTable(*schoolTable, datasetSchoolName, noPartitionFolder, noPartitioning, partitionSizeTest);
     std::filesystem::path expectedPath = noPartitionFolder / (datasetWeatherName + "0.parquet");
     ASSERT_EQ(std::filesystem::exists( noPartitionFolder / (datasetWeatherName + "0.parquet")), true);
     ASSERT_EQ(std::filesystem::exists( noPartitionFolder / (datasetSchoolName + "0.parquet")), true);
