@@ -16,6 +16,7 @@ set(SOURCES
         testFixedGrid.cpp
         testGridFile.cpp
         testKDTree.cpp
+        testPartitionTPCH.cpp
         testQuadTree.cpp
         testReadWrite.cpp
         testSTRTree.cpp
