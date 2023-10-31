@@ -1,7 +1,6 @@
 #include <arrow/table.h>
 #include <arrow/result.h>
 #include <filesystem>
-#include <iostream>
 #include <set>
 #include <string>
 
@@ -41,7 +40,7 @@ public:
     std::filesystem::path datasetsFolder = benchmarkFolder / "datasets";
 
     // Partitioning config
-    int partitionSize = 20;
+    int partitionSize = 20000;
     std::string parquetFileExtension = ".parquet";
     std::string fileExtension = parquetFileExtension;
 

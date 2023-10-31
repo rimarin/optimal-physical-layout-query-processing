@@ -30,6 +30,7 @@ namespace partitioning {
 
         // Extract the partition ids
         // Create a new table with the current schema + a new column with the partition ids
+        std::string strTable = table->ToString();
         std::shared_ptr<arrow::Table> combined = table->CombineChunks().ValueOrDie();
         std::vector<std::shared_ptr<arrow::Array>> columnArrays;
         std::vector<std::shared_ptr<arrow::Field>> columnFields;
@@ -49,6 +50,9 @@ namespace partitioning {
         {
             uniquePartitionIds.insert(arrow_array->Value(i));
         }
+        auto numPartitions = uniquePartitionIds.size();
+        std::cout << "[Partitioning] Computed " << numPartitions << " unique partition ids" << std::endl;
+        assert(("Number of partitions is too high, component might freeze or crash", numPartitions < 20000));
 
         // For each distinct partition_id we filter the table by that partition_id (the newly created column)
         std::vector<std::shared_ptr<arrow::Table>> partitionedTables = {};

@@ -1,19 +1,27 @@
+
 #include "../include/partitioning/FixedGridPartitioning.h"
+
 
 namespace partitioning {
 
     FixedGridPartitioning::FixedGridPartitioning(std::vector<std::string> partitionColumns) {
         columns = std::move(partitionColumns);
+        std::cout << "[FixedGridPartitioning] Initializing partitioning technique" << std::endl;
+        std::string displayColumns;
+        for (const auto &column : columns) displayColumns + " " += column;
+        std::cout << "[FixedGridPartitioning] Partition has to be done on columns: " << displayColumns << std::endl;
     }
 
     arrow::Status FixedGridPartitioning::ColumnsToPartitionId(arrow::compute::KernelContext* ctx, const arrow::compute::ExecSpan& batch,
                                                               arrow::compute::ExecResult* out) {
         auto* x = batch[0].array.GetValues<int32_t>(1);
         auto* y = batch[1].array.GetValues<int32_t>(1);
+        std::cout << "[FixedGridPartitioning] First value x is: " << *x << std::endl;
+        std::cout << "[FixedGridPartitioning] First value y is: " << *y << std::endl;
         const auto* cellSize = batch[2].array.GetValues<int64_t>(1);
         auto* out_values = out->array_span_mutable()->GetValues<int64_t>(1);
 
-        // Calculate the cell index
+        std::cout << "[FixedGridPartitioning] Computing cell index" << std::endl;
         for (int64_t i = 0; i < batch[0].array.length; ++i) {
             auto grid_x = *x++ / *cellSize;
             auto grid_y = *y++ / *cellSize;
@@ -52,9 +60,19 @@ namespace partitioning {
         std::vector<arrow::Datum> columnData;
         for (const auto &column: columns){
             // Infer the data types of the columns
-            inputTypes.emplace_back(table->schema()->GetFieldByName(column)->type());
+            auto columnType = table->schema()->GetFieldByName(column)->type();
+            assert(("FixedGrid supports only int32 column type at the moment", columnType == arrow::int32()));
+            std::cout << "[FixedGridPartitioning] Reading column <" << column << "> of type " << columnType->ToString() << std::endl;
+            inputTypes.emplace_back(columnType);
             // Extract column data by getting the chunks and casting them to an arrow array
             std::shared_ptr<arrow::ChunkedArray> chunkedColumn = table->GetColumnByName(column);
+            auto chunk = chunkedColumn->chunk(0);
+            auto arrow_array = std::static_pointer_cast<arrow::Int32Array>(chunk);
+            std::vector<int32_t> int_vector;
+            for (int64_t i = 0; i < chunk->length(); ++i)
+            {
+                int_vector.push_back(arrow_array->Value(i));
+            }
             columnData.emplace_back(chunkedColumn->chunk(0));
         }
         inputTypes.emplace_back(arrow::int64());
