@@ -17,13 +17,15 @@ namespace partitioning {
         virtual ~MultiDimensionalPartitioning() = default;
         virtual arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> partition(std::shared_ptr<arrow::Table> table,
                                                                                     int partitionSize) = 0;
-        inline static std::vector<std::shared_ptr<arrow::Table>> splitPartitions(std::shared_ptr<arrow::Table> &table,
-                                                                                  std::shared_ptr<arrow::Array> &partitionIds);
+        virtual arrow::Result<arrow::Datum> columnsToPartitionId(std::shared_ptr<arrow::Table> table,
+                                                                                    int partitionSize) = 0;
+        inline static std::vector<std::shared_ptr<arrow::Table>> splitTableIntoPartitions(std::shared_ptr<arrow::Table> &table,
+                                                                                          std::shared_ptr<arrow::Array> &partitionIds);
     };
 
     std::vector<std::shared_ptr<arrow::Table>>
-    MultiDimensionalPartitioning::splitPartitions(std::shared_ptr<arrow::Table> &table,
-                                                  std::shared_ptr<arrow::Array> &partitionIds) {
+    MultiDimensionalPartitioning::splitTableIntoPartitions(std::shared_ptr<arrow::Table> &table,
+                                                           std::shared_ptr<arrow::Array> &partitionIds) {
         // Extract the distinct values of partitions ids.
         // Split the table into a set of different tables, one for each partition:
         // For each distinct partition_id we filter the table by that partition_id (the newly created column)

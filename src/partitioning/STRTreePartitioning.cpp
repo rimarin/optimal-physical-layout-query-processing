@@ -70,7 +70,7 @@ namespace partitioning {
         std::shared_ptr<arrow::Array> partitionIds = std::move(fixedGridCellIds)->make_array();
         auto partitionIdsString = partitionIds->ToString();
         // Call the splitting method to divide the tables into sub-tables according to the partition ids
-        return partitioning::MultiDimensionalPartitioning::splitPartitions(table, partitionIds);
+        return partitioning::MultiDimensionalPartitioning::splitTableIntoPartitions(table, partitionIds);
     }
 
 }

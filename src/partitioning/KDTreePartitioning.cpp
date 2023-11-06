@@ -76,9 +76,9 @@ namespace partitioning {
         std::vector<arrow::Datum> columnData;
         for (const auto &column: columns){
             // Infer the data types of the columns
-            inputTypes.emplace_back(table->schema()->GetFieldByName(column)->type());
-            auto debug = table->schema()->GetFieldByName(column)->type();
-            auto debug2 = table->ToString();
+            auto columnType = table->schema()->GetFieldByName(column)->type();
+            std::cout << "[KDTreePartitioning] Reading column <" << column << "> of type " << columnType->ToString() << std::endl;
+            inputTypes.emplace_back(columnType);
             // Extract column data by getting the chunks and casting them to an arrow array
             std::shared_ptr<arrow::ChunkedArray> chunkedColumn = table->GetColumnByName(column);
             columnData.emplace_back(chunkedColumn->chunk(0));
@@ -96,7 +96,7 @@ namespace partitioning {
         auto hallo = KDTreePartitionIds->ToString();
         std::shared_ptr<arrow::Array> partitionIds = std::move(KDTreePartitionIds)->make_array();
         auto test = partitionIds->ToString();
-        return partitioning::MultiDimensionalPartitioning::splitPartitions(table, partitionIds);
+        return partitioning::MultiDimensionalPartitioning::splitTableIntoPartitions(table, partitionIds);
     }
 
 }

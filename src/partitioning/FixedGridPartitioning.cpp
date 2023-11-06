@@ -14,6 +14,10 @@ namespace partitioning {
 
     arrow::Status FixedGridPartitioning::ColumnsToPartitionId(arrow::compute::KernelContext* ctx, const arrow::compute::ExecSpan& batch,
                                                               arrow::compute::ExecResult* out) {
+        // Batch input data format:
+        // [0] Array of x column values
+        // [1] Array of y column values
+        // [2] Cell size for the grid
         auto* x = batch[0].array.GetValues<int32_t>(1);
         auto* y = batch[1].array.GetValues<int32_t>(1);
         std::cout << "[FixedGridPartitioning] First value x is: " << *x << std::endl;
@@ -99,7 +103,7 @@ namespace partitioning {
         std::shared_ptr<arrow::Array> partitionIds = std::move(fixedGridCellIds)->make_array();
         auto partitionIdsString = partitionIds->ToString();
         // Call the splitting method to divide the tables into sub-tables according to the partition ids
-        return partitioning::MultiDimensionalPartitioning::splitPartitions(table, partitionIds);
+        return partitioning::MultiDimensionalPartitioning::splitTableIntoPartitions(table, partitionIds);
     }
 
 }

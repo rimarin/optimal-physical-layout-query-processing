@@ -96,7 +96,7 @@ namespace partitioning {
         auto hallo = QuadTreePartitionIds->ToString();
         std::shared_ptr<arrow::Array> partitionIds = std::move(QuadTreePartitionIds)->make_array();
         auto test = partitionIds->ToString();
-        return partitioning::MultiDimensionalPartitioning::splitPartitions(table, partitionIds);
+        return partitioning::MultiDimensionalPartitioning::splitTableIntoPartitions(table, partitionIds);
     }
 
 }

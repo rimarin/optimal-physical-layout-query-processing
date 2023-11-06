@@ -17,11 +17,9 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningKDTree) {
     std::vector<std::string> partitioningColumns = {"Age", "Student_id"};
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> kdTreePartitioning = std::make_shared<partitioning::KDTreePartitioning>(
             partitioningColumns);
-    arrow::Status statusKDTree = storage::DataWriter::WriteTable(*table, datasetSchoolName, kdTreeFolder,
-                                                                 kdTreePartitioning, partitionSizeTest);
-    int numPartitions = 4;
-    for (int i = 0; i < numPartitions; ++i) {
-        auto expectedPath = kdTreeFolder / (datasetSchoolName + std::to_string(i) + ".parquet");
-        ASSERT_EQ(std::filesystem::exists(expectedPath), true);
-    }
+    arrow::Status statusKDTree = storage::DataWriter::WriteTable(*table, datasetSchoolName, kdTreeFolder,kdTreePartitioning, partitionSizeTest);
+    auto pathPartition0 = kdTreeFolder / (datasetSchoolName + "0.parquet");
+    ASSERT_EQ(readColumn<int32_t>(pathPartition0, "Student_id"), std::vector<int32_t>({45, 21}));
+    ASSERT_EQ(readColumn<int32_t>(pathPartition0, "Age"), std::vector<int32_t>({21, 18}));
+    ASSERT_EQ(readColumn<int32_t>(pathPartition0, "partition_id"), std::vector<int32_t>({0, 0}));
 }

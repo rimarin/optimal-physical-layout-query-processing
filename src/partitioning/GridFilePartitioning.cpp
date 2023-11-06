@@ -10,7 +10,7 @@ namespace partitioning {
                                                               arrow::compute::ExecResult* out) {
         // Implementation based on:
         // "The Grid File: An Adaptable, Symmetric Multikey File Structure", https://doi.org/10.1145/348.318586
-        //
+        // Sort one dimension, divide in half.
 
         auto* out_values = out->array_span_mutable()->GetValues<int64_t>(1);
         for (int64_t i = 0; i < batch[0].array.length; ++i) {
@@ -66,7 +66,7 @@ namespace partitioning {
         std::shared_ptr<arrow::Array> partitionIds = std::move(fixedGridCellIds)->make_array();
         auto partitionIdsString = partitionIds->ToString();
         // Call the splitting method to divide the tables into sub-tables according to the partition ids
-        return partitioning::MultiDimensionalPartitioning::splitPartitions(table, partitionIds);
+        return partitioning::MultiDimensionalPartitioning::splitTableIntoPartitions(table, partitionIds);
     }
 
 }

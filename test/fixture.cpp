@@ -85,4 +85,18 @@ public:
             return arrow::Status::IOError("Dataset not found");
         }
     }
+
+    template<class T>
+    arrow::Result<std::vector<T>> readColumn(std::filesystem::path &filename, std::string columnName){
+        std::shared_ptr<arrow::Table> partition0 = storage::DataReader::ReadTable(filename).ValueOrDie();
+        std::vector<arrow::Datum> columnData;
+        auto columnChunk = std::static_pointer_cast<arrow::Int32Array>(
+                partition0->GetColumnByName(columnName)->chunk(0));
+        std::vector<T> columnVector;
+        for (int64_t i = 0; i < columnChunk->length(); ++i)
+        {
+            columnVector.push_back(columnChunk->Value(i));
+        }
+        return columnVector;
+    }
 };
