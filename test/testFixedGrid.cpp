@@ -16,29 +16,12 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningFixedGrid){
     std::vector<std::string> partitioningColumns = {"Day", "Month"};
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> fixedGridPartitioning = std::make_shared<partitioning::FixedGridPartitioning>(partitioningColumns);
     arrow::Status statusFixedGrid = storage::DataWriter::WriteTable(*table, datasetWeatherName, fixedGridFolder, fixedGridPartitioning, partitionSizeTest);
-    auto expectedPath = fixedGridFolder / (datasetWeatherName + "0.parquet");
-    ASSERT_EQ(std::filesystem::exists(expectedPath), true);
-    std::shared_ptr<arrow::Table> partition0 = storage::DataReader::ReadTable(expectedPath).ValueOrDie();
-    std::vector<arrow::Datum> columnData;
-    auto day = std::static_pointer_cast<arrow::Int32Array>(partition0->GetColumnByName("Day")->chunk(0));
-    std::vector<int32_t> day_vector;
-    for (int64_t i = 0; i < day->length(); ++i)
-    {
-        day_vector.push_back(day->Value(i));
-    }
-    ASSERT_EQ(day_vector, std::vector<int32_t>({1, 12, 17}));
-    auto month = std::static_pointer_cast<arrow::Int32Array>(partition0->GetColumnByName("Month")->chunk(0));
-    std::vector<int32_t> month_vector;
-    for (int64_t i = 0; i < month->length(); ++i)
-    {
-        month_vector.push_back(month->Value(i));
-    }
-    ASSERT_EQ(month_vector, std::vector<int32_t>({1, 3, 5}));
-    auto partitionId = std::static_pointer_cast<arrow::Int64Array>(partition0->GetColumnByName("partition_id")->chunk(0));
-    std::vector<int32_t> partition_id_vector;
-    for (int64_t i = 0; i < partitionId->length(); ++i)
-    {
-        partition_id_vector.push_back(partitionId->Value(i));
-    }
-    ASSERT_EQ(partition_id_vector, std::vector<int32_t>({0, 0, 0}));
+    auto pathPartition0 = fixedGridFolder / (datasetWeatherName + "0.parquet");
+    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition0, "Day"), std::vector<int32_t>({1, 12, 17}));
+    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition0, "Month"), std::vector<int32_t>({1, 3, 5}));
+    ASSERT_EQ(readColumn<arrow::Int64Array>(pathPartition0, "partition_id"), std::vector<int64_t>({0, 0, 0}));
+    auto pathPartition1 = fixedGridFolder / (datasetWeatherName + "1.parquet");
+    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition1, "Day"), std::vector<int32_t>({23, 28}));
+    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition1, "Month"), std::vector<int32_t>({7, 1}));
+    ASSERT_EQ(readColumn<arrow::Int64Array>(pathPartition1, "partition_id"), std::vector<int64_t>({1, 1}));
 }
