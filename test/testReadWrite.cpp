@@ -24,7 +24,7 @@ TEST_F(TestOptimalLayoutFixture, TestGenerateParquetExamples){
 
 TEST_F(TestOptimalLayoutFixture, TestReadParquet){
     std::filesystem::path inputFile = noPartitionFolder / (datasetWeatherName + "0.parquet");
-    arrow::Result<std::shared_ptr<arrow::Table>> tableFromDisk = storage::DataReader::ReadTable(inputFile);
+    arrow::Result<std::shared_ptr<arrow::Table>> tableFromDisk = storage::DataReader::readTable(inputFile);
     ASSERT_EQ(tableFromDisk.status(), arrow::Status::OK());
     arrow::Result<std::shared_ptr<arrow::Table>> testDatasetSchool = getDataset(datasetSchoolName);
     ASSERT_EQ(testDatasetSchool.status(), arrow::Status::OK());

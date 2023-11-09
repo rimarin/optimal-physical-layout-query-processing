@@ -60,7 +60,7 @@ namespace partitioning {
     }
 
     arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> KDTreePartitioning::partition(std::shared_ptr<arrow::Table> table,
-                                                                                            int partitionSize){
+                                                                                            int32_t partitionSize){
         std::cout << "[KDTreePartitioning] Applying partitioning technique" << std::endl;
         const std::string computeFunctionName = "partition_kdtree";
         const arrow::compute::FunctionDoc computeFunctionDoc{

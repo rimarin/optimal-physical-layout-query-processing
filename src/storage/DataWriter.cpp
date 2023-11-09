@@ -89,7 +89,7 @@ namespace storage {
                                          std::string &filename,
                                          std::filesystem::path &outputFolder,
                                          const std::shared_ptr<partitioning::MultiDimensionalPartitioning> &partitioningMethod,
-                                         int partitionSize) {
+                                         int32_t partitionSize) {
         auto partitions = partitioningMethod->partition(table, partitionSize).ValueOrDie();
         auto debug = table->ToString();
         std::string outPath = outputFolder.string();

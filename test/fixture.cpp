@@ -40,8 +40,8 @@ public:
     std::filesystem::path datasetsFolder = benchmarkFolder / "datasets";
 
     // Partitioning config
-    int partitionSizeTest = 20;
-    int partitionSizeReal = 20000;
+    int32_t partitionSizeTest = 20;
+    int32_t partitionSizeReal = 20000;
     std::string parquetFileExtension = ".parquet";
     std::string fileExtension = parquetFileExtension;
 
@@ -77,10 +77,10 @@ public:
     arrow::Result<std::shared_ptr<arrow::Table>> getDataset(std::string datasetName){
         if (testDatasets.count(datasetName)){
             std::filesystem::path datasetFile = noPartitionFolder / (datasetName + "0" + fileExtension);
-            return storage::DataReader::ReadTable(datasetFile);
+            return storage::DataReader::readTable(datasetFile);
         } else if(realDatasets.count(datasetName)){
             std::filesystem::path datasetFile = datasetsFolder / datasetName / (datasetToFileName[datasetName] + fileExtension);
-            return storage::DataReader::ReadTable(datasetFile);
+            return storage::DataReader::readTable(datasetFile);
         } else {
             return arrow::Status::IOError("Dataset not found");
         }
@@ -88,7 +88,7 @@ public:
 
     template <typename ArrayType, typename T = typename ArrayType::TypeClass>
     arrow::Result<std::vector<typename T::c_type>> readColumn(std::filesystem::path &filename, std::string columnName){
-        std::shared_ptr<arrow::Table> partition = storage::DataReader::ReadTable(filename).ValueOrDie();
+        std::shared_ptr<arrow::Table> partition = storage::DataReader::readTable(filename).ValueOrDie();
         std::vector<arrow::Datum> columnData;
         auto columnChunk = std::static_pointer_cast<arrow::NumericArray<T>>(
                 partition->GetColumnByName(columnName)->chunk(0));

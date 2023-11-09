@@ -25,7 +25,7 @@ namespace partitioning {
     }
 
     arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> STRTreePartitioning::partition(std::shared_ptr<arrow::Table> table,
-                                                                                             int partitionSize){
+                                                                                             int32_t partitionSize){
         std::cout << "[STRTreePartitioning] Applying partitioning technique" << std::endl;
         // Add a new custom Compute function to the registry
         const std::string computeFunctionName = "partition_strtree";
