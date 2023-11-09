@@ -16,7 +16,9 @@ class DataReader {
     public:
         DataReader() = default;
         virtual ~DataReader() = default;
-        static arrow::Result<std::shared_ptr<arrow::Table>> ReadTable(std::filesystem::path &inputFile);
+        static arrow::Result<std::shared_ptr<arrow::Table>> readTable(std::filesystem::path &inputFile);
+        static arrow::Result<std::vector<std::shared_ptr<arrow::Array>>> getColumns(std::shared_ptr<arrow::Table> &table,
+                                                                                    std::vector<std::string> &columns);
 };
 } // storage
 
