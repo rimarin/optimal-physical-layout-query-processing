@@ -2,20 +2,22 @@
 
 namespace common {
 
-    KDTree::KDTree(std::vector<Point> &points) {
+    KDTree::KDTree(std::vector<Point> &points, int32_t partitionSize) {
         // Construct the tree from the given points and store the root
+        leafSize = partitionSize;
+        std::cout << "[KDTree] Start building a kd-tree for " << points.size() << " points and partition size " << partitionSize << std::endl;
         root = buildTree(points, 0);
     }
 
     std::shared_ptr<KDNode> KDTree::buildTree(std::vector<Point> points, int depth){
+        std::cout << "[KDTree] Reached depth " << depth << " with " << points.size() << " elements" << std::endl;
         // Recursive implementation of kdTree construction from a set of multidimensional points
         if (points.empty()) {
             return nullptr;
         }
         // When we reach the desired leaf size (which is the number of rows per parquet partition)
         // We should store the node and exit the recursion
-        // TODO: parametrize according to rows per partition or partition size
-        if (points.size() == 2){
+        if (points.size() <= leafSize){
             auto node = std::make_shared<KDNode>(points);
             leaves.emplace_back(node);
             return node;

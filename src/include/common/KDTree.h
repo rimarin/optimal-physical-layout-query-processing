@@ -33,12 +33,13 @@ namespace common {
 
     class KDTree {
     public:
-        KDTree(std::vector<Point> &points);
+        KDTree(std::vector<Point> &points, int32_t partitionSize);
         std::shared_ptr<KDNode> buildTree(std::vector<Point> points, int depth);
         virtual ~KDTree() = default;
         std::shared_ptr<KDNode> getRoot();
         std::vector<std::shared_ptr<KDNode>> getLeaves();
     private:
+        int32_t leafSize;
         std::shared_ptr<KDNode> root;
         std::vector<std::shared_ptr<KDNode>> leaves;
     };

@@ -36,7 +36,7 @@ namespace partitioning {
         }
 
         // Build a kd-tree on the vector of points
-        std::shared_ptr<common::KDTree> kdTree = std::make_shared<common::KDTree>(points);
+        std::shared_ptr<common::KDTree> kdTree = std::make_shared<common::KDTree>(points, partitionSize);
 
         // Retrieve the leaves, where the points have partitioned and stored
         std::vector<std::shared_ptr<common::KDNode>> leaves = kdTree->getLeaves();
