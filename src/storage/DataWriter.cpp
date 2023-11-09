@@ -58,24 +58,24 @@ namespace storage {
     }
 
     arrow::Result<std::shared_ptr<arrow::Table>> DataWriter::GenerateExampleSchoolTable() {
-        arrow::DoubleBuilder doubleBuilder;
-        double_t student_id_raw[8] = {16, 45, 21, 7, 74, 34, 111, 91};
-        ARROW_RETURN_NOT_OK(doubleBuilder.AppendValues(student_id_raw, 8));
+        arrow::Int32Builder int32Builder;
+        int32_t student_id_raw[8] = {16, 45, 21, 7, 74, 34, 111, 91};
+        ARROW_RETURN_NOT_OK(int32Builder.AppendValues(student_id_raw, 8));
         std::shared_ptr<arrow::Array> student_id;
-        ARROW_ASSIGN_OR_RAISE(student_id, doubleBuilder.Finish());
+        ARROW_ASSIGN_OR_RAISE(student_id, int32Builder.Finish());
 
-        double_t age_raw[8] = {30, 21, 18, 27, 41, 37, 23, 22};
-        ARROW_RETURN_NOT_OK(doubleBuilder.AppendValues(age_raw, 8));
+        int32_t age_raw[8] = {30, 21, 18, 27, 41, 37, 23, 22};
+        ARROW_RETURN_NOT_OK(int32Builder.AppendValues(age_raw, 8));
         std::shared_ptr<arrow::Array> age;
-        ARROW_ASSIGN_OR_RAISE(age, doubleBuilder.Finish());
+        ARROW_ASSIGN_OR_RAISE(age, int32Builder.Finish());
 
         std::vector<std::shared_ptr<arrow::Array>> columns = {student_id, age};
 
         std::shared_ptr<arrow::Field> field_student_id, field_age;
         std::shared_ptr<arrow::Schema> schema;
 
-        field_student_id = arrow::field("Student_id", arrow::float64());
-        field_age = arrow::field("Age", arrow::float64());
+        field_student_id = arrow::field("Student_id", arrow::int32());
+        field_age = arrow::field("Age", arrow::int32());
 
         schema = arrow::schema({field_student_id, field_age});
 
