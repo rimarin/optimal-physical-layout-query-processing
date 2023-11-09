@@ -15,8 +15,11 @@
 #include <arrow/status.h>
 #include <arrow/table.h>
 
-#include "Partitioning.h"
+#include "../common/ColumnDataConverter.h"
 #include "../storage/DataWriter.h"
+#include "../storage/DataReader.h"
+#include "Partitioning.h"
+
 
 namespace partitioning {
 
@@ -25,11 +28,10 @@ namespace partitioning {
         FixedGridPartitioning(std::vector<std::string> partitionColumns);
         virtual ~FixedGridPartitioning() = default;
         arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> partition(std::shared_ptr<arrow::Table> table,
-                                                                            int partitionSize);
+                                                                            int32_t partitionSize);
+        arrow::Result<arrow::Datum> columnsToPartitionId(std::vector<std::shared_ptr<arrow::Array>> &columnArrowArrays, int32_t &partitionSize);
     private:
         std::vector<std::string> columns;
-        static arrow::Status ColumnsToPartitionId(arrow::compute::KernelContext* ctx, const arrow::compute::ExecSpan& batch,
-                                                  arrow::compute::ExecResult* out);
     };
 }
 
