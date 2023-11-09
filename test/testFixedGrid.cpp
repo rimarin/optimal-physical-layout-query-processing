@@ -14,7 +14,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningFixedGrid){
     cleanUpFolder(fixedGridFolder);
     arrow::Result<std::shared_ptr<arrow::Table>> table = storage::DataWriter::GenerateExampleWeatherTable().ValueOrDie();
     std::vector<std::string> partitioningColumns = {"Day", "Month"};
-    std::shared_ptr<partitioning::MultiDimensionalPartitioning> fixedGridPartitioning = std::make_shared<partitioning::FixedGridPartitioning>(partitioningColumns);
+    std::shared_ptr<partitioning::MultiDimensionalPartitioning> fixedGridPartitioning = std::make_shared<partitioning::FixedGridPartitioning>();
     auto partitions = fixedGridPartitioning->partition(*table, partitioningColumns, partitionSizeTest).ValueOrDie();
     arrow::Status statusFixedGrid = storage::DataWriter::WritePartitions(partitions, datasetWeatherName, fixedGridFolder);
     auto pathPartition0 = fixedGridFolder / (datasetWeatherName + "0" + fileExtension);

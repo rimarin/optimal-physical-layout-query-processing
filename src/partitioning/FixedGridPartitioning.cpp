@@ -1,21 +1,18 @@
-
 #include "../include/partitioning/FixedGridPartitioning.h"
 
 namespace partitioning {
 
-    FixedGridPartitioning::FixedGridPartitioning(std::vector<std::string> partitionColumns) {
-        columns = std::move(partitionColumns);
+    arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> FixedGridPartitioning::partition(std::shared_ptr<arrow::Table> table,
+                                                                                               std::vector<std::string> partitionColumns,
+                                                                                               int32_t partitionSize){
         std::cout << "[FixedGridPartitioning] Initializing partitioning technique" << std::endl;
         std::string displayColumns;
-        for (const auto &column : columns) displayColumns + " " += column;
+        for (const auto &column : partitionColumns) displayColumns + " " += column;
         std::cout << "[FixedGridPartitioning] Partition has to be done on columns: " << displayColumns << std::endl;
-    }
-
-    arrow::Result<arrow::Datum> FixedGridPartitioning::columnsToPartitionId(std::vector<std::shared_ptr<arrow::Array>>
-    &columnArrowArrays, int32_t &partitionSize) {
+        auto columnArrowArrays = storage::DataReader::getColumns(table, partitionColumns).ValueOrDie();
         auto converter = common::ColumnDataConverter();
         auto columnData = converter.toDouble(columnArrowArrays).ValueOrDie();
-        std::shared_ptr<arrow::Array> fixedGridCellIds;
+        std::shared_ptr<arrow::Array> partitionIds;
         arrow::Int64Builder int64Builder;
         auto x = columnData[0];
         auto y = columnData[1];
@@ -31,16 +28,7 @@ namespace partitioning {
         }
         ARROW_RETURN_NOT_OK(int64Builder.AppendValues(values));
         std::cout << "[FixedGridPartitioning] Mapped columns to partition ids" << std::endl;
-        ARROW_ASSIGN_OR_RAISE(fixedGridCellIds, int64Builder.Finish());
-        return fixedGridCellIds;
-    }
-
-    arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> FixedGridPartitioning::partition(std::shared_ptr<arrow::Table> table,
-                                                                                               std::vector<std::string> partitionColumns,
-                                                                                               int32_t partitionSize){
-        std::cout << "[FixedGridPartitioning] Applying partitioning technique" << std::endl;
-        auto columnData = storage::DataReader::getColumns(table, columns).ValueOrDie();
-        std::shared_ptr<arrow::Array> partitionIds = columnsToPartitionId(columnData, partitionSize).ValueOrDie().make_array();
+        ARROW_ASSIGN_OR_RAISE(partitionIds, int64Builder.Finish());
         return partitioning::MultiDimensionalPartitioning::splitTableIntoPartitions(table, partitionIds);
     }
 

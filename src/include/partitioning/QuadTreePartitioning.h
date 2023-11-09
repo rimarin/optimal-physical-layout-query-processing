@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <utility>
 
 #include <arrow/api.h>
 #include <arrow/compute/api.h>
@@ -16,22 +17,19 @@
 #include <arrow/table.h>
 
 #include "Partitioning.h"
+#include "../storage/DataReader.h"
 #include "../storage/DataWriter.h"
+#include "../common/ColumnDataConverter.h"
 #include "../common/QuadTree.h"
+
 
 namespace partitioning {
 
     class QuadTreePartitioning : public MultiDimensionalPartitioning {
     public:
-        explicit QuadTreePartitioning(std::vector<std::string> partitionColumns);
-        ~QuadTreePartitioning() override = default;
         arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> partition(std::shared_ptr<arrow::Table> table,
                                                                             std::vector<std::string> partitionColumns,
                                                                             int32_t partitionSize) override;
-    private:
-        std::vector<std::string> columns;
-        static arrow::Status ColumnsToPartitionId(arrow::compute::KernelContext* ctx, const arrow::compute::ExecSpan& batch,
-                                                                  arrow::compute::ExecResult* out);
     };
 }
 

@@ -20,8 +20,6 @@ namespace partitioning {
                                                                                     int32_t partitionSize) = 0;
         inline static std::vector<std::shared_ptr<arrow::Table>> splitTableIntoPartitions(std::shared_ptr<arrow::Table> &table,
                                                                                           std::shared_ptr<arrow::Array> &partitionIds);
-    private:
-        int32_t partitionSize;
     };
 
     // Splitting method to divide a table into sub-tables according to the partition ids

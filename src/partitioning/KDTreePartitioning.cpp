@@ -2,23 +2,27 @@
 
 namespace partitioning {
 
-    KDTreePartitioning::KDTreePartitioning(std::vector<std::string> partitionColumns) {
-        columns = std::move(partitionColumns);
-    }
+    arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> KDTreePartitioning::partition(std::shared_ptr<arrow::Table> table,
+                                                                                            std::vector<std::string> partitionColumns,
+                                                                                            int32_t partitionSize){
+        std::cout << "[KDTreePartitioning] Initializing partitioning technique" << std::endl;
+        std::string displayColumns;
+        for (const auto &column : partitionColumns) displayColumns + " " += column;
+        std::cout << "[KDTreePartitioning] Partition has to be done on columns: " << displayColumns << std::endl;
+        auto columnArrowArrays = storage::DataReader::getColumns(table, partitionColumns).ValueOrDie();
+        auto converter = common::ColumnDataConverter();
+        auto columnData = converter.toDouble(columnArrowArrays).ValueOrDie();
 
-    arrow::Status KDTreePartitioning::ColumnsToPartitionId(arrow::compute::KernelContext *ctx, const arrow::compute::ExecSpan &batch,
-                                                           arrow::compute::ExecResult *out) {
         // Extract column vectors from the batch, convert them from arrow array to std vector of points
         std::vector<common::Point> partitioningColumnValues = {};
-        for(const auto & batchValue : batch.values){
-            auto columnArray = batchValue.array.ToArray();
-            auto arrowDoubleArray = std::static_pointer_cast<arrow::DoubleArray>(columnArray);
+        for(const auto & column : columnData){
             common::Point columnValues;
-            for (int64_t i = 0; i < arrowDoubleArray->length(); ++i) {
-                columnValues.push_back(arrowDoubleArray->Value(i));
+            for (int64_t i = 0; i < column.size(); ++i) {
+                columnValues.push_back(column[i]);
             }
             partitioningColumnValues.emplace_back(columnValues);
         }
+
         // Columnar to row layout: vector of columns is transformed into a vector of points (rows)
         std::vector<common::Point> points;
         auto numColumns = partitioningColumnValues.size();
@@ -33,6 +37,7 @@ namespace partitioning {
 
         // Build a kd-tree on the vector of points
         std::shared_ptr<common::KDTree> kdTree = std::make_shared<common::KDTree>(points);
+
         // Retrieve the leaves, where the points have partitioned and stored
         std::vector<std::shared_ptr<common::KDNode>> leaves = kdTree->getLeaves();
 
@@ -49,52 +54,15 @@ namespace partitioning {
         // However, the partition id have to be aligned with the initial sorting of the points
         // Therefore, iterate over points (as passed in the first place) and assign to the return value
         // the mapped partition
-        auto* out_values = out->array_span_mutable()->GetValues<int64_t>(1);
+        std::shared_ptr<arrow::Array> partitionIds;
+        arrow::Int64Builder int64Builder;
+        std::vector<int64_t> values = {};
         for (int i = 0; i < numRows; i++){
-            out_values[i] = pointToPartitionId[points[i]];
+            values.emplace_back(pointToPartitionId[points[i]]);
         }
+        ARROW_RETURN_NOT_OK(int64Builder.AppendValues(values));
         std::cout << "[KDTreePartitioning] Mapped columns to partition ids" << std::endl;
-        return arrow::Status::OK();
-    }
-
-    arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> KDTreePartitioning::partition(std::shared_ptr<arrow::Table> table,
-                                                                                            std::vector<std::string> partitionColumns,
-                                                                                            int32_t partitionSize){
-        std::cout << "[KDTreePartitioning] Applying partitioning technique" << std::endl;
-        const std::string computeFunctionName = "partition_kdtree";
-        const arrow::compute::FunctionDoc computeFunctionDoc{
-                "Given n columns, builds a kd-tree to partition the data and return the partition id",
-                "returns partition id for the columns",
-                {"col1", "col2", "..."},
-                "PartitionKDTreeOptions"};
-        auto func = std::make_shared<arrow::compute::ScalarFunction>(computeFunctionName,
-                                                                     arrow::compute::Arity::VarArgs(2),
-                                                                     computeFunctionDoc);
-        std::vector<arrow::compute::InputType> inputTypes = {};
-        // Extract column data by getting the chunks and casting them to an arrow array
-        std::vector<arrow::Datum> columnData;
-        for (const auto &column: columns){
-            // Infer the data types of the columns
-            auto columnType = table->schema()->GetFieldByName(column)->type();
-            std::cout << "[KDTreePartitioning] Reading column <" << column << "> of type " << columnType->ToString() << std::endl;
-            inputTypes.emplace_back(columnType);
-            // Extract column data by getting the chunks and casting them to an arrow array
-            std::shared_ptr<arrow::ChunkedArray> chunkedColumn = table->GetColumnByName(column);
-            columnData.emplace_back(chunkedColumn->chunk(0));
-        }
-        auto signature = arrow::compute::KernelSignature::Make(inputTypes, arrow::int64(), true);
-        arrow::compute::ScalarKernel kernel(signature, ColumnsToPartitionId);
-        kernel.mem_allocation = arrow::compute::MemAllocation::PREALLOCATE;
-        kernel.null_handling = arrow::compute::NullHandling::INTERSECTION;
-        ARROW_RETURN_NOT_OK(func->AddKernel(std::move(kernel)));
-        auto registry = arrow::compute::GetFunctionRegistry();
-        ARROW_RETURN_NOT_OK(registry->AddFunction(std::move(func)));
-
-        // Invoke the custom method
-        arrow::Result<arrow::Datum> KDTreePartitionIds = arrow::compute::CallFunction(computeFunctionName, columnData);
-        auto hallo = KDTreePartitionIds->ToString();
-        std::shared_ptr<arrow::Array> partitionIds = std::move(KDTreePartitionIds)->make_array();
-        auto test = partitionIds->ToString();
+        ARROW_ASSIGN_OR_RAISE(partitionIds, int64Builder.Finish());
         return partitioning::MultiDimensionalPartitioning::splitTableIntoPartitions(table, partitionIds);
     }
 

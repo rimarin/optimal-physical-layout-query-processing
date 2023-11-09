@@ -14,7 +14,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningFixedGridTPCH){
     cleanUpFolder(fixedGridFolder);
     arrow::Result<std::shared_ptr<arrow::Table>> table = getDataset(datasetTPCHName);
     std::vector<std::string> partitioningColumns = {"c_custkey", "l_orderkey"};
-    std::shared_ptr<partitioning::MultiDimensionalPartitioning> fixedGridPartitioning = std::make_shared<partitioning::FixedGridPartitioning>(partitioningColumns);
+    std::shared_ptr<partitioning::MultiDimensionalPartitioning> fixedGridPartitioning = std::make_shared<partitioning::FixedGridPartitioning>();
     auto partitions = fixedGridPartitioning->partition(*table, partitioningColumns, partitionSizeReal).ValueOrDie();
     arrow::Status statusTPCH = storage::DataWriter::WritePartitions(partitions, datasetTPCHName, fixedGridFolder);
     auto pathPartitionFirst = fixedGridFolder / (datasetTPCHName + "0" + fileExtension);

@@ -14,7 +14,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningQuadTree){
     cleanUpFolder(quadTreeFolder);
     arrow::Result<std::shared_ptr<arrow::Table>> table = storage::DataWriter::GenerateExampleSchoolTable().ValueOrDie();
     std::vector<std::string> partitioningColumns = {"Age", "Student_id"};
-    std::shared_ptr<partitioning::MultiDimensionalPartitioning> quadTreePartitioning = std::make_shared<partitioning::QuadTreePartitioning>(partitioningColumns);
+    std::shared_ptr<partitioning::MultiDimensionalPartitioning> quadTreePartitioning = std::make_shared<partitioning::QuadTreePartitioning>();
     auto partitions = quadTreePartitioning->partition(*table, partitioningColumns, partitionSizeTest).ValueOrDie();
     arrow::Status statusQuadTree = storage::DataWriter::WritePartitions(partitions, datasetSchoolName, quadTreeFolder);
     auto pathPartition0 = quadTreeFolder / (datasetSchoolName + "0" + fileExtension);

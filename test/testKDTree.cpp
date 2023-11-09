@@ -15,8 +15,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningKDTree) {
     cleanUpFolder(kdTreeFolder);
     arrow::Result<std::shared_ptr<arrow::Table>> table = storage::DataWriter::GenerateExampleSchoolTable().ValueOrDie();
     std::vector<std::string> partitioningColumns = {"Age", "Student_id"};
-    std::shared_ptr<partitioning::MultiDimensionalPartitioning> kdTreePartitioning = std::make_shared<partitioning::KDTreePartitioning>(
-            partitioningColumns);
+    std::shared_ptr<partitioning::MultiDimensionalPartitioning> kdTreePartitioning = std::make_shared<partitioning::KDTreePartitioning>();
     auto partitions = kdTreePartitioning->partition(*table, partitioningColumns, partitionSizeTest).ValueOrDie();
     arrow::Status statusKDTree = storage::DataWriter::WritePartitions(partitions, datasetSchoolName, kdTreeFolder);
     auto pathPartition0 = kdTreeFolder / (datasetSchoolName + "0.parquet");

@@ -30,7 +30,6 @@ namespace storage {
         for (const auto &column: columns){
             // Infer the data types of the columns
             auto columnType = table->schema()->GetFieldByName(column)->type();
-            assert(("FixedGrid supports only int32 column type at the moment", columnType == arrow::int32()));
             std::cout << "Reading column <" << column << "> of type " << columnType->ToString() << std::endl;
             inputTypes.emplace_back(columnType);
             // Extract column data by getting the chunks and casting them to an arrow array
