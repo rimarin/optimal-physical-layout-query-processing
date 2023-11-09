@@ -15,7 +15,9 @@ cmake-build-debug
 /test/_lib
 /test/FixedGrid
 /test/GridFile
+/test/HilbertCurve
 /test/KDTree
 /test/NoPartition
 /test/QuadTree
 /test/STRTree
+/test/ZOrderCurve

@@ -34,6 +34,8 @@ public:
     std::filesystem::path kdTreeFolder = std::filesystem::current_path() / "KDTree";
     std::filesystem::path strTreeFolder = std::filesystem::current_path() / "STRTree";
     std::filesystem::path quadTreeFolder = std::filesystem::current_path() / "QuadTree";
+    std::filesystem::path hilbertCurveFolder = std::filesystem::current_path() / "HilbertCurve";
+    std::filesystem::path zOrderCurveFolder = std::filesystem::current_path() / "ZOrderCurve";
 
     std::filesystem::path testsFolder = std::filesystem::current_path();
     std::filesystem::path benchmarkFolder = testsFolder.parent_path() / "benchmark";
@@ -65,11 +67,13 @@ public:
     }
 
     void cleanUpFolder(std::filesystem::path folder){
-        for (const auto & folderIter : std::filesystem::directory_iterator(folder))
-        {
-            if (folderIter.path().extension() == parquetFileExtension)
+        if (std::filesystem::is_directory(folder)){
+            for (const auto & folderIter : std::filesystem::directory_iterator(folder))
             {
-                std::filesystem::remove(folderIter.path());
+                if (folderIter.path().extension() == parquetFileExtension)
+                {
+                    std::filesystem::remove(folderIter.path());
+                }
             }
         }
     }

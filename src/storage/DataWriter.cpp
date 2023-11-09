@@ -100,6 +100,9 @@ namespace storage {
     arrow::Status DataWriter::WritePartitions(std::vector<std::shared_ptr<arrow::Table>>& partitions,
                                               std::string &tableName,
                                               std::filesystem::path &outputFolder) {
+        if (!std::filesystem::is_directory(outputFolder)){
+            std::filesystem::create_directory(outputFolder);
+        }
         for (int32_t i = 0; i < partitions.size(); i++) {
             std::string filename = tableName + std::to_string(i) + ".parquet";
             ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTable(partitions[i], filename, outputFolder));

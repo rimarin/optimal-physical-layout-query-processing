@@ -15,11 +15,13 @@ set(SOURCES
         fixture.cpp
         testFixedGrid.cpp
         testGridFile.cpp
+        testHilbertCurve.cpp
         testKDTree.cpp
         testPartitionTPCH.cpp
         testQuadTree.cpp
         testReadWrite.cpp
         testSTRTree.cpp
+        testZOrderCurve.cpp
         ../src/common/KDTree.cpp
         ../src/common/QuadTree.cpp
         ../src/storage/DataWriter.cpp
@@ -27,9 +29,11 @@ set(SOURCES
         ../src/partitioning/NoPartitioning.cpp
         ../src/partitioning/FixedGridPartitioning.cpp
         ../src/partitioning/GridFilePartitioning.cpp
+        ../src/partitioning/HilbertCurvePartitioning.cpp
         ../src/partitioning/KDTreePartitioning.cpp
         ../src/partitioning/QuadTreePartitioning.cpp
-        ../src/partitioning/STRTreePartitioning.cpp)
+        ../src/partitioning/STRTreePartitioning.cpp
+        ../src/partitioning/ZOrderCurvePartitioning.cpp)
 add_executable(oplqp_test ${SOURCES})
 
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
