@@ -20,7 +20,6 @@ set(SOURCES
         testQuadTree.cpp
         testReadWrite.cpp
         testSTRTree.cpp
-        ../src/common/DataLayoutConverter.cpp
         ../src/common/KDTree.cpp
         ../src/common/QuadTree.cpp
         ../src/storage/DataWriter.cpp
