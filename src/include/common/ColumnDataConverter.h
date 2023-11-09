@@ -30,7 +30,7 @@ namespace common {
 
         // Default implementation
         arrow::Status Visit(const arrow::Array& array) {
-            return arrow::Status::NotImplemented("Can not compute sum for array of type ",
+            return arrow::Status::NotImplemented("Cannot convert to double, for this array of type ",
                                                  array.type()->ToString());
         }
 
