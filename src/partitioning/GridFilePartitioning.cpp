@@ -21,6 +21,7 @@ namespace partitioning {
     }
 
     arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> GridFilePartitioning::partition(std::shared_ptr<arrow::Table> table,
+                                                                                              std::vector<std::string> partitionColumns,
                                                                                               int32_t partitionSize){
         std::cout << "[GridFilePartitioning] Applying partitioning technique" << std::endl;
         // Add a new custom Compute function to the registry

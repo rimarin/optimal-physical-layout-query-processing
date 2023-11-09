@@ -23,8 +23,9 @@ namespace partitioning {
     class STRTreePartitioning : public MultiDimensionalPartitioning {
     public:
         STRTreePartitioning(std::vector<std::string> partitionColumns, int size);
-        virtual ~STRTreePartitioning() = default;
+        ~STRTreePartitioning() override = default;
         arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> partition(std::shared_ptr<arrow::Table> table,
+                                                                            std::vector<std::string> partitionColumns,
                                                                             int32_t partitionSize);
     private:
         int32_t partitionSize;

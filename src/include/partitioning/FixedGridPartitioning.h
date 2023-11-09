@@ -25,11 +25,13 @@ namespace partitioning {
 
     class FixedGridPartitioning : public MultiDimensionalPartitioning {
     public:
-        FixedGridPartitioning(std::vector<std::string> partitionColumns);
-        virtual ~FixedGridPartitioning() = default;
+        explicit FixedGridPartitioning(std::vector<std::string> partitionColumns);
+        ~FixedGridPartitioning() override = default;
         arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> partition(std::shared_ptr<arrow::Table> table,
-                                                                            int32_t partitionSize);
-        arrow::Result<arrow::Datum> columnsToPartitionId(std::vector<std::shared_ptr<arrow::Array>> &columnArrowArrays, int32_t &partitionSize);
+                                                                            std::vector<std::string> partitionColumns,
+                                                                            int32_t partitionSize) override;
+        arrow::Result<arrow::Datum> columnsToPartitionId(std::vector<std::shared_ptr<arrow::Array>> &columnArrowArrays,
+                                                         int32_t &partitionSize);
     private:
         std::vector<std::string> columns;
     };

@@ -85,19 +85,24 @@ namespace storage {
         return table;
     }
 
-    arrow::Status DataWriter::WriteTable(const std::shared_ptr<arrow::Table>& table,
+    arrow::Status DataWriter::WriteTable(std::shared_ptr<arrow::Table>& table,
                                          std::string &filename,
-                                         std::filesystem::path &outputFolder,
-                                         const std::shared_ptr<partitioning::MultiDimensionalPartitioning> &partitioningMethod,
-                                         int32_t partitionSize) {
-        auto partitions = partitioningMethod->partition(table, partitionSize).ValueOrDie();
+                                         std::filesystem::path &outputFolder) {
         auto debug = table->ToString();
         std::string outPath = outputFolder.string();
-        for (int i = 0; i < partitions.size(); ++i) {
-            std::string outFilename = outPath + "/" + filename + std::to_string(i) + ".parquet";
-            auto outfile = arrow::io::FileOutputStream::Open(outFilename);
-            PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*partitions.at(i), arrow::default_memory_pool(), *outfile, table->num_rows()));
-            std::cout << "[DataWriter] Written table to " << outFilename << std::endl;
+        std::string outFilename = outPath + "/" + filename;
+        auto outfile = arrow::io::FileOutputStream::Open(outFilename);
+        PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, arrow::default_memory_pool(), *outfile, table->num_rows()));
+        std::cout << "[DataWriter] Written table to " << outFilename << std::endl;
+        return arrow::Status::OK();
+    }
+
+    arrow::Status DataWriter::WritePartitions(std::vector<std::shared_ptr<arrow::Table>>& partitions,
+                                              std::string &tableName,
+                                              std::filesystem::path &outputFolder) {
+        for (int32_t i = 0; i < partitions.size(); i++) {
+            std::string filename = tableName + std::to_string(i) + ".parquet";
+            ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTable(partitions[i], filename, outputFolder));
         }
         return arrow::Status::OK();
     }

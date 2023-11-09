@@ -16,6 +16,7 @@ namespace partitioning {
         MultiDimensionalPartitioning() = default;
         virtual ~MultiDimensionalPartitioning() = default;
         virtual arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> partition(std::shared_ptr<arrow::Table> table,
+                                                                                    std::vector<std::string> partitionColumns,
                                                                                     int32_t partitionSize) = 0;
         inline static std::vector<std::shared_ptr<arrow::Table>> splitTableIntoPartitions(std::shared_ptr<arrow::Table> &table,
                                                                                           std::shared_ptr<arrow::Array> &partitionIds);

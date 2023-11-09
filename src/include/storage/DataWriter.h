@@ -18,11 +18,12 @@ class DataWriter {
     public:
         DataWriter() = default;
         virtual ~DataWriter() = default;
-        static arrow::Status WriteTable(const std::shared_ptr<arrow::Table>& table,
+        static arrow::Status WriteTable(std::shared_ptr<arrow::Table>& table,
                                         std::string &filename,
-                                        std::filesystem::path &outputFolder,
-                                        const std::shared_ptr<partitioning::MultiDimensionalPartitioning> &partitioningMethod,
-                                        int32_t partitionSize);
+                                        std::filesystem::path &outputFolder);
+        static arrow::Status WritePartitions(std::vector<std::shared_ptr<arrow::Table>>& partitions,
+                                             std::string &tableName,
+                                             std::filesystem::path &outputFolder);
         static arrow::Result<std::shared_ptr<arrow::Table>> GenerateExampleWeatherTable();
         static arrow::Result<std::shared_ptr<arrow::Table>> GenerateExampleSchoolTable();
 };

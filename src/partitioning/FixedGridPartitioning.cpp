@@ -36,6 +36,7 @@ namespace partitioning {
     }
 
     arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> FixedGridPartitioning::partition(std::shared_ptr<arrow::Table> table,
+                                                                                               std::vector<std::string> partitionColumns,
                                                                                                int32_t partitionSize){
         std::cout << "[FixedGridPartitioning] Applying partitioning technique" << std::endl;
         auto columnData = storage::DataReader::getColumns(table, columns).ValueOrDie();
