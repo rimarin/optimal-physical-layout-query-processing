@@ -12,9 +12,9 @@ namespace partitioning {
         auto columnArrowArrays = storage::DataReader::getColumns(table, partitionColumns).ValueOrDie();
         auto converter = common::ColumnDataConverter();
 
-        auto hilbertCurve = common::HilbertCurve();
-        auto test1 = hilbertCurve.test();
-        std::cout << test1;
+        // auto hilbertCurve = common::HilbertCurve();
+        // auto test1 = hilbertCurve.test();
+        // std::cout << test1;
 
         auto columnData = converter.toDouble(columnArrowArrays).ValueOrDie();
         std::shared_ptr<arrow::Array> partitionIds;

@@ -3,11 +3,9 @@
 namespace common
 {
     class HilbertCurve {
-        // https://stackoverflow.com/a/71683904
-        // References for visualization: https://pypi.org/project/numpy-hilbert-curve/
-    public:
         //+++++++++++++++++++++++++++ PUBLIC-DOMAIN SOFTWARE ++++++++++++++++++++++++++
-        // Functions: TransposetoAxes AxestoTranspose
+        // Source: https://stackoverflow.com/a/71683904
+        // Functions: TransposeToAxes AxesToTranspose
         // Purpose: Transform in-place between Hilbert transpose and geometrical axes
         // Example: b=5 bits for each of n=3 coordinates.
         // 15-bit Hilbert integer = A B C D E F G H I J K L M N O is stored
@@ -16,13 +14,19 @@ namespace common
         //        X[1] = B E H K N <------->       | /X[1]
         //        X[2] = C F I L O            axes |/
         //               high  low                 0------ X[0]
-        // Axes are stored conventially as b-bit integers.
+        // Axes are stored conventionally as b-bit integers.
         // Author: John Skilling 20 Apr 2001 to 11 Oct 2003
         //-----------------------------------------------------------------------------
+        // Other:
+        // - Hilbert Curve Visualization: https://pypi.org/project/numpy-hilbert-curve/
+        // - Type support: only supports int, due to the bitwise implementation. The bitwise operators do not make
+        //   sense when applied to double or float, and the standard says that the bitwise operators (~, &, |, ^, >>,
+        //   <<, and the assignment variants) do not accept double or float operands. Both double and float have 3
+        //   sections - a sign bit, an exponent, and the mantissa, any attempt to shift would lead to ambiguity.
+    public:
+        typedef int64_t coord_t; // char,short,int for up to 8,16,32 bits per word
 
-        typedef unsigned int coord_t; // char,short,int for up to 8,16,32 bits per word
-
-        void TransposetoAxes(coord_t* X, int b, int n) // Position, #bits, dimension
+        void TransposeToAxes(coord_t* X, int b, int n) // Position, #bits, dimension
         {
             coord_t N = 2 << (b - 1), P, Q, t;
 
@@ -46,7 +50,7 @@ namespace common
             }
         }
 
-        void AxestoTranspose(coord_t* X, int b, int n) // Position, #bits, dimension
+        void AxesToTranspose(coord_t* X, int b, int n) // Position, #bits, dimension
         {
             coord_t M = 1 << (b - 1), P, Q, t;
 
@@ -95,9 +99,7 @@ namespace common
             for (int i = 0; i < n; ++i) {
                 result |= (code[i] << (n - i - 1));
             }
-            auto oldResult = (codex << 2) | (codey << 1) | codez;
             return result;
-            // return (codex << 2) | (codey << 1) | codez;
         }
 
         // From https://github.com/Forceflow/libmorton/blob/main/include/libmorton/morton3D.h
@@ -122,14 +124,12 @@ namespace common
             coord_t X3[2] = {1, 1}; // Any position in 32x32x32 cube
             coord_t X4[2] = {0, 0}; // Any position in 32x32x32 cube
             coord_t X5[3] = {1, 1, 0}; // Any position in 32x32x32 cube
-            printf("Input coords = %d,%d,%d\n", X[0], X[1], X[2]);
 
-            AxestoTranspose(X, 5, 3); // Hilbert transpose for 5 bits and 3 dimensions
-            AxestoTranspose(X2, 5, 3); // Hilbert transpose for 5 bits and 3 dimensions
-            AxestoTranspose(X3, 5, 2); // Hilbert transpose for 5 bits and 3 dimensions
-            AxestoTranspose(X4, 5, 2); // Hilbert transpose for 5 bits and 3 dimensions
-            AxestoTranspose(X5, 2, 3); // Hilbert transpose for 5 bits and 3 dimensions
-            printf("Hilbert coords = %d,%d,%d\n", X[0], X[1], X[2]);
+            AxesToTranspose(X, 5, 3); // Hilbert transpose for 5 bits and 3 dimensions
+            AxesToTranspose(X2, 5, 3); // Hilbert transpose for 5 bits and 3 dimensions
+            AxesToTranspose(X3, 5, 2); // Hilbert transpose for 5 bits and 3 dimensions
+            AxesToTranspose(X4, 5, 2); // Hilbert transpose for 5 bits and 3 dimensions
+            AxesToTranspose(X5, 2, 3); // Hilbert transpose for 5 bits and 3 dimensions
 
             unsigned int code = interleaveBits(X, 5, 3);
             unsigned int code2 = interleaveBits(X2, 5, 3);
