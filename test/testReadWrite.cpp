@@ -17,7 +17,7 @@ TEST_F(TestOptimalLayoutFixture, TestGenerateParquetExamples){
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> noPartitioning = std::make_shared<partitioning::NoPartitioning>();
     auto partitionsWeather = noPartitioning->partition(*weatherTable, {std::string("")}, partitionSizeTest).ValueOrDie();
     arrow::Status statusWeather = storage::DataWriter::WritePartitions(partitionsWeather, datasetWeatherName, noPartitionFolder);
-    auto partitionsSchool = noPartitioning->partition(*weatherTable, {std::string("")}, partitionSizeTest).ValueOrDie();
+    auto partitionsSchool = noPartitioning->partition(*schoolTable, {std::string("")}, partitionSizeTest).ValueOrDie();
     arrow::Status statusSchool = storage::DataWriter::WritePartitions(partitionsSchool, datasetSchoolName, noPartitionFolder);
     std::filesystem::path expectedPath = noPartitionFolder / (datasetWeatherName + "0" + fileExtension);
     ASSERT_EQ(std::filesystem::exists( noPartitionFolder / (datasetWeatherName + "0" + fileExtension)), true);
