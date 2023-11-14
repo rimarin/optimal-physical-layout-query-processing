@@ -26,7 +26,7 @@ namespace common
     public:
         typedef int64_t coord_t; // char,short,int for up to 8,16,32 bits per word
 
-        void TransposeToAxes(coord_t* X, int b, int n) // Position, #bits, dimension
+        void transposeToAxes(coord_t* X, int b, int n) // Position, #bits, dimension
         {
             coord_t N = 2 << (b - 1), P, Q, t;
 
@@ -50,7 +50,7 @@ namespace common
             }
         }
 
-        void AxesToTranspose(coord_t* X, int b, int n) // Position, #bits, dimension
+        void axesToTranspose(coord_t* X, int b, int n) // Position, #bits, dimension
         {
             coord_t M = 1 << (b - 1), P, Q, t;
 
@@ -115,29 +115,6 @@ namespace common
                 X[1] |= (code & (selector << (shift_selector + 1))) >> (shiftback + 1);
                 X[0] |= (code & (selector << (shift_selector + 2))) >> (shiftback + 2);
             }
-        }
-
-        int test()
-        {
-            coord_t X[3] = {5, 10, 20}; // Any position in 32x32x32 cube
-            coord_t X2[3] = {1, 1, 1}; // Any position in 32x32x32 cube
-            coord_t X3[2] = {1, 1}; // Any position in 32x32x32 cube
-            coord_t X4[2] = {0, 0}; // Any position in 32x32x32 cube
-            coord_t X5[3] = {1, 1, 0}; // Any position in 32x32x32 cube
-
-            AxesToTranspose(X, 5, 3); // Hilbert transpose for 5 bits and 3 dimensions
-            AxesToTranspose(X2, 5, 3); // Hilbert transpose for 5 bits and 3 dimensions
-            AxesToTranspose(X3, 5, 2); // Hilbert transpose for 5 bits and 3 dimensions
-            AxesToTranspose(X4, 5, 2); // Hilbert transpose for 5 bits and 3 dimensions
-            AxesToTranspose(X5, 2, 3); // Hilbert transpose for 5 bits and 3 dimensions
-
-            unsigned int code = interleaveBits(X, 5, 3);
-            unsigned int code2 = interleaveBits(X2, 5, 3);
-            unsigned int code3 = interleaveBits(X3, 5, 2);
-            unsigned int code4 = interleaveBits(X4, 5, 2);
-            unsigned int code5 = interleaveBits(X5, 2, 3);
-
-            return 0;
         }
 
     };

@@ -22,6 +22,15 @@ namespace common {
     public:
 
         arrow::Result<std::vector<std::vector<double>>> toDouble(std::vector<std::shared_ptr<arrow::Array>> &columnData){
+            outputType = "double";
+            for (const auto &data: columnData){
+                ARROW_RETURN_NOT_OK(arrow::VisitArrayInline(*data, this));
+            }
+            return convertedData;
+        }
+
+        arrow::Result<std::vector<std::vector<double>>> toInt64(std::vector<std::shared_ptr<arrow::Array>> &columnData){
+            outputType = "int64";
             for (const auto &data: columnData){
                 ARROW_RETURN_NOT_OK(arrow::VisitArrayInline(*data, this));
             }
@@ -39,7 +48,12 @@ namespace common {
             std::vector<double> castedArray = {};
             for (std::optional<typename T::c_type> value: array) {
                 if (value.has_value()) {
-                    castedArray.emplace_back(static_cast<double>(value.value()));
+                    if (outputType == "int64"){
+                        castedArray.emplace_back(static_cast<int64_t>(value.value()));
+                    }
+                    else{
+                        castedArray.emplace_back(static_cast<double>(value.value()));
+                    }
                 }
             }
             if (!castedArray.empty()) {
@@ -49,6 +63,7 @@ namespace common {
         }
     private:
         std::vector<std::vector<double>> convertedData = {};
+        std::string outputType = "double";
     };
 }
 

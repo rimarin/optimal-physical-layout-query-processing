@@ -17,11 +17,11 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurve){
     int64_t X3[2] = {1, 1};
     int64_t X4[2] = {0, 0};
     int64_t X5[3] = {1, 1, 0};
-    hilbertCurve.AxesToTranspose(X1, 5, 3);
-    hilbertCurve.AxesToTranspose(X2, 5, 3);
-    hilbertCurve.AxesToTranspose(X3, 5, 2);
-    hilbertCurve.AxesToTranspose(X4, 5, 2);
-    hilbertCurve.AxesToTranspose(X5, 2, 3);
+    hilbertCurve.axesToTranspose(X1, 5, 3);
+    hilbertCurve.axesToTranspose(X2, 5, 3);
+    hilbertCurve.axesToTranspose(X3, 5, 2);
+    hilbertCurve.axesToTranspose(X4, 5, 2);
+    hilbertCurve.axesToTranspose(X5, 2, 3);
     ASSERT_EQ(7865, hilbertCurve.interleaveBits(X1, 5, 3));
     ASSERT_EQ(5, hilbertCurve.interleaveBits(X2, 5, 3));
     ASSERT_EQ(2, hilbertCurve.interleaveBits(X3, 5, 2));
