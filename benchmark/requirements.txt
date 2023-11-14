@@ -1,0 +1,14 @@
+certifi==2023.7.22
+charset-normalizer==3.3.1
+duckdb==0.9.1
+idna==3.4
+numpy==1.26.2
+path==16.7.1
+pgpq==0.9.0
+psycopg==3.1.12
+py4j==0.10.9.7
+pyarrow==14.0.1
+pyspark==3.5.0
+requests==2.31.0
+typing_extensions==4.8.0
+urllib3==2.0.7
