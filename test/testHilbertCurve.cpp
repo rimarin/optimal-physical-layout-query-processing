@@ -31,6 +31,14 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurve){
     arrow::Result<std::shared_ptr<arrow::Table>> table = storage::DataWriter::GenerateExampleSchoolTable().ValueOrDie();
     std::vector<std::string> partitioningColumns = {"Age", "Student_id"};
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> hilbertCurvePartitioning = std::make_shared<partitioning::HilbertCurvePartitioning>();
-    auto partitions = hilbertCurvePartitioning->partition(*table, partitioningColumns, partitionSizeTest).ValueOrDie();
+    auto partitions = hilbertCurvePartitioning->partition(*table, partitioningColumns, 5).ValueOrDie();
     arrow::Status statusHilbertCurve = storage::DataWriter::WritePartitions(partitions, datasetSchoolName, hilbertCurveFolder);
+    auto pathPartition0 = hilbertCurveFolder / (datasetSchoolName + "0.parquet");
+    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition0, "Student_id"), std::vector<int32_t>({16, 45, 21, 7, 34}));
+    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition0, "Age"), std::vector<int32_t>({30, 21, 18, 27, 37}));
+    ASSERT_EQ(readColumn<arrow::Int64Array>(pathPartition0, "partition_id"), std::vector<int64_t>({0, 0, 0, 0, 0}));
+    auto pathPartition1 = hilbertCurveFolder / (datasetSchoolName + "1.parquet");
+    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition1, "Student_id"), std::vector<int32_t>({74, 111, 91}));
+    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition1, "Age"), std::vector<int32_t>({41, 23, 22}));
+    ASSERT_EQ(readColumn<arrow::Int64Array>(pathPartition1, "partition_id"), std::vector<int64_t>({1, 1, 1}));
 }
