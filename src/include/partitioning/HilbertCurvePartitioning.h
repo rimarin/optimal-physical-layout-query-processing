@@ -24,6 +24,8 @@
 
 namespace partitioning {
 
+    using IntRow = std::vector<int64_t>;
+
     class HilbertCurvePartitioning : public MultiDimensionalPartitioning {
     public:
         arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> partition(std::shared_ptr<arrow::Table> table,

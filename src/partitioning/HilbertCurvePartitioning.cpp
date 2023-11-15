@@ -18,33 +18,46 @@ namespace partitioning {
         int numBits = 8;
         int numDims = columnData.size();
         int columnSize = columnData[0].size();
-        std::map<common::Point, int64_t> rowToHilbertValue;
+        std::map<IntRow, int64_t> rowToHilbertValue;
+        std::vector<IntRow> rows;
         std::vector<int64_t> hilbertValues = {};
+
         // Convert columnar format to rows and compute Hilbert value for each for them
         // Build a hashmap to link each row to the generated Hilbert value
         // In addition, append Hilbert values to one vector
         for (int i = 0; i < columnSize; ++i) {
-            std::vector<int64_t> rowVector;
+            IntRow rowVector;
             for (int j = 0; j < numDims; ++j) {
                 rowVector.emplace_back(columnData[j][i]);
             }
-            int64_t* row = rowVector.data();
-            hilbertCurve.axesToTranspose(row, numBits, numDims);
-            unsigned int hilbertValue = hilbertCurve.interleaveBits(row, numBits, numDims);
+            rows.emplace_back(rowVector);
+            auto coordinatesVector = IntRow(rowVector);
+            int64_t* coordinates = coordinatesVector.data();
+            hilbertCurve.axesToTranspose(coordinates, numBits, numDims);
+            unsigned int hilbertValue = hilbertCurve.interleaveBits(coordinates, numBits, numDims);
             hilbertValues.emplace_back(hilbertValue);
             rowToHilbertValue[rowVector] = hilbertValue;
         }
-        // TODO: sort hilbert curve values
 
-        // TODO: iterate over sorted values and group them according to partition size
-        //  create map<hilbertValue, partitionId> hilbertValueToPartitionId
+        // Sort hilbert curve values
+        std::sort(std::begin(hilbertValues), std::end(hilbertValues));
 
-        // TODO: iterate over rows, get HilbertValue from rowToHilbertValue, use it to get partitionId
-        //  from hilbertValueToPartitionId. Append the obtained partitionId to the result values
+        // Iterate over sorted values and group them according to partition size
+        std::map<int64_t, int64_t> hilbertValueToPartitionId;
+        for (int i = 0; i < hilbertValues.size(); ++i) {
+            hilbertValueToPartitionId[hilbertValues[i]] = i / partitionSize;
+        }
 
+        // Iterate over rows, get HilbertValue from rowToHilbertValue, use it to get partitionId
+        // from hilbertValueToPartitionId. Append the obtained partitionId to the result values
         std::vector<int64_t> values = {};
+        for (auto &row : rows) {
+            auto hilbertValueForRow = rowToHilbertValue[row];
+            auto partitionId = hilbertValueToPartitionId[hilbertValueForRow];
+            values.emplace_back(partitionId);
+        }
         ARROW_RETURN_NOT_OK(int64Builder.AppendValues(values));
-        std::cout << "[FixedGridPartitioning] Mapped columns to partition ids" << std::endl;
+        std::cout << "[HilbertCurvePartitioning] Mapped columns to partition ids" << std::endl;
         ARROW_ASSIGN_OR_RAISE(partitionIds, int64Builder.Finish());
         return partitioning::MultiDimensionalPartitioning::splitTableIntoPartitions(table, partitionIds);
     }
