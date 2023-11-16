@@ -24,16 +24,7 @@ namespace partitioning {
         }
 
         // Columnar to row layout: vector of columns is transformed into a vector of points (rows)
-        std::vector<common::Point> points;
-        auto numColumns = partitioningColumnValues.size();
-        auto numRows = partitioningColumnValues[0].size();
-        for (int i = 0; i < numRows; i++){
-            common::Point point = {};
-            for (int j = 0; j < numColumns; j++) {
-                point.emplace_back(partitioningColumnValues[j][i]);
-            }
-            points.emplace_back(point);
-        }
+        std::vector<common::Point> points = common::ColumnDataConverter::toRows(columnData);
 
         // Build a kd-tree on the vector of points
         std::shared_ptr<common::KDTree> kdTree = std::make_shared<common::KDTree>(points, partitionSize);
@@ -57,8 +48,8 @@ namespace partitioning {
         std::shared_ptr<arrow::Array> partitionIds;
         arrow::Int64Builder int64Builder;
         std::vector<int64_t> values = {};
-        for (int i = 0; i < numRows; i++){
-            values.emplace_back(pointToPartitionId[points[i]]);
+        for (const auto & point : points){
+            values.emplace_back(pointToPartitionId[point]);
         }
         ARROW_RETURN_NOT_OK(int64Builder.AppendValues(values));
         std::cout << "[KDTreePartitioning] Mapped columns to partition ids" << std::endl;

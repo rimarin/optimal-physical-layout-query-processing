@@ -15,9 +15,9 @@
 #include <arrow/status.h>
 #include <arrow/table.h>
 
-namespace common {
+#include "Point.h"
 
-    using Point = std::vector<double>;
+namespace common {
 
     struct KDNode {
         double splitValue;

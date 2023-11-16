@@ -15,10 +15,9 @@
 #include <arrow/result.h>
 #include <arrow/status.h>
 #include <arrow/table.h>
+#include "Point.h"
 
 namespace common {
-
-    using Point = std::vector<double>;
 
     struct QuadNode {
         std::pair<double, double> splitValues;

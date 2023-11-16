@@ -16,10 +16,27 @@
 #include <arrow/table.h>
 #include <arrow/table.h>
 
+#include "Point.h"
+
 namespace common {
 
     class ColumnDataConverter {
     public:
+
+        // Columnar to row layout: vector of columns is transformed into a vector of points (rows)
+        static std::vector<Point> toRows(std::vector<std::vector<double>> &columnData) {
+            std::vector<Point> points;
+            auto numColumns = columnData.size();
+            auto numRows = columnData[0].size();
+            for (int i = 0; i < numRows; i++) {
+                Point point = {};
+                for (int j = 0; j < numColumns; j++) {
+                    point.emplace_back(columnData[j][i]);
+                }
+                points.emplace_back(point);
+            }
+            return points;
+        }
 
         arrow::Result<std::vector<std::vector<double>>> toDouble(std::vector<std::shared_ptr<arrow::Array>> &columnData){
             outputType = "double";
