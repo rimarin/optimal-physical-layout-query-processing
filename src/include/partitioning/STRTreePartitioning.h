@@ -20,6 +20,7 @@
 #include "../storage/DataWriter.h"
 #include "../storage/DataReader.h"
 
+#include "include/common/Point.h"
 
 namespace partitioning {
 
@@ -28,6 +29,12 @@ namespace partitioning {
         arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> partition(std::shared_ptr<arrow::Table> table,
                                                                             std::vector<std::string> partitionColumns,
                                                                             int32_t partitionSize);
+    private:
+        std::vector<std::vector<common::Point>> sortTileRecursive(std::vector<common::Point> points, int coord);
+        int k;
+        int n;
+        int r;
+        int p;
     };
 }
 
