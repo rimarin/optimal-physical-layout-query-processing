@@ -31,7 +31,7 @@ namespace partitioning {
                                                                             int32_t partitionSize);
     private:
         void sortTileRecursive(std::vector<common::Point> points, int coord);
-        std::vector<std::vector<common::Point>> slices;
+        std::vector<std::vector<common::Point>> slices = {};
         int k;
         int n;
         int r;

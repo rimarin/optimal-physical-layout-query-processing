@@ -40,9 +40,10 @@ namespace partitioning {
         n = partitionSize;
         P = r / n;
         S = ceil(sqrt(P));
+        slices = {};
 
         int coord = 0;
-        sortTileRecursive({points}, coord);
+        sortTileRecursive(points, coord);
 
         std::map<common::Point, int64_t> pointToPartitionId;
         for (int i = 0; i < slices.size(); ++i) {
@@ -61,13 +62,14 @@ namespace partitioning {
     }
 
     void STRTreePartitioning::sortTileRecursive(std::vector<common::Point> points, int coord) {
-        if (points.size() <= n || coord == k){
+        if (points.size() <= n){
             slices.emplace_back(points);
             return;
         }
+        int coordToUse = coord % k;
         std::sort(points.begin(), points.end(),
-                  [&coord](const std::vector<double>& a, const std::vector<double>& b) {
-                      return a[coord] < b[coord];
+                  [&coordToUse](const std::vector<double>& a, const std::vector<double>& b) {
+                      return a[coordToUse] < b[coordToUse];
                   });
         for (int i = 0; i < S; ++i) {
             auto begin = points.begin() + (i * (points.size() / S) );
@@ -75,8 +77,8 @@ namespace partitioning {
             if (end >= points.end()){
                 end = points.end();
             }
-            auto slice = std::vector(begin, end);
-            sortTileRecursive(slice, coord+1);
+            auto slice = std::vector<common::Point>(begin, end);
+            sortTileRecursive(slice, coordToUse+1);
         }
     }
 
