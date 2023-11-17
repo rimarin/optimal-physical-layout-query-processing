@@ -30,11 +30,13 @@ namespace partitioning {
                                                                             std::vector<std::string> partitionColumns,
                                                                             int32_t partitionSize);
     private:
-        std::vector<std::vector<common::Point>> sortTileRecursive(std::vector<common::Point> points, int coord);
+        void sortTileRecursive(std::vector<common::Point> points, int coord);
+        std::vector<std::vector<common::Point>> slices;
         int k;
         int n;
         int r;
-        int p;
+        int P;
+        int S;
     };
 }
 

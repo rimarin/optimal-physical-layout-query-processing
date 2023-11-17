@@ -3,8 +3,7 @@
 namespace partitioning {
 
     arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> STRTreePartitioning::partition(std::shared_ptr<arrow::Table> table,
-                                                                                             std::vector<std::string> partitionColumns,
-                                                                                             int32_t partitionSize){
+                                                                                             std::vector<std::string> partitionColumns,int32_t partitionSize) {
         /* Implementation based on:
            STR: A Simple and Efficient Algorithm for R-Tree Packing, https://dl.acm.org/doi/10.5555/870314
            An R-tree is a hierarchical data structure derived from the B-tree, which stores a collection of
@@ -26,7 +25,7 @@ namespace partitioning {
         */
         std::cout << "[STRTreePartitioning] Initializing partitioning technique" << std::endl;
         std::string displayColumns;
-        for (const auto &column : partitionColumns) displayColumns + " " += column;
+        for (const auto &column: partitionColumns) displayColumns + " " += column;
         std::cout << "[STRTreePartitioning] Partition has to be done on columns: " << displayColumns << std::endl;
         auto columnArrowArrays = storage::DataReader::getColumns(table, partitionColumns).ValueOrDie();
         auto converter = common::ColumnDataConverter();
@@ -39,14 +38,21 @@ namespace partitioning {
         k = columnData.size();
         r = points.size();
         n = partitionSize;
-        p = ceil(sqrt(r / n));
+        P = r / n;
+        S = ceil(sqrt(P));
 
         int coord = 0;
-        // sortTileRecursive(points, coord);
+        sortTileRecursive({points}, coord);
 
+        std::map<common::Point, int64_t> pointToPartitionId;
+        for (int i = 0; i < slices.size(); ++i) {
+            for (const auto &point: slices[i]){
+                pointToPartitionId[point] = i;
+            }
+        }
         std::vector<int64_t> values = {};
-        for (int64_t i = 0; i < points.size(); ++i) {
-            values.emplace_back(0);
+        for (const auto &point: points){
+            values.emplace_back(pointToPartitionId[point]);
         }
         ARROW_RETURN_NOT_OK(int64Builder.AppendValues(values));
         std::cout << "[STRTreePartitioning] Mapped columns to partition ids" << std::endl;
@@ -54,24 +60,24 @@ namespace partitioning {
         return partitioning::MultiDimensionalPartitioning::splitTableIntoPartitions(table, partitionIds);
     }
 
-    std::vector<std::vector<common::Point>> STRTreePartitioning::sortTileRecursive(std::vector<common::Point> points, int coord) {
-        if (coord == k){
-            return {points};
+    void STRTreePartitioning::sortTileRecursive(std::vector<common::Point> points, int coord) {
+        if (points.size() <= n || coord == k){
+            slices.emplace_back(points);
+            return;
         }
         std::sort(points.begin(), points.end(),
                   [&coord](const std::vector<double>& a, const std::vector<double>& b) {
                       return a[coord] < b[coord];
                   });
-        coord++;
-        std::vector<std::vector<common::Point>> slices;
-        for (int i = 0; i < p; ++i) {
-            slices.emplace_back(points.begin() + (i * n), points.end() + ((i + 1) * n));
+        for (int i = 0; i < S; ++i) {
+            auto begin = points.begin() + (i * (points.size() / S) );
+            auto end = points.begin() + ((i + 1) * (points.size() / S) );
+            if (end >= points.end()){
+                end = points.end();
+            }
+            auto slice = std::vector(begin, end);
+            sortTileRecursive(slice, coord+1);
         }
-        for (const auto &slice: slices){
-            auto slicePoints = sortTileRecursive(slice, coord+1);
-
-        }
-        return slices;
     }
 
 }
