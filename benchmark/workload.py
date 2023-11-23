@@ -49,3 +49,20 @@ class Workload(abc.ABC):
     @abc.abstractmethod
     def is_dataset_generated(self) -> bool:
         pass
+
+    @staticmethod
+    def rename_queries(path: str):
+
+        def num_to_letter(num: int) -> str:
+            return chr(ord('a') + num)
+
+        files = sorted(os.listdir(path))
+        grouped_files = [[] for _ in range(7)]
+        for file in files:
+            if '_' in file:
+                idx = int(file.split('_')[0]) - 1
+                grouped_files[idx].append(file)
+        for group in grouped_files:
+            for index, file in enumerate(group):
+                renamed_file = file.split('_')[0] + num_to_letter(index) + '.sql'
+                os.rename(os.path.join(path, file), os.path.join(path, renamed_file))

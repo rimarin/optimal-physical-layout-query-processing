@@ -1,6 +1,7 @@
 import duckdb
 import os
 
+from workload import Workload
 from workload_osm import OSMWorkload
 from workload_taxi import TaxiWorkload
 from workload_tpch import TPCHWorkload
@@ -16,7 +17,7 @@ https://github.com/duckdb/duckdb/tree/main/benchmark#run-a-single-benchmark
 """
 
 
-def run_benchmarks():
+def prepare_data_and_queries():
 
     taxi = TaxiWorkload()
     if not taxi.is_dataset_generated():
@@ -37,5 +38,28 @@ def run_benchmarks():
         osm.generate_queries()
 
 
+def mass_rename_queries():
+    taxi = TaxiWorkload()
+    tpch = TPCHWorkload()
+    osm = OSMWorkload()
+    Workload.rename_queries(taxi.get_generated_queries_folder())
+    Workload.rename_queries(tpch.get_generated_queries_folder())
+    Workload.rename_queries(osm.get_generated_queries_folder())
+
+
+def run_benchmarks():
+    duckdb_folder = "../duckdb"
+    duckdb_path = os.path.join(os.path.abspath(os.getcwd()), duckdb_folder)
+    if not os.path. exists(duckdb_path):
+        os.system("git clone https://github.com/duckdb/duckdb")
+        os.system(f"cd {duckdb_path}")
+    os.system("BUILD_BENCHMARK=1 BUILD_TPCH=1 make")
+    os.system(f'build/release/benchmark/benchmark_runner "benchmark/osm/.*"')
+    os.system(f'build/release/benchmark/benchmark_runner "benchmark/taxi/.*"')
+    os.system(f'build/release/benchmark/benchmark_runner "benchmark/tpch/.*"')
+
+
 if __name__ == "__main__":
+    # prepare_data_and_queries()
+    # mass_rename_queries()
     run_benchmarks()
