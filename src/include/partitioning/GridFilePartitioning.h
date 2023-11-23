@@ -28,7 +28,9 @@ namespace partitioning {
                                                                             std::vector<std::string> partitionColumns,
                                                                             int32_t partitionSize) override;
     private:
+        void packSlicesRecursive(std::vector<common::Point> points, int coord);
         std::vector<std::vector<common::Point>> slices = {};
+        std::vector<int> columnIndexes;
         int k;
         int n;
         int r;

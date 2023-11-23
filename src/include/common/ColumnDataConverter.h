@@ -38,6 +38,21 @@ namespace common {
             return points;
         }
 
+        // Compute Pearson's second skewness coefficient (median skewness) https://en.wikipedia.org/wiki/Skewness
+        // The result is converted to absolute value, since we do not care whether the skewness is positive or
+        // negative, but we only need the intensity of the skewness.
+        static double getColumnSkew(std::vector<double> &column){
+            int size = column.size();
+            double mean = std::accumulate(column.begin(), column.end(), 0.0) / size;
+            double median = column.at(column.size() / 2);
+            double variance = 0.0;
+            std::for_each (std::begin(column), std::end(column), [&](const double d) {
+                variance += (d - mean) * (d - mean);
+            });
+            double stdev = std::sqrt(variance / (size - 1));
+            return std::abs(3 * (mean - median) / stdev);
+        }
+
         arrow::Result<std::vector<std::vector<double>>> toDouble(std::vector<std::shared_ptr<arrow::Array>> &columnData){
             outputType = "double";
             for (const auto &data: columnData){

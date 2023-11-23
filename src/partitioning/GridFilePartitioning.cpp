@@ -29,19 +29,69 @@ namespace partitioning {
         auto columnArrowArrays = storage::DataReader::getColumns(table, partitionColumns).ValueOrDie();
         auto converter = common::ColumnDataConverter();
         auto columnData = converter.toDouble(columnArrowArrays).ValueOrDie();
-        std::shared_ptr<arrow::Array> partitionIds;
-        arrow::Int64Builder int64Builder;
-        auto x = columnData[0];
-        auto y = columnData[1];
-        std::vector<int64_t> values = {};
-        // Sort one dimension, divide in half.
-        for (int64_t i = 0; i < x.size(); ++i) {
-            values.emplace_back(0);
+
+        std::vector<common::Point> points = common::ColumnDataConverter::toRows(columnData);
+
+        std::vector<std::tuple<int, double>> columnIndexToSkewPairs;
+        for(int i = 0; i <columnData.size(); ++i) {
+            auto skew = common::ColumnDataConverter::getColumnSkew(columnData[i]);
+            columnIndexToSkewPairs.emplace_back(i, skew);
         }
+        std::sort(columnIndexToSkewPairs.begin(), columnIndexToSkewPairs.end(),
+                  [](const std::tuple<int, double>& a, const std::tuple<int, double>& b) {
+                      return std::get<1>(a) < std::get<1>(b);
+                  });
+        for (auto &indexAndSkew: columnIndexToSkewPairs) {
+            columnIndexes.emplace_back(std::get<0>(indexAndSkew));
+        }
+
+        k = columnData.size();
+        r = points.size();
+        n = partitionSize;
+        P = r / n;
+        S = ceil(sqrt(P));
+        slices = {};
+
+        int coordIdx = 0;
+        packSlicesRecursive(points, coordIdx);
+
+        std::map<common::Point, int64_t> pointToPartitionId;
+        for (int i = 0; i < slices.size(); ++i) {
+            for (const auto &point: slices[i]){
+                pointToPartitionId[point] = i;
+            }
+        }
+        std::vector<int64_t> values = {};
+        for (const auto &point: points){
+            values.emplace_back(pointToPartitionId[point]);
+        }
+        arrow::Int64Builder int64Builder;
         ARROW_RETURN_NOT_OK(int64Builder.AppendValues(values));
         std::cout << "[GridFilePartitioning] Mapped columns to partition ids" << std::endl;
+        std::shared_ptr<arrow::Array> partitionIds;
         ARROW_ASSIGN_OR_RAISE(partitionIds, int64Builder.Finish());
         return partitioning::MultiDimensionalPartitioning::splitTableIntoPartitions(table, partitionIds);
+    }
+
+    void GridFilePartitioning::packSlicesRecursive(std::vector<common::Point> points, int coord) {
+        if (points.size() <= n){
+            slices.emplace_back(points);
+            return;
+        }
+        int coordToUse = columnIndexes[coord % k];
+        std::sort(points.begin(), points.end(),
+                  [&coordToUse](const std::vector<double>& a, const std::vector<double>& b) {
+                      return a[coordToUse] < b[coordToUse];
+                  });
+        for (int i = 0; i < S; ++i) {
+            auto begin = points.begin() + (i * (points.size() / S) );
+            auto end = points.begin() + ((i + 1) * (points.size() / S) );
+            if (end >= points.end()){
+                end = points.end();
+            }
+            auto slice = std::vector<common::Point>(begin, end);
+            packSlicesRecursive(slice, coordToUse+1);
+        }
     }
 
 }
