@@ -16,6 +16,7 @@
 #include <arrow/table.h>
 
 #include "../common/ColumnDataConverter.h"
+#include "../common/ZOrderCurve.h"
 #include "../storage/DataReader.h"
 #include "../storage/DataWriter.h"
 #include "Partitioning.h"
