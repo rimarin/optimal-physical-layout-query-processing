@@ -24,7 +24,7 @@ namespace common
         //   <<, and the assignment variants) do not accept double or float operands. Both double and float have 3
         //   sections - a sign bit, an exponent, and the mantissa, any attempt to shift would lead to ambiguity.
     public:
-        typedef int64_t coord_t; // char,short,int for up to 8,16,32 bits per word
+        typedef int64_t coord_t;
 
         void transposeToAxes(coord_t* X, int b, int n) // Position, #bits, dimension
         {

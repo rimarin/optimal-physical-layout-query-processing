@@ -55,7 +55,7 @@ class OSMWorkload(Workload):
             '13': 'id',
             '14': 'id'
         }
-        templates = [_ for _ in range(7, 7 + 1)]
+        templates = [_ for _ in range(1, 7 + 1)]
         num_queries_per_template = 500
         for template in templates:
             with open(os.path.join(self.get_queries_folder(), f'{str(template)}.sql'), 'r') as template_file:

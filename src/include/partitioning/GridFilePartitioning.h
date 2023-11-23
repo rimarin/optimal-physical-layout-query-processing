@@ -27,6 +27,13 @@ namespace partitioning {
         arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> partition(std::shared_ptr<arrow::Table> table,
                                                                             std::vector<std::string> partitionColumns,
                                                                             int32_t partitionSize) override;
+    private:
+        std::vector<std::vector<common::Point>> slices = {};
+        int k;
+        int n;
+        int r;
+        int P;
+        int S;
     };
 }
 
