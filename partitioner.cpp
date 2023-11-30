@@ -10,7 +10,7 @@
 int main(int argc, char **argv) {
     if (argc < 5){
         std::cout << "Insufficient number of arguments\n";
-        std::cout << "Expected syntax: ./oplqp <dataset_name> <partitioning_technique> <partition_size> <columns>\n";
+        std::cout << "Expected syntax: partitioner <dataset_name> <partitioning_technique> <partition_size> <columns>\n";
         exit(1);
     }
     std::string argDatasetName = argv[1];
