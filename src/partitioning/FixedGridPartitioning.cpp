@@ -9,6 +9,7 @@ namespace partitioning {
         std::string displayColumns;
         for (const auto &column : partitionColumns) displayColumns + " " += column;
         std::cout << "[FixedGridPartitioning] Partition has to be done on columns: " << displayColumns << std::endl;
+
         auto columnArrowArrays = storage::DataReader::getColumns(table, partitionColumns).ValueOrDie();
         auto converter = common::ColumnDataConverter();
         auto columnData = converter.toDouble(columnArrowArrays).ValueOrDie();

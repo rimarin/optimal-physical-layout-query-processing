@@ -17,10 +17,9 @@
 
 #include "Partitioning.h"
 #include "../common/ColumnDataConverter.h"
+#include "../common/Point.h"
 #include "../storage/DataWriter.h"
 #include "../storage/DataReader.h"
-
-#include "include/common/Point.h"
 
 namespace partitioning {
 

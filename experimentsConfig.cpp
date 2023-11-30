@@ -1,16 +1,16 @@
 #include <set>
 #include <string>
 
-#include "include/storage/DataReader.h"
-#include "include/partitioning/FixedGridPartitioning.h"
-#include "include/partitioning/GridFilePartitioning.h"
-#include "include/partitioning/HilbertCurvePartitioning.h"
-#include "include/partitioning/KDTreePartitioning.h"
-#include "include/partitioning/NoPartitioning.h"
-#include "include/partitioning/Partitioning.h"
-#include "include/partitioning/QuadTreePartitioning.h"
-#include "include/partitioning/STRTreePartitioning.h"
-#include "include/partitioning/ZOrderCurvePartitioning.h"
+#include "src/include/storage/DataReader.h"
+#include "src/include/partitioning/FixedGridPartitioning.h"
+#include "src/include/partitioning/GridFilePartitioning.h"
+#include "src/include/partitioning/HilbertCurvePartitioning.h"
+#include "src/include/partitioning/KDTreePartitioning.h"
+#include "src/include/partitioning/NoPartitioning.h"
+#include "src/include/partitioning/Partitioning.h"
+#include "src/include/partitioning/QuadTreePartitioning.h"
+#include "src/include/partitioning/STRTreePartitioning.h"
+#include "src/include/partitioning/ZOrderCurvePartitioning.h"
 
 
 class ExperimentsConfig {
@@ -20,7 +20,6 @@ public:
     static inline const std::string datasetSchool = "school";
     static inline const std::string datasetWeather = "weather";
     static inline const std::set<std::string> testDatasets = {datasetSchool, datasetWeather};
-
     static inline const std::string datasetOSM = "osm";
     static inline const std::string datasetTaxi = "taxi";
     static inline const std::string datasetTPCH1 = "tpch-sf1";
@@ -46,7 +45,6 @@ public:
     static inline const std::filesystem::path quadTreeFolder = std::filesystem::current_path() / quadTree;
     static inline const std::filesystem::path hilbertCurveFolder = std::filesystem::current_path() / hilbertCurve;
     static inline const std::filesystem::path zOrderCurveFolder = std::filesystem::current_path() / zOrderCurve;
-
     static inline const std::filesystem::path testsFolder = std::filesystem::current_path();
     static inline const std::filesystem::path benchmarkFolder = testsFolder.parent_path() / "benchmark";
     static inline const std::filesystem::path datasetsFolder = benchmarkFolder / "datasets";
