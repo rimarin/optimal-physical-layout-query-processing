@@ -50,7 +50,7 @@ class TPCHWorkload(Workload):
                    's_suppkey = ps_suppkey;')
 
         # Export the entire table to a parquet file
-        database_file = os.path.join(self.get_dataset_folder(), 'lineitem.parquet')
+        database_file = os.path.join(self.get_dataset_folder(), 'tpch.parquet')
         duckdb.sql(f'COPY (SELECT * FROM lineitem_denorm) TO \'{database_file}\' (FORMAT PARQUET)')
         self.total_rows = len(duckdb.sql(f'SELECT * FROM lineitem_denorm'))
 
