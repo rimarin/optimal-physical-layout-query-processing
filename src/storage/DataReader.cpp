@@ -29,7 +29,11 @@ namespace storage {
         std::vector<std::shared_ptr<arrow::Array>> columnData;
         for (const auto &column: columns){
             // Infer the data types of the columns
-            auto columnType = table->schema()->GetFieldByName(column)->type();
+            auto columnByName = table->schema()->GetFieldByName(column);
+            if (columnByName == nullptr){
+                throw std::invalid_argument("Column with name <" + column + "> could not be loaded, check the column name");
+            }
+            auto columnType = columnByName->type();
             std::cout << "Reading column <" << column << "> of type " << columnType->ToString() << std::endl;
             inputTypes.emplace_back(columnType);
             // Extract column data by getting the chunks and casting them to an arrow array
