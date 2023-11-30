@@ -6,7 +6,7 @@ namespace partitioning {
                                                                                               std::vector<std::string> partitionColumns,
                                                                                               int32_t partitionSize){
         /*
-         * In the literature there are difference implementations of adaptive grid.
+         * In the literature there are different implementations of adaptive grid.
          * Here we use a simplified version of the algorithm described in Flood:
          * "Learning Multi-Dimensional Indexes", https://dl.acm.org/doi/10.1145/3318464.3380579
          * A certain dimension is chosen and the data space is divided into equally spaced slices.

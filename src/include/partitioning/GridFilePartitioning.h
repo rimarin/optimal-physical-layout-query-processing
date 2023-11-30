@@ -1,5 +1,5 @@
-#ifndef PARTITIONING_FIXEDGRID_H
-#define PARTITIONING_FIXEDGRID_H
+#ifndef PARTITIONING_GRIDFILE_H
+#define PARTITIONING_GRIDFILE_H
 
 #include <iostream>
 #include <map>
@@ -39,4 +39,4 @@ namespace partitioning {
     };
 }
 
-#endif //PARTITIONING_FIXEDGRID_H
+#endif //PARTITIONING_GRIDFILE_H
