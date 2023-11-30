@@ -11,6 +11,10 @@
 #include "gtest/gtest.h"
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurve){
+    auto folder = ExperimentsConfig::hilbertCurveFolder;
+    auto dataset = ExperimentsConfig::datasetSchool;
+    auto partitionSize = 5;
+    auto fileExtension = ExperimentsConfig::fileExtension;
     auto hilbertCurve = common::HilbertCurve();
     int64_t X1[3] = {5, 10, 20};
     int64_t X2[3] = {1, 1, 1};
@@ -27,17 +31,17 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurve){
     ASSERT_EQ(2, hilbertCurve.interleaveBits(X3, 5, 2));
     ASSERT_EQ(0, hilbertCurve.interleaveBits(X4, 5, 2));
     ASSERT_EQ(2, hilbertCurve.interleaveBits(X5, 5, 3));
-    cleanUpFolder(hilbertCurveFolder);
+    cleanUpFolder(folder);
     arrow::Result<std::shared_ptr<arrow::Table>> table = storage::DataWriter::GenerateExampleSchoolTable().ValueOrDie();
     std::vector<std::string> partitioningColumns = {"Age", "Student_id"};
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> hilbertCurvePartitioning = std::make_shared<partitioning::HilbertCurvePartitioning>();
-    auto partitions = hilbertCurvePartitioning->partition(*table, partitioningColumns, 5).ValueOrDie();
-    arrow::Status statusHilbertCurve = storage::DataWriter::WritePartitions(partitions, datasetSchoolName, hilbertCurveFolder);
-    auto pathPartition0 = hilbertCurveFolder / (datasetSchoolName + "0.parquet");
+    auto partitions = hilbertCurvePartitioning->partition(*table, partitioningColumns, partitionSize).ValueOrDie();
+    arrow::Status statusHilbertCurve = storage::DataWriter::WritePartitions(partitions, dataset, folder);
+    auto pathPartition0 = folder / (dataset + "0" + fileExtension);
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition0, "Student_id"), std::vector<int32_t>({16, 45, 21, 7, 34}));
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition0, "Age"), std::vector<int32_t>({30, 21, 18, 27, 37}));
     ASSERT_EQ(readColumn<arrow::Int64Array>(pathPartition0, "partition_id"), std::vector<int64_t>({0, 0, 0, 0, 0}));
-    auto pathPartition1 = hilbertCurveFolder / (datasetSchoolName + "1.parquet");
+    auto pathPartition1 = folder / (dataset + "1" + fileExtension);
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition1, "Student_id"), std::vector<int32_t>({74, 111, 91}));
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition1, "Age"), std::vector<int32_t>({41, 23, 22}));
     ASSERT_EQ(readColumn<arrow::Int64Array>(pathPartition1, "partition_id"), std::vector<int64_t>({1, 1, 1}));

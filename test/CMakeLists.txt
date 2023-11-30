@@ -22,6 +22,7 @@ set(SOURCES
         testReadWrite.cpp
         testSTRTree.cpp
         testZOrderCurve.cpp
+        ../experimentsConfig.cpp
         ../src/common/KDTree.cpp
         ../src/common/QuadTree.cpp
         ../src/storage/DataWriter.cpp

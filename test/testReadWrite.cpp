@@ -12,26 +12,36 @@
 
 
 TEST_F(TestOptimalLayoutFixture, TestGenerateParquetExamples){
+    auto folder = ExperimentsConfig::noPartitionFolder;
+    auto dataset1 = ExperimentsConfig::datasetWeather;
+    auto dataset2 = ExperimentsConfig::datasetSchool;
+    auto partitionSize = 20;
+    auto fileExtension = ExperimentsConfig::fileExtension;
     arrow::Result<std::shared_ptr<arrow::Table>> weatherTable = storage::DataWriter::GenerateExampleWeatherTable().ValueOrDie();
     arrow::Result<std::shared_ptr<arrow::Table>> schoolTable = storage::DataWriter::GenerateExampleSchoolTable().ValueOrDie();
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> noPartitioning = std::make_shared<partitioning::NoPartitioning>();
-    auto partitionsWeather = noPartitioning->partition(*weatherTable, {std::string("")}, partitionSizeTest).ValueOrDie();
-    arrow::Status statusWeather = storage::DataWriter::WritePartitions(partitionsWeather, datasetWeatherName, noPartitionFolder);
-    auto partitionsSchool = noPartitioning->partition(*schoolTable, {std::string("")}, partitionSizeTest).ValueOrDie();
-    arrow::Status statusSchool = storage::DataWriter::WritePartitions(partitionsSchool, datasetSchoolName, noPartitionFolder);
-    std::filesystem::path expectedPath = noPartitionFolder / (datasetWeatherName + "0" + fileExtension);
-    ASSERT_EQ(std::filesystem::exists( noPartitionFolder / (datasetWeatherName + "0" + fileExtension)), true);
-    ASSERT_EQ(std::filesystem::exists( noPartitionFolder / (datasetSchoolName + "0" + fileExtension)), true);
+    auto partitionsWeather = noPartitioning->partition(*weatherTable, {std::string("")}, partitionSize).ValueOrDie();
+    arrow::Status statusWeather = storage::DataWriter::WritePartitions(partitionsWeather, dataset1, folder);
+    auto partitionsSchool = noPartitioning->partition(*schoolTable, {std::string("")}, partitionSize).ValueOrDie();
+    arrow::Status statusSchool = storage::DataWriter::WritePartitions(partitionsSchool, dataset2, folder);
+    std::filesystem::path expectedPath = folder / (dataset1 + "0" + fileExtension);
+    ASSERT_EQ(std::filesystem::exists( folder / (dataset1 + "0" + fileExtension)), true);
+    ASSERT_EQ(std::filesystem::exists( folder / (dataset2 + "0" + fileExtension)), true);
 }
 
 TEST_F(TestOptimalLayoutFixture, TestReadParquet){
-    std::filesystem::path inputFile = noPartitionFolder / (datasetWeatherName + "0" + fileExtension);
+    auto folder = ExperimentsConfig::noPartitionFolder;
+    auto dataset1 = ExperimentsConfig::datasetWeather;
+    auto dataset2 = ExperimentsConfig::datasetSchool;
+    auto dataset3 = ExperimentsConfig::datasetTPCH1;
+    auto fileExtension = ExperimentsConfig::fileExtension;
+    std::filesystem::path inputFile = folder / (dataset1 + "0" + fileExtension);
     arrow::Result<std::shared_ptr<arrow::Table>> tableFromDisk = storage::DataReader::readTable(inputFile);
     ASSERT_EQ(tableFromDisk.status(), arrow::Status::OK());
-    arrow::Result<std::shared_ptr<arrow::Table>> testDatasetSchool = getDataset(datasetSchoolName);
+    arrow::Result<std::shared_ptr<arrow::Table>> testDatasetSchool = getDataset(dataset2);
     ASSERT_EQ(testDatasetSchool.status(), arrow::Status::OK());
-    arrow::Result<std::shared_ptr<arrow::Table>> testDatasetWeather = getDataset(datasetWeatherName);
+    arrow::Result<std::shared_ptr<arrow::Table>> testDatasetWeather = getDataset(dataset1);
     ASSERT_EQ(testDatasetWeather.status(), arrow::Status::OK());
-    arrow::Result<std::shared_ptr<arrow::Table>> realDatasetTPCH = getDataset(datasetTPCHName);
+    arrow::Result<std::shared_ptr<arrow::Table>> realDatasetTPCH = getDataset(dataset3);
     ASSERT_EQ(realDatasetTPCH.status(), arrow::Status::OK());
 }

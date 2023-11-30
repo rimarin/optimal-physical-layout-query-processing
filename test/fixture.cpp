@@ -1,51 +1,15 @@
 #include <arrow/table.h>
 #include <arrow/result.h>
 #include <filesystem>
-#include <set>
 #include <string>
 
 #include "gtest/gtest.h"
 
-#include "include/storage/DataReader.h"
+#include "../experimentsConfig.cpp"
 
 
 class TestOptimalLayoutFixture: public ::testing::Test {
 public:
-
-    // Dataset names
-    std::string datasetSchoolName = "school";
-    std::string datasetWeatherName = "weather";
-    std::set<std::string> testDatasets = {datasetSchoolName, datasetWeatherName};
-
-    std::string datasetOSMName = "osm";
-    std::string datasetTaxiName = "taxi";
-    std::string datasetTPCHName = "tpch";
-    std::set<std::string> realDatasets = {datasetOSMName, datasetTaxiName, datasetTPCHName};
-    std::map<std::string, std::string> datasetToFileName = {
-            {datasetOSMName, "..."},
-            { datasetTaxiName, "trips_2018-01"},
-            { datasetTPCHName, "lineitem_sf1"}
-    };
-
-    // Folder names
-    std::filesystem::path noPartitionFolder = std::filesystem::current_path() / "NoPartition";
-    std::filesystem::path fixedGridFolder = std::filesystem::current_path() / "FixedGrid";
-    std::filesystem::path gridFileFolder = std::filesystem::current_path() / "GridFile";
-    std::filesystem::path kdTreeFolder = std::filesystem::current_path() / "KDTree";
-    std::filesystem::path strTreeFolder = std::filesystem::current_path() / "STRTree";
-    std::filesystem::path quadTreeFolder = std::filesystem::current_path() / "QuadTree";
-    std::filesystem::path hilbertCurveFolder = std::filesystem::current_path() / "HilbertCurve";
-    std::filesystem::path zOrderCurveFolder = std::filesystem::current_path() / "ZOrderCurve";
-
-    std::filesystem::path testsFolder = std::filesystem::current_path();
-    std::filesystem::path benchmarkFolder = testsFolder.parent_path() / "benchmark";
-    std::filesystem::path datasetsFolder = benchmarkFolder / "datasets";
-
-    // Partitioning config
-    int32_t partitionSizeTest = 20;
-    int32_t partitionSizeReal = 20000;
-    std::string parquetFileExtension = ".parquet";
-    std::string fileExtension = parquetFileExtension;
 
     TestOptimalLayoutFixture( ) {
         // initialization;
@@ -70,7 +34,7 @@ public:
         if (std::filesystem::is_directory(folder)){
             for (const auto & folderIter : std::filesystem::directory_iterator(folder))
             {
-                if (folderIter.path().extension() == parquetFileExtension)
+                if (folderIter.path().extension() == ExperimentsConfig::parquetFileExtension)
                 {
                     std::filesystem::remove(folderIter.path());
                 }
@@ -78,12 +42,12 @@ public:
         }
     }
 
-    arrow::Result<std::shared_ptr<arrow::Table>> getDataset(std::string datasetName){
-        if (testDatasets.count(datasetName)){
-            std::filesystem::path datasetFile = noPartitionFolder / (datasetName + "0" + fileExtension);
+    arrow::Result<std::shared_ptr<arrow::Table>> getDataset(std::string &datasetName){
+        if (ExperimentsConfig::testDatasets.count(datasetName)){
+            std::filesystem::path datasetFile = ExperimentsConfig::noPartitionFolder / (datasetName + "0" + ExperimentsConfig::fileExtension);
             return storage::DataReader::readTable(datasetFile);
-        } else if(realDatasets.count(datasetName)){
-            std::filesystem::path datasetFile = datasetsFolder / datasetName / (datasetToFileName[datasetName] + fileExtension);
+        } else if(ExperimentsConfig::realDatasets.count(datasetName)){
+            std::filesystem::path datasetFile = ExperimentsConfig::datasetsFolder / datasetName / (datasetName + ExperimentsConfig::fileExtension);
             return storage::DataReader::readTable(datasetFile);
         } else {
             return arrow::Status::IOError("Dataset not found");

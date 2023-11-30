@@ -12,25 +12,29 @@
 
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningKDTree) {
-    cleanUpFolder(kdTreeFolder);
+    auto folder = ExperimentsConfig::kdTreeFolder;
+    auto dataset = ExperimentsConfig::datasetSchool;
+    auto partitionSize = 2;
+    auto fileExtension = ExperimentsConfig::fileExtension;
+    cleanUpFolder(folder);
     arrow::Result<std::shared_ptr<arrow::Table>> table = storage::DataWriter::GenerateExampleSchoolTable().ValueOrDie();
     std::vector<std::string> partitioningColumns = {"Age", "Student_id"};
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> kdTreePartitioning = std::make_shared<partitioning::KDTreePartitioning>();
-    auto partitions = kdTreePartitioning->partition(*table, partitioningColumns, 2).ValueOrDie();
-    arrow::Status statusKDTree = storage::DataWriter::WritePartitions(partitions, datasetSchoolName, kdTreeFolder);
-    auto pathPartition0 = kdTreeFolder / (datasetSchoolName + "0.parquet");
+    auto partitions = kdTreePartitioning->partition(*table, partitioningColumns, partitionSize).ValueOrDie();
+    arrow::Status statusKDTree = storage::DataWriter::WritePartitions(partitions, dataset, folder);
+    auto pathPartition0 = folder / (dataset + "0" + fileExtension);
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition0, "Student_id"), std::vector<int32_t>({45, 21}));
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition0, "Age"), std::vector<int32_t>({21, 18}));
     ASSERT_EQ(readColumn<arrow::Int64Array>(pathPartition0, "partition_id"), std::vector<int64_t>({0, 0}));
-    auto pathPartition1 = kdTreeFolder / (datasetSchoolName + "1.parquet");
+    auto pathPartition1 = folder / (dataset + "1" + fileExtension);
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition1, "Student_id"), std::vector<int32_t>({111, 91}));
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition1, "Age"), std::vector<int32_t>({23, 22}));
     ASSERT_EQ(readColumn<arrow::Int64Array>(pathPartition1, "partition_id"), std::vector<int64_t>({1, 1}));
-    auto pathPartition2 = kdTreeFolder / (datasetSchoolName + "2.parquet");
+    auto pathPartition2 = folder / (dataset + "2" + fileExtension);
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition2, "Student_id"), std::vector<int32_t>({16, 7}));
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition2, "Age"), std::vector<int32_t>({30, 27}));
     ASSERT_EQ(readColumn<arrow::Int64Array>(pathPartition2, "partition_id"), std::vector<int64_t>({2, 2}));
-    auto pathPartition3 = kdTreeFolder / (datasetSchoolName + "3.parquet");
+    auto pathPartition3 = folder / (dataset + "3" + fileExtension);
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition3, "Student_id"), std::vector<int32_t>({74, 34}));
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition3, "Age"), std::vector<int32_t>({41, 37}));
     ASSERT_EQ(readColumn<arrow::Int64Array>(pathPartition3, "partition_id"), std::vector<int64_t>({3, 3}));

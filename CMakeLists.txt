@@ -11,6 +11,8 @@ find_package(Parquet REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 
 set(SOURCES
+    experimentsConfig.cpp
+    partitioner.cpp
     src/apply_partitioning.cpp
     src/common/KDTree.cpp
     src/common/QuadTree.cpp
