@@ -8,6 +8,12 @@ find_package(Arrow REQUIRED)
 find_package(ArrowDataset REQUIRED)
 find_package(Parquet REQUIRED)
 
+if(NOT Arrow_FOUND)
+    set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+    include(arrow)
+    build_arrow()
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 
 set(SOURCES
