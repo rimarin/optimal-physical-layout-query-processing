@@ -39,13 +39,12 @@ int main(int argc, char **argv) {
         partitioningColumns.push_back(segment);
     }
 
-    std::filesystem::path datasetPath = std::filesystem::current_path() / "benchmark" / "datasets" / argDatasetName /
+    std::filesystem::path datasetPath = std::filesystem::current_path().parent_path() / "benchmark" / "datasets" / argDatasetName /
             ExperimentsConfig::noPartition / (argDatasetName + ".parquet");
-    std::filesystem::path outputPath = std::filesystem::current_path() / "benchmark" / "datasets" / argDatasetName / argPartitioningTechnique;
+    std::filesystem::path outputPath = std::filesystem::current_path().parent_path() / "benchmark" / "datasets" / argDatasetName / argPartitioningTechnique;
     arrow::Result<std::shared_ptr<arrow::Table>> table = storage::DataReader::readTable(datasetPath);
     auto mapNameToTechnique = ExperimentsConfig::nameToPartitioningTechnique;
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> partitioningTechnique = mapNameToTechnique[argPartitioningTechnique];
-    auto partitions = partitioningTechnique->partition(*table, partitioningColumns, partitionSize).ValueOrDie();
-    arrow::Status status = storage::DataWriter::WritePartitions(partitions, argDatasetName, outputPath);
+    arrow::Status status = partitioningTechnique->partition(*table, partitioningColumns, partitionSize, outputPath);
     return 0;
 }

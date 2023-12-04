@@ -2,12 +2,13 @@
 #define PARTITIONING_PARTITIONING_H
 
 #include <iostream>
+#include <filesystem>
 #include <set>
 
 #include <arrow/api.h>
 #include <arrow/dataset/api.h>
 #include <arrow/compute/api.h>
-
+#include <parquet/arrow/writer.h>
 
 namespace partitioning {
 
@@ -15,24 +16,28 @@ namespace partitioning {
     public:
         MultiDimensionalPartitioning() = default;
         virtual ~MultiDimensionalPartitioning() = default;
-        virtual arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> partition(std::shared_ptr<arrow::Table> table,
-                                                                                    std::vector<std::string> partitionColumns,
-                                                                                    int32_t partitionSize) = 0;
-        inline static std::vector<std::shared_ptr<arrow::Table>> splitTableIntoPartitions(std::shared_ptr<arrow::Table> &table,
-                                                                                          std::shared_ptr<arrow::Array> &partitionIds);
+        virtual arrow::Status partition(std::shared_ptr<arrow::Table> table,
+                                        std::vector<std::string> partitionColumns,
+                                        int32_t partitionSize,
+                                        std::filesystem::path &outputFolder) = 0;
+        inline static arrow::Status writeOutPartitions(std::shared_ptr<arrow::Table> &table,
+                                                       std::shared_ptr<arrow::Array> &partitionIds,
+                                                       std::filesystem::path &outputFolder);
     };
 
     // Splitting method to divide a table into sub-tables according to the partition ids
-    std::vector<std::shared_ptr<arrow::Table>>
-    MultiDimensionalPartitioning::splitTableIntoPartitions(std::shared_ptr<arrow::Table> &table,
-                                                           std::shared_ptr<arrow::Array> &partitionIds) {
+    // Also useful: https://stackoverflow.com/questions/73118363/how-can-i-partition-an-arrow-table-by-value-in-one-pass
+    // Can slice like in https://github.com/apache/arrow/blob/353139680311e809d2413ea46e17e1656069ac5e/cpp/src/arrow/dataset/partition.cc#L90C20-L90C20
+    arrow::Status MultiDimensionalPartitioning::writeOutPartitions(std::shared_ptr<arrow::Table> &table,
+                                                                   std::shared_ptr<arrow::Array> &partitionIds,
+                                                                   std::filesystem::path &outputFolder) {
         // Extract the distinct values of partitions ids.
         // Split the table into a set of different tables, one for each partition:
         // For each distinct partition_id we filter the table by that partition_id (the newly created column)
 
         // Extract the partition ids
         // Create a new table with the current schema + a new column with the partition ids
-        std::string strTable = table->ToString();
+        auto numRows = table->num_rows();
         std::shared_ptr<arrow::Table> combined = table->CombineChunks().ValueOrDie();
         std::vector<std::shared_ptr<arrow::Array>> columnArrays;
         std::vector<std::shared_ptr<arrow::Field>> columnFields;
@@ -55,26 +60,32 @@ namespace partitioning {
         auto numPartitions = uniquePartitionIds.size();
         std::cout << "[Partitioning] Computed " << numPartitions << " unique partition ids" << std::endl;
         assert(("Number of partitions is too high, component might freeze or crash", numPartitions < 20000));
-
         // For each distinct partition_id we filter the table by that partition_id (the newly created column)
-        std::vector<std::shared_ptr<arrow::Table>> partitionedTables = {};
         // Construct new table with the partitioning column from the record batches and
         // Wrap the Table in a Dataset, so we can use a Scanner
-        auto writeTable = arrow::Table::FromRecordBatches({batch}).ValueOrDie();
-        std::shared_ptr<arrow::dataset::Dataset> dataset = std::make_shared<arrow::dataset::InMemoryDataset>(writeTable);
+        int partitionedTablesNumRows = 0;
         for (const auto &partitionId: uniquePartitionIds){
+            auto writeTable = arrow::Table::FromRecordBatches({batch}).ValueOrDie();
+            std::shared_ptr<arrow::dataset::Dataset> dataset = std::make_shared<arrow::dataset::InMemoryDataset>(writeTable);
             // Build ScannerOptions for a Scanner to do a basic filter operation
             auto options = std::make_shared<arrow::dataset::ScanOptions>();
             options->filter = arrow::compute::equal(
                     arrow::compute::field_ref("partition_id"),
-                    arrow::compute::literal(partitionId)); // Change for your use case
+                    arrow::compute::literal(partitionId));
             auto builder = arrow::dataset::ScannerBuilder(dataset, options);
             auto scanner = builder.Finish();
             std::shared_ptr<arrow::Table> partitionedTable = scanner.ValueOrDie()->ToTable().ValueOrDie();
-            partitionedTables.push_back(partitionedTable);
+            partitionedTablesNumRows += partitionedTable->num_rows();
+            auto outfile = arrow::io::FileOutputStream::Open(outputFolder.string() + "/" + std::to_string(partitionId) + ".parquet");
+            PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*partitionedTable, arrow::default_memory_pool(), *outfile, table->num_rows()));
+            std::cout << "[Partitioning] Generate partitioned table with " << partitionedTable->num_rows() << " rows" << std::endl;
+            std::cout << "Allocated memory " << arrow::default_memory_pool()->bytes_allocated() << " bytes" << std::endl;
         }
-        std::cout << "[Partitioning] Split table into " << partitionedTables.size() << " partitions" << std::endl;
-        return partitionedTables;
+        if (numRows != partitionedTablesNumRows){
+            throw std::runtime_error("Numbers of rows of the original table and the sum of the rows of the partitioned table should match");
+        }
+        std::cout << "[Partitioning] Split table into " << numPartitions << " partitions" << std::endl;
+        return arrow::Status::OK();
     }
 }
 

@@ -2,8 +2,10 @@
 
 namespace partitioning {
 
-    arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> STRTreePartitioning::partition(std::shared_ptr<arrow::Table> table,
-                                                                                             std::vector<std::string> partitionColumns,int32_t partitionSize) {
+    arrow::Status STRTreePartitioning::partition(std::shared_ptr<arrow::Table> table,
+                                                 std::vector<std::string> partitionColumns,
+                                                 int32_t partitionSize,
+                                                 std::filesystem::path &outputFolder) {
         /* Implementation based on:
          * STR: A Simple and Efficient Algorithm for R-Tree Packing, https://dl.acm.org/doi/10.5555/870314
          * An R-tree is a hierarchical data structure derived from the B-tree, which stores a collection of
@@ -57,7 +59,7 @@ namespace partitioning {
         std::cout << "[STRTreePartitioning] Mapped columns to partition ids" << std::endl;
         std::shared_ptr<arrow::Array> partitionIds;
         ARROW_ASSIGN_OR_RAISE(partitionIds, int64Builder.Finish());
-        return partitioning::MultiDimensionalPartitioning::splitTableIntoPartitions(table, partitionIds);
+        return partitioning::MultiDimensionalPartitioning::writeOutPartitions(table, partitionIds, outputFolder);
     }
 
     void STRTreePartitioning::sortTileRecursive(std::vector<common::Point> points, int coord) {

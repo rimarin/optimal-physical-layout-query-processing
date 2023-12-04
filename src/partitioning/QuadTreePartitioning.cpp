@@ -2,9 +2,10 @@
 
 namespace partitioning {
 
-    arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> QuadTreePartitioning::partition(std::shared_ptr<arrow::Table> table,
-                                                                                              std::vector<std::string> partitionColumns,
-                                                                                              int32_t partitionSize){
+    arrow::Status QuadTreePartitioning::partition(std::shared_ptr<arrow::Table> table,
+                                                  std::vector<std::string> partitionColumns,
+                                                  int32_t partitionSize,
+                                                  std::filesystem::path &outputFolder){
         std::cout << "[QuadTreePartitioning] Initializing partitioning technique" << std::endl;
         std::string displayColumns;
         for (const auto &column : partitionColumns) displayColumns + " " += column;
@@ -54,7 +55,7 @@ namespace partitioning {
         ARROW_RETURN_NOT_OK(int64Builder.AppendValues(values));
         std::cout << "[QuadTreePartitioning] Mapped columns to partition ids" << std::endl;
         ARROW_ASSIGN_OR_RAISE(partitionIds, int64Builder.Finish());
-        return partitioning::MultiDimensionalPartitioning::splitTableIntoPartitions(table, partitionIds);
+        return partitioning::MultiDimensionalPartitioning::writeOutPartitions(table, partitionIds, outputFolder);
     }
 
 }

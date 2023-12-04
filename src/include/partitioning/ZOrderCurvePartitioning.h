@@ -26,9 +26,10 @@ namespace partitioning {
 
     class ZOrderCurvePartitioning : public MultiDimensionalPartitioning {
     public:
-        arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> partition(std::shared_ptr<arrow::Table> table,
-                                                                            std::vector<std::string> partitionColumns,
-                                                                            int32_t partitionSize) override;
+        arrow::Status partition(std::shared_ptr<arrow::Table> table,
+                                std::vector<std::string> partitionColumns,
+                                int32_t partitionSize,
+                                std::filesystem::path &outputFolder) override;
     };
 }
 

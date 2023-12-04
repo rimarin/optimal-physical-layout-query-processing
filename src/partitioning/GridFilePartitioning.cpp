@@ -2,9 +2,10 @@
 
 namespace partitioning {
 
-    arrow::Result<std::vector<std::shared_ptr<arrow::Table>>> GridFilePartitioning::partition(std::shared_ptr<arrow::Table> table,
-                                                                                              std::vector<std::string> partitionColumns,
-                                                                                              int32_t partitionSize){
+    arrow::Status GridFilePartitioning::partition(std::shared_ptr<arrow::Table> table,
+                                                  std::vector<std::string> partitionColumns,
+                                                  int32_t partitionSize,
+                                                  std::filesystem::path &outputFolder){
         /*
          * In the literature there are different implementations of adaptive grid.
          * Here we use a simplified version of the algorithm described in Flood:
@@ -70,7 +71,7 @@ namespace partitioning {
         std::cout << "[GridFilePartitioning] Mapped columns to partition ids" << std::endl;
         std::shared_ptr<arrow::Array> partitionIds;
         ARROW_ASSIGN_OR_RAISE(partitionIds, int64Builder.Finish());
-        return partitioning::MultiDimensionalPartitioning::splitTableIntoPartitions(table, partitionIds);
+        return partitioning::MultiDimensionalPartitioning::writeOutPartitions(table, partitionIds, outputFolder);
     }
 
     void GridFilePartitioning::packSlicesRecursive(std::vector<common::Point> points, int coord) {
