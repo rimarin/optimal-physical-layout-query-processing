@@ -47,7 +47,7 @@ public:
             std::filesystem::path datasetFile = ExperimentsConfig::noPartitionFolder / (datasetName + "0" + ExperimentsConfig::fileExtension);
             return storage::DataReader::readTable(datasetFile);
         } else if(ExperimentsConfig::realDatasets.count(datasetName)){
-            std::filesystem::path datasetFile = ExperimentsConfig::datasetsFolder / datasetName / (datasetName + ExperimentsConfig::fileExtension);
+            std::filesystem::path datasetFile = ExperimentsConfig::datasetsFolder / datasetName / "no-partition" / (datasetName + ExperimentsConfig::fileExtension);
             return storage::DataReader::readTable(datasetFile);
         } else {
             return arrow::Status::IOError("Dataset not found");
