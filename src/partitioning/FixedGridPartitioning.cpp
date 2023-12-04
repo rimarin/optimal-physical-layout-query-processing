@@ -6,6 +6,9 @@ namespace partitioning {
                                                    std::vector<std::string> partitionColumns,
                                                    int32_t partitionSize,
                                                    std::filesystem::path &outputFolder){
+        // Note: for FixedGrid the partition size is not applicable. In fact, we can only
+        // define the cell size/width in the grid and that will determine the number of elements per partition.
+        // Here the partition size is used as cell width.
         std::cout << "[FixedGridPartitioning] Initializing partitioning technique" << std::endl;
         std::string displayColumns;
         for (const auto &column : partitionColumns) displayColumns + " " += column;
@@ -18,6 +21,7 @@ namespace partitioning {
         arrow::Int64Builder int64Builder;
         auto x = columnData[0];
         auto y = columnData[1];
+        std::cout << "[FixedGridPartitioning] Using cell width " << partitionSize << std::endl;
         std::cout << "[FixedGridPartitioning] First value x is: " << x[0] << std::endl;
         std::cout << "[FixedGridPartitioning] First value y is: " << y[0] << std::endl;
         std::cout << "[FixedGridPartitioning] Computing cell index" << std::endl;

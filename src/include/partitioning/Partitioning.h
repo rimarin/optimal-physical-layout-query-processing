@@ -64,6 +64,7 @@ namespace partitioning {
         // Construct new table with the partitioning column from the record batches and
         // Wrap the Table in a Dataset, so we can use a Scanner
         int partitionedTablesNumRows = 0;
+        uint64_t completedPartitions = 0;
         for (const auto &partitionId: uniquePartitionIds){
             auto writeTable = arrow::Table::FromRecordBatches({batch}).ValueOrDie();
             std::shared_ptr<arrow::dataset::Dataset> dataset = std::make_shared<arrow::dataset::InMemoryDataset>(writeTable);
@@ -78,8 +79,11 @@ namespace partitioning {
             partitionedTablesNumRows += partitionedTable->num_rows();
             auto outfile = arrow::io::FileOutputStream::Open(outputFolder.string() + "/" + std::to_string(partitionId) + ".parquet");
             PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*partitionedTable, arrow::default_memory_pool(), *outfile, table->num_rows()));
+            completedPartitions += 1;
             std::cout << "[Partitioning] Generate partitioned table with " << partitionedTable->num_rows() << " rows" << std::endl;
-            std::cout << "Allocated memory " << arrow::default_memory_pool()->bytes_allocated() << " bytes" << std::endl;
+            // std::cout << "Allocated memory " << arrow::default_memory_pool()->bytes_allocated() << " bytes" << std::endl;
+            int progress = (float(completedPartitions) / float(numPartitions)) * 100;
+            std::cout << "[Partitioning] Progress: " << progress << " %" << std::endl;
         }
         if (numRows != partitionedTablesNumRows){
             throw std::runtime_error("Numbers of rows of the original table and the sum of the rows of the partitioned table should match");
