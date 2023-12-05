@@ -8,13 +8,39 @@ from workload import Workload
 
 class TPCHWorkload(Workload):
 
-    def __init__(self):
+    def __init__(self, scale = 1):
         super().__init__()
         self.total_rows = None
-        self.scale = 1
+        self.scale = scale
 
     def get_name(self):
-        return 'tpch'
+        return f'tpch-sf{self.scale}'
+
+    def get_relevant_columns(self):
+        return ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime", "passenger_count",
+                "fare_amount", "trip_distance"]
+
+    def get_schema(self):
+        return {
+            "VendorID": int,
+            "tpep_pickup_datetime": int,
+            "tpep_dropoff_datetime": int,
+            "passenger_count": int,
+            "trip_distance": float,
+            "RatecodeID": int,
+            "store_and_fwd_flag": str,
+            "PULocationID": int,
+            "DOLocationID": int,
+            "payment_type": int,
+            "extra": float,
+            "mta_tax": float,
+            "tip_amount": float,
+            "tolls_amount": float,
+            "improvement_surcharge": float,
+            "total_amount": float,
+            "congestion_surcharge": float,
+            "airport_fee": float,
+        }
 
     def get_table_name(self):
         return 'lineitem'
@@ -92,4 +118,5 @@ class TPCHWorkload(Workload):
         return os.path.exists(os.path.join(self.get_dataset_folder(), self.get_table_name() + '.parquet'))
 
     def is_query_workload_generated(self) -> bool:
-        return True
+        # TODO: implement
+        return any(f.endswith(".sql") for f in os.listdir(self.get_generated_queries_folder()))

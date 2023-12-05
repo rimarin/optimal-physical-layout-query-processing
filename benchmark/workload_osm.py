@@ -19,6 +19,25 @@ class OSMWorkload(Workload):
     def get_table_name(self):
         return ''
 
+    def get_relevant_columns(self):
+        return ["min_lon", "max_lon", "min_lat", "max_lat", "created_at", "version", "id"]
+
+    def get_schema(self):
+        return {
+            "id": int,
+            "version": int,
+            "changeset": int,
+            "created_at": int,
+            "tags": list,
+            "wrt": str,
+            "min_lon": float,
+            "max_lon": float,
+            "min_lat": float,
+            "max_lat": float,
+            "quadkey": str,
+            "linear_meters": float
+        }
+
     def generate_dataset(self, **params):
         os.system(f"aws s3 cp s3://daylight-openstreetmap/parquet/osm_features/release=v1.33/type=node/ "
                   f"{self.get_dataset_folder()} --recursive")
@@ -84,7 +103,7 @@ class OSMWorkload(Workload):
                 query_selectivity = round((num_tuples / self.get_total_rows()) * 100, rounding_digits)
                 min_selectivity, max_selectivity = 0.001, 5
                 if query_selectivity != 0 and min_selectivity < query_selectivity < max_selectivity:
-                    with open(os.path.join(self.get_generated_queries_folder(), f'{str(template)}_{str(query_selectivity)}.sql'),
+                    with open(os.path.join(self.get_generated_queries_folder(), f'{str(template)}_{str(query_selectivity)}.sql.test'),
                               'w') as query_file:
                         query_file.write(final_query)
 
@@ -92,4 +111,5 @@ class OSMWorkload(Workload):
         return any(f.endswith(".parquet") for f in os.listdir(self.get_dataset_folder()))
 
     def is_query_workload_generated(self) -> bool:
-        return False
+        # TODO: implement
+        return any(f.endswith(".sql") for f in os.listdir(self.get_generated_queries_folder()))

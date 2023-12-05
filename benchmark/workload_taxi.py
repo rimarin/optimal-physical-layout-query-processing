@@ -22,6 +22,32 @@ class TaxiWorkload(Workload):
     def get_table_name(self):
         return 'trips'
 
+    def get_relevant_columns(self):
+        return ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime", "passenger_count",
+                "fare_amount", "trip_distance"]
+
+    def get_schema(self):
+        return {
+            "VendorID": int,
+            "tpep_pickup_datetime": int,
+            "tpep_dropoff_datetime": int,
+            "passenger_count": int,
+            "trip_distance": float,
+            "RatecodeID": int,
+            "store_and_fwd_flag": str,
+            "PULocationID": int,
+            "DOLocationID": int,
+            "payment_type": int,
+            "extra": float,
+            "mta_tax": float,
+            "tip_amount": float,
+            "tolls_amount": float,
+            "improvement_surcharge": float,
+            "total_amount": float,
+            "congestion_surcharge": float,
+            "airport_fee": float,
+        }
+
     def generate_dataset(self, **params):
         self.start_year = params.get("start_year", self.start_year)
         self.end_year = params.get("end_year", self.end_year)
@@ -122,4 +148,6 @@ class TaxiWorkload(Workload):
         return os.path.exists(first_file) and os.path.exists(last_file)
 
     def is_query_workload_generated(self) -> bool:
-        return True
+        # TODO: implement
+        return any(f.endswith(".sql") for f in os.listdir(self.get_generated_queries_folder()))
+

@@ -4,6 +4,10 @@ import os
 
 from path import Path
 
+from workload_osm import OSMWorkload
+from workload_taxi import TaxiWorkload
+from workload_tpch import TPCHWorkload
+
 
 class Workload(abc.ABC):
 
@@ -14,8 +18,50 @@ class Workload(abc.ABC):
         self.total_rows = None
 
     @abc.abstractmethod
+    def generate_dataset(self, **params):
+        pass
+
+    @abc.abstractmethod
+    def generate_partitioned_dataset(self):
+        pass
+
+    @abc.abstractmethod
+    def generate_queries(self):
+        pass
+
+    @staticmethod
+    def get_available_workloads():
+        return [OSMWorkload(), TaxiWorkload(), TPCHWorkload()]
+
+    @staticmethod
+    def get_workload(name: str):
+        scale = 1
+        if 'tpch-sf' in name:
+            scale = name.split('tpch-sf')[1]
+        name_to_workload = {
+            f'tpch-sf{scale}': TPCHWorkload(scale=scale),
+            'taxi': TaxiWorkload(),
+            'osm': OSMWorkload()
+        }
+        if name in name_to_workload:
+            return name_to_workload[name]
+        raise Exception('Workload not found')
+
+    def get_dataset_folder(self):
+        return os.path.abspath(os.path.join(self.DATASETS_FOLDER, self.get_name()))
+
+    def get_files_pattern(self):
+        return f'{self.get_dataset_folder()}/{self.get_table_name()}*.parquet'
+
+    def get_generated_queries_folder(self):
+        return os.path.abspath(os.path.join(self.get_queries_folder(), 'generated'))
+
+    @abc.abstractmethod
     def get_name(self):
         pass
+
+    def get_queries_folder(self):
+        return os.path.abspath(os.path.join(self.QUERIES_FOLDER, self.get_name()))
 
     @abc.abstractmethod
     def get_table_name(self):
@@ -25,26 +71,6 @@ class Workload(abc.ABC):
         if not self.total_rows:
             self.total_rows = len(duckdb.sql(f'SELECT * FROM read_parquet(\'{self.get_files_pattern()}\')'))
         return self.total_rows
-
-    def get_dataset_folder(self):
-        return os.path.abspath(os.path.join(self.DATASETS_FOLDER, self.get_name()))
-
-    def get_files_pattern(self):
-        return f'{self.get_dataset_folder()}/{self.get_table_name()}*.parquet'
-
-    def get_queries_folder(self):
-        return os.path.abspath(os.path.join(self.QUERIES_FOLDER, self.get_name()))
-
-    def get_generated_queries_folder(self):
-        return os.path.abspath(os.path.join(self.get_queries_folder(), 'generated'))
-
-    @abc.abstractmethod
-    def generate_dataset(self, **params):
-        pass
-
-    @abc.abstractmethod
-    def generate_queries(self):
-        pass
 
     @abc.abstractmethod
     def is_dataset_generated(self) -> bool:
