@@ -42,7 +42,10 @@ namespace partitioning {
         std::vector<std::shared_ptr<arrow::Array>> columnArrays;
         std::vector<std::shared_ptr<arrow::Field>> columnFields;
         for (int i=0; i < table->num_columns(); ++i) {
-            columnArrays.push_back(combined->columns().at(i)->chunk(0));
+            auto combinedColumnChunks = combined->columns().at(i)->chunks();
+            for (const auto &chunk: combinedColumnChunks){
+                columnArrays.push_back(chunk);
+            }
             columnFields.push_back(table->schema()->field(i));
         }
         columnFields.push_back(arrow::field("partition_id", arrow::int64()));
