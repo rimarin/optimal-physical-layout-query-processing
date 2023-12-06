@@ -4,10 +4,6 @@ import os
 
 from path import Path
 
-from workload_osm import OSMWorkload
-from workload_taxi import TaxiWorkload
-from workload_tpch import TPCHWorkload
-
 
 class Workload(abc.ABC):
 
@@ -22,33 +18,11 @@ class Workload(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def generate_partitioned_dataset(self):
-        pass
-
-    @abc.abstractmethod
     def generate_queries(self):
         pass
 
-    @staticmethod
-    def get_available_workloads():
-        return [OSMWorkload(), TaxiWorkload(), TPCHWorkload()]
-
-    @staticmethod
-    def get_workload(name: str):
-        scale = 1
-        if 'tpch-sf' in name:
-            scale = name.split('tpch-sf')[1]
-        name_to_workload = {
-            f'tpch-sf{scale}': TPCHWorkload(scale=scale),
-            'taxi': TaxiWorkload(),
-            'osm': OSMWorkload()
-        }
-        if name in name_to_workload:
-            return name_to_workload[name]
-        raise Exception('Workload not found')
-
     def get_dataset_folder(self):
-        return os.path.abspath(os.path.join(self.DATASETS_FOLDER, self.get_name()))
+        return os.path.abspath(os.path.join(self.DATASETS_FOLDER, self.get_name(), 'no-partition'))
 
     def get_files_pattern(self):
         return f'{self.get_dataset_folder()}/{self.get_table_name()}*.parquet'

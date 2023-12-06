@@ -8,7 +8,7 @@ from workload import Workload
 
 class TPCHWorkload(Workload):
 
-    def __init__(self, scale = 1):
+    def __init__(self, scale=1):
         super().__init__()
         self.total_rows = None
         self.scale = scale
@@ -17,33 +17,14 @@ class TPCHWorkload(Workload):
         return f'tpch-sf{self.scale}'
 
     def get_relevant_columns(self):
-        return ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime", "passenger_count",
-                "fare_amount", "trip_distance"]
+        return ["c_custkey", "l_orderkey", "o_orderdate", "l_shipdate", "c_nationkey", "n_regionkey", "l_discount",
+                "l_quantity", "l_commitdate", "l_receiptdate", "l_commitdate", "p_size"]
 
     def get_schema(self):
-        return {
-            "VendorID": int,
-            "tpep_pickup_datetime": int,
-            "tpep_dropoff_datetime": int,
-            "passenger_count": int,
-            "trip_distance": float,
-            "RatecodeID": int,
-            "store_and_fwd_flag": str,
-            "PULocationID": int,
-            "DOLocationID": int,
-            "payment_type": int,
-            "extra": float,
-            "mta_tax": float,
-            "tip_amount": float,
-            "tolls_amount": float,
-            "improvement_surcharge": float,
-            "total_amount": float,
-            "congestion_surcharge": float,
-            "airport_fee": float,
-        }
+        raise NotImplementedError
 
     def get_table_name(self):
-        return 'lineitem'
+        return self.get_name()
 
     def generate_dataset(self, **params):
         """
@@ -113,6 +94,9 @@ class TPCHWorkload(Workload):
                     with open(os.path.join(self.get_generated_queries_folder(), f'{str(template)}_{str(query_selectivity)}.sql'),
                               'w') as query_file:
                         query_file.write(query)
+
+    def get_queries_folder(self):
+        return os.path.abspath(os.path.join(self.QUERIES_FOLDER, self.get_name().split('-sf')[0]))
 
     def is_dataset_generated(self) -> bool:
         return os.path.exists(os.path.join(self.get_dataset_folder(), self.get_table_name() + '.parquet'))
