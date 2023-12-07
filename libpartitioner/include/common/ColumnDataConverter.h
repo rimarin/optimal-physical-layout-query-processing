@@ -1,5 +1,5 @@
-#ifndef OPLQP_COLUMNDATACONVERTER_H
-#define OPLQP_COLUMNDATACONVERTER_H
+#ifndef COMMON_COLUMNDATACONVERTER_H
+#define COMMON_COLUMNDATACONVERTER_H
 
 #include <iostream>
 #include <map>
@@ -99,4 +99,4 @@ namespace common {
     };
 }
 
-#endif //OPLQP_COLUMNDATACONVERTER_H
+#endif //COMMON_COLUMNDATACONVERTER_H

@@ -1,5 +1,5 @@
-#ifndef PARTITIONING_KDTREE_H
-#define PARTITIONING_KDTREE_H
+#ifndef COMMON_KDTREE_H
+#define COMMON_KDTREE_H
 
 #include <iostream>
 #include <map>
@@ -46,4 +46,4 @@ namespace common {
 
 }
 
-#endif //PARTITIONING_KDTREE_H
+#endif //COMMON_KDTREE_H

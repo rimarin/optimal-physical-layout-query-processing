@@ -1,3 +1,6 @@
+#ifndef COMMON_ZORDERCURVE_H
+#define COMMON_ZORDERCURVE_H
+
 #include <cstdio>
 #include <vector>
 
@@ -67,3 +70,5 @@ namespace common {
         }
     };
 }
+
+#endif //COMMON_ZORDERCURVE_H

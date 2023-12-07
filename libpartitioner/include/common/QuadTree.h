@@ -1,5 +1,5 @@
-#ifndef PARTITIONING_QUADTREE_H
-#define PARTITIONING_QUADTREE_H
+#ifndef COMMON_QUADTREE_H
+#define COMMON_QUADTREE_H
 
 #include <algorithm>
 #include <iostream>
@@ -49,4 +49,4 @@ namespace common {
 
 }
 
-#endif //PARTITIONING_QUADTREE_H
+#endif //COMMON_QUADTREE_H
