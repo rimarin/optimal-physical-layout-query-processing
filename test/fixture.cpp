@@ -5,7 +5,7 @@
 
 #include "gtest/gtest.h"
 
-#include "../experimentsConfig.cpp"
+#include "../partitioner/experimentsConfig.cpp"
 
 
 class TestOptimalLayoutFixture: public ::testing::Test {

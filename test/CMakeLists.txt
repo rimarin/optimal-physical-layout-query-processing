@@ -1,44 +1,21 @@
-cmake_minimum_required(VERSION 3.25)
+include(FetchContent)
 
-project(oplqp_test)
+FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG        release-1.12.1
+)
 
-add_subdirectory(_lib)
-include_directories(../src/)
+FetchContent_MakeAvailable(googletest)
+add_library(GTest::GTest INTERFACE IMPORTED)
+target_link_libraries(GTest::GTest INTERFACE gtest_main)
 
-find_package(Arrow REQUIRED)
-find_package(ArrowDataset REQUIRED)
-find_package(Parquet REQUIRED)
+file(GLOB SOURCES *.cpp)
+add_executable(partitioner_test ${SOURCES})
 
-set(CMAKE_CXX_STANDARD 17)
+target_link_libraries(partitioner_test libpartitioner)
 
-set(SOURCES
-        fixture.cpp
-        testFixedGrid.cpp
-        testGridFile.cpp
-        testHilbertCurve.cpp
-        testKDTree.cpp
-        testPartitionTPCH.cpp
-        testQuadTree.cpp
-        testReadWrite.cpp
-        testSTRTree.cpp
-        testZOrderCurve.cpp
-        ../experimentsConfig.cpp
-        ../src/common/KDTree.cpp
-        ../src/common/QuadTree.cpp
-        ../src/storage/DataWriter.cpp
-        ../src/storage/DataReader.cpp
-        ../src/partitioning/NoPartitioning.cpp
-        ../src/partitioning/FixedGridPartitioning.cpp
-        ../src/partitioning/GridFilePartitioning.cpp
-        ../src/partitioning/HilbertCurvePartitioning.cpp
-        ../src/partitioning/KDTreePartitioning.cpp
-        ../src/partitioning/QuadTreePartitioning.cpp
-        ../src/partitioning/STRTreePartitioning.cpp
-        ../src/partitioning/ZOrderCurvePartitioning.cpp)
-add_executable(oplqp_test ${SOURCES})
+target_include_directories(partitioner_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
-
-target_link_libraries(oplqp_test PRIVATE Arrow::arrow_shared parquet arrow_dataset gtest gtest_main)
-target_include_directories(oplqp_test PRIVATE src/include)
-
+add_test(NAME partitioner_test
+        COMMAND partitioner_test)

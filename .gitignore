@@ -8,14 +8,12 @@
 /dataSources.local.xml
 cmake-build-debug
 cmake-build-release
-partitioner
 .idea/
 /benchmark/lib
 /benchmark/datasets/osm
 /benchmark/datasets/taxi
 /benchmark/datasets/tpch-sf1
 /benchmark/datasets/tpch-sf10
-/test/_lib
 /test/fixed-grid
 /test/grid-file
 /test/hilbert-curve
