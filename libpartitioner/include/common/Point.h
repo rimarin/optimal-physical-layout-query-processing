@@ -8,7 +8,3 @@ namespace common {
 }
 
 #endif //COMMON_POINT_H
-
-#endif //COMMON_POINT_H
-
-#endif //COMMON_POINT_H

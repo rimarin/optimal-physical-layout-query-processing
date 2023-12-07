@@ -1,4 +1,3 @@
-set(ARROW_BUILD_SHARED True)
 set(ARROW_DEPENDENCY_SOURCE "SYSTEM")
 
 # From arrow_io: "This benchmark either requires SSE4.2 or ARMV8 SIMD to be enabled"
@@ -9,12 +8,12 @@ set(ARROW_DEPENDENCY_SOURCE "SYSTEM")
 set(ARROW_SIMD_LEVEL SSE4_2)
 
 # Turn on Arrow features here (and add them to target_link_libraries when appropriate)
+set(ARROW_ACERO ON)
 set(ARROW_PARQUET ON)
 set(ARROW_IPC ON)
 set(ARROW_DATASET ON)
 set(ARROW_FILESYSTEM ON)
 set(ARROW_COMPUTE ON)
-
 
 # Get Arrow
 include(FetchContent)
@@ -37,7 +36,7 @@ file(INSTALL "${arrow_BINARY_DIR}/src/parquet/parquet_version.h"
 
 # NOTE: I had to add this to make headers available which I find weird
 target_include_directories(
-        arrow_shared
+        arrow_static
         INTERFACE "$<BUILD_INTERFACE:${arrow_SOURCE_DIR}/cpp/src>"
 )
 
@@ -64,11 +63,11 @@ set(LIBPARTITIONER_SOURCES
 add_library(libpartitioner STATIC ${LIBPARTITIONER_SOURCES})
 
 target_link_libraries(libpartitioner
-        PRIVATE
-        arrow_shared
-        arrow_dataset_shared
-        arrow_acero_shared
-        parquet_shared)
+        PUBLIC
+        arrow_static
+        arrow_dataset_static
+        arrow_acero_static
+        parquet_static)
 
 # Specify here the include directories exported by this library
 target_include_directories(libpartitioner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} include)

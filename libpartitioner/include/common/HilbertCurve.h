@@ -124,7 +124,3 @@ namespace common
 }
 
 #endif //COMMON_HILBERTCURVE_H
-
-#endif //COMMON_HILBERTCURVE_H
-
-#endif //COMMON_HILBERTCURVE_H

@@ -72,7 +72,3 @@ namespace common {
 }
 
 #endif //COMMON_ZORDERCURVE_H
-
-#endif //COMMON_ZORDERCURVE_H
-
-#endif //COMMON_ZORDERCURVE_H
