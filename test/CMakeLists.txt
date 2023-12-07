@@ -13,7 +13,7 @@ target_link_libraries(GTest::GTest INTERFACE gtest_main)
 file(GLOB SOURCES *.cpp)
 add_executable(partitioner_test ${SOURCES})
 
-target_link_libraries(partitioner_test libpartitioner gtest_main)
+target_link_libraries(partitioner_test libpartitioner gtest gtest_main gmock_main)
 
 target_include_directories(partitioner_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
