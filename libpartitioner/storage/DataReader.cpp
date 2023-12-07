@@ -17,14 +17,16 @@ namespace storage {
         ARROW_RETURN_NOT_OK(parquet::arrow::OpenFile(input, pool, &arrow_reader));
 
         std::shared_ptr<arrow::Table> table;
-        arrow::Status result;
-        result = arrow_reader->ReadTable(&table);
+        ARROW_RETURN_NOT_OK(arrow_reader->ReadTable(&table));
         std::cout << "[DataReader] Read table from file " << inputFile.string() << std::endl;
         return table;
     }
 
     arrow::Result<std::vector<std::shared_ptr<arrow::Array>>>
     DataReader::getColumns(std::shared_ptr<arrow::Table> &table, std::vector<std::string> &columns) {
+        if (table == nullptr){
+            throw std::invalid_argument("Cannot getColumns from empty table");
+        }
         std::vector<arrow::compute::InputType> inputTypes;
         std::vector<std::shared_ptr<arrow::Array>> columnData;
         for (const auto &column: columns){

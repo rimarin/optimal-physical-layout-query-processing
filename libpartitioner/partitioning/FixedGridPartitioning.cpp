@@ -15,9 +15,7 @@ namespace partitioning {
         std::cout << "[FixedGridPartitioning] Partition has to be done on columns: " << displayColumns << std::endl;
         std::cout << "[FixedGridPartitioning] Regardless of number of passed columns, the FixedGrid technique will "
                      "consider the first 2 columns and overlap the 2-dimensional space with a grid of fixed-sized cells" << std::endl;
-        // std::vector<std::shared_ptr<arrow::Array>> columnArrowArrays;
-        auto columnArrowArrays = storage::DataReader::getColumns(table, partitionColumns).ValueOrDie();
-        /*
+        std::vector<std::shared_ptr<arrow::Array>> columnArrowArrays;
         if (partitionColumns.size() >= 2){
             columnArrowArrays = storage::DataReader::getColumns(table, partitionColumns).ValueOrDie();
         }
@@ -25,7 +23,7 @@ namespace partitioning {
             auto cols = table->columns();
             columnArrowArrays.emplace_back(cols[0]->chunk(0));
             columnArrowArrays.emplace_back(cols[1]->chunk(0));
-        }*/
+        }
         auto converter = common::ColumnDataConverter();
         auto columnData = converter.toDouble(columnArrowArrays).ValueOrDie();
         std::shared_ptr<arrow::Array> partitionIds;
