@@ -9,6 +9,7 @@ class Workload(abc.ABC):
 
     DATASETS_FOLDER = Path('datasets/')
     QUERIES_FOLDER = Path('queries/')
+    FILE_EXTENSION = '.parquet'
 
     def __init__(self):
         self.total_rows = None
@@ -21,11 +22,14 @@ class Workload(abc.ABC):
     def generate_queries(self):
         pass
 
-    def get_dataset_folder(self):
-        return os.path.abspath(os.path.join(self.DATASETS_FOLDER, self.get_name(), 'no-partition'))
+    def get_dataset_folder(self, partitioning='no-partition'):
+        return os.path.abspath(os.path.join(self.DATASETS_FOLDER, self.get_name(), partitioning))
+
+    def get_num_total_partitions(self):
+        return len([f for f in os.listdir(self.get_generated_queries_folder()) if f.endswith(self.FILE_EXTENSION)])
 
     def get_files_pattern(self):
-        return f'{self.get_dataset_folder()}/{self.get_table_name()}*.parquet'
+        return f'{self.get_dataset_folder()}/{self.get_table_name()}*{self.FILE_EXTENSION}'
 
     def get_generated_queries_folder(self):
         return os.path.abspath(os.path.join(self.get_queries_folder(), 'generated'))
