@@ -5,10 +5,10 @@ import random
 import re
 import requests
 
-from workload import Workload
+from benchmark import Benchmark
 
 
-class TaxiWorkload(Workload):
+class BenchmarkTaxi(Benchmark):
 
     def __init__(self):
         super().__init__()
@@ -68,7 +68,7 @@ class TaxiWorkload(Workload):
     def generate_queries(self):
         """
         Approach resembles that in Tsunami paper:
-        1. Generate uniform number from 1 to 6 to pick the columns
+        1. Generate uniform number from 1 to 6 to pick the partitioning_columns
         2. Uniformly pick a value within the range of each column
         However, we do not need the first step, since our query templates are already designed to have an increasing
         number of dimensions.

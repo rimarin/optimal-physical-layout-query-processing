@@ -3,11 +3,12 @@ import duckdb
 import os
 import random
 import re
+import subprocess
 
-from workload import Workload
+from benchmark import Benchmark
 
 
-class OSMWorkload(Workload):
+class BenchmarkOSM(Benchmark):
 
     def __init__(self):
         super().__init__()
@@ -39,8 +40,8 @@ class OSMWorkload(Workload):
         }
 
     def generate_dataset(self, **params):
-        os.system(f"aws s3 cp s3://daylight-openstreetmap/parquet/osm_features/release=v1.33/type=node/ "
-                  f"{self.get_dataset_folder()} --recursive")
+        subprocess.check_output(f"aws s3 cp s3://daylight-openstreetmap/parquet/osm_features/release=v1.33/type=node/ "
+                                f"{self.get_dataset_folder()} --recursive", shell=True)
         for f in os.listdir(self.get_dataset_folder()):
             os.rename(os.path.join(self.get_generated_queries_folder(), f),
                       os.path.join(self.get_generated_queries_folder(), f + '.parquet'))
@@ -103,7 +104,8 @@ class OSMWorkload(Workload):
                 query_selectivity = round((num_tuples / self.get_total_rows()) * 100, rounding_digits)
                 min_selectivity, max_selectivity = 0.001, 5
                 if query_selectivity != 0 and min_selectivity < query_selectivity < max_selectivity:
-                    with open(os.path.join(self.get_generated_queries_folder(), f'{str(template)}_{str(query_selectivity)}.sql.test'),
+                    with open(os.path.join(self.get_generated_queries_folder(),
+                                           f'{str(template)}_{str(query_selectivity)}.sql.test'),
                               'w') as query_file:
                         query_file.write(final_query)
 

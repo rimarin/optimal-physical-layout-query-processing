@@ -3,10 +3,10 @@ import os
 import re
 import subprocess
 
-from workload import Workload
+from benchmark import Benchmark
 
 
-class TPCHWorkload(Workload):
+class BenchmarkTPCH(Benchmark):
 
     def __init__(self, scale=1):
         super().__init__()
@@ -73,7 +73,7 @@ class TPCHWorkload(Workload):
         num_queries_per_template = 10
 
         templates_folder = os.path.join(self.get_queries_folder())
-        os.system(f'cd {templates_folder}; export DSS_QUERY={templates_folder}')
+        subprocess.check_output(f'cd {templates_folder}; export DSS_QUERY={templates_folder}', shell=True)
 
         for template in templates:
             for i in range(num_queries_per_template):
