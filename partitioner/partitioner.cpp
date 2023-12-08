@@ -3,9 +3,8 @@
 #include <set>
 
 #include "../libpartitioner/include/storage/DataWriter.h"
-#include "../libpartitioner/include/partitioning/Partitioning.h"
 #include "../libpartitioner/include/storage/DataReader.h"
-#include "../test/fixture.cpp"
+#include "experimentsConfig.cpp"
 
 int main(int argc, char **argv) {
     if (argc < 5){
