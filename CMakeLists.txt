@@ -5,6 +5,7 @@ project(partitioner)
 enable_testing()
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_BUILD_TYPE Release)
 
 add_subdirectory(libpartitioner)
 add_subdirectory(test)
