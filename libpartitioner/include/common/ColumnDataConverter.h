@@ -93,6 +93,28 @@ namespace common {
             }
             return arrow::Status::OK();
         }
+
+        template<typename ArrayType, typename T = typename ArrayType::TypeClass>
+        arrow::enable_if_date<T, arrow::Status> Visit(const ArrayType &array) {
+            std::vector<double> castedArray = {};
+            for (std::optional<typename T::c_type> value: array) {
+                if (value.has_value()) {
+                    if (outputType == "int64"){
+                        castedArray.emplace_back(static_cast<int64_t>(value.value()));
+                    }
+                    else{
+                        castedArray.emplace_back(static_cast<double>(value.value()));
+                    }
+                }
+            }
+            if (!castedArray.empty()) {
+                convertedData.emplace_back(castedArray);
+            }
+            return arrow::Status::OK();
+        }
+
+        // TODO: arrow::enable_if_decimal<T, arrow::Status> Visit(const ArrayType &array) {
+
     private:
         std::vector<std::vector<double>> convertedData = {};
         std::string outputType = "double";
