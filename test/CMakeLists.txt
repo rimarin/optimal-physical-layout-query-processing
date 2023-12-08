@@ -10,6 +10,8 @@ FetchContent_MakeAvailable(googletest)
 add_library(GTest::GTest INTERFACE IMPORTED)
 target_link_libraries(GTest::GTest INTERFACE gtest_main)
 
+include_directories(${GTEST_INCLUDE_DIRS})
+
 file(GLOB SOURCES *.cpp)
 add_executable(partitioner_test ${SOURCES})
 
