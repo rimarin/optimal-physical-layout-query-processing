@@ -17,7 +17,7 @@ set(ARROW_COMPUTE ON)
 set(ARROW_WITH_SNAPPY ON)
 set(ARROW_BUILD_STATIC ON)
 set(ARROW_DEPENDENCY_SOURCE BUNDLED)
-# set(ARROW_THRIFT_USE_SHARED OFF)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 # Get Arrow
 include(FetchContent)
@@ -66,12 +66,15 @@ set(LIBPARTITIONER_SOURCES
 # Declare the library
 add_library(libpartitioner STATIC ${LIBPARTITIONER_SOURCES})
 
+find_package(Threads REQUIRED)
+
 target_link_libraries(libpartitioner
         PUBLIC
         arrow_static
         arrow_dataset_static
         arrow_acero_static
-        parquet_static)
+        parquet_static
+        Threads::Threads)
 
 # Specify here the include directories exported by this library
 target_include_directories(libpartitioner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} include)
