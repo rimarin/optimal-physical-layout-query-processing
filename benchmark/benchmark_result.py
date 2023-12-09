@@ -14,21 +14,25 @@ class BenchmarkResult:
         self.query_variant = benchmark_config.query_variant
         self.partitioning_columns = benchmark_config.partitioning_columns
         self.used_columns = benchmark_config.partitioning_columns
+        self.latencies = latencies
         self.latency_avg = statistics.mean(latencies)
         self.latency_std = statistics.stdev(latencies)
         self.used_partitions = used_partitions
         self.total_partitions = benchmark_config.total_partitions
-        self.storage_manager = StorageManager(self.benchmark.get_dataset_folder(self.partitioning))
-        with open('temp/query.sql') as query_file:
-            self.query_parser = QueryParser(query_file.read())
-
 
     def __str__(self):
         return f'{self.dataset} {self.partitioning} q{self.query_number}{self.query_variant}'
 
     def format(self, filetype='csv'):
-        self.used_columns = QueryParser()
+        self.total_partitions = StorageManager.get_num_files(self.benchmark.get_dataset_folder(self.partitioning))
+        with open('temp/query.sql') as query_file:
+            self.used_columns = QueryParser.extract_columns_from_where(query_file.read())
         return (f'{self.dataset}; {self.partitioning}; q{self.query_number}{self.query_variant}; '
-                f'{self.partitioning_columns}; {self.query_parser.extract_columns_from_where()}; '
-                f'{self.latency_avg}; {self.latency_std}; {self.used_partitions}; {self.total_partitions}; \n')
-        # TODO: add partition size
+                f'{self.partitioning_columns}; {self.used_columns}; '
+                f'{self.latencies}; {self.latency_avg}; {self.latency_std}; {self.partition_size}; '
+                f'{self.used_partitions}; {self.total_partitions}; \n')
+
+    @staticmethod
+    def format_header():
+        return ('dataset; partitioning; query; partitioning_columns; used_columns; latencies; latency_avg;'
+                'latency_std; partition_size; used_partitions; total_partitions; \n')
