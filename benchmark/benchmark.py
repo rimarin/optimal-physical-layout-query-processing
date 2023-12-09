@@ -2,6 +2,7 @@ import abc
 import duckdb
 import os
 
+from config import DATA_FORMAT
 from path import Path
 
 
@@ -9,7 +10,6 @@ class Benchmark(abc.ABC):
 
     DATASETS_FOLDER = Path('datasets/')
     QUERIES_FOLDER = Path('queries/')
-    FILE_EXTENSION = '.parquet'
 
     def __init__(self):
         self.total_rows = None
@@ -26,10 +26,10 @@ class Benchmark(abc.ABC):
         return os.path.abspath(os.path.join(self.DATASETS_FOLDER, self.get_name(), partitioning))
 
     def get_num_total_partitions(self, partitioning='no-partition'):
-        return len([f for f in os.listdir(self.get_dataset_folder(partitioning)) if f.endswith(self.FILE_EXTENSION)])
+        return len([f for f in os.listdir(self.get_dataset_folder(partitioning)) if f.endswith(DATA_FORMAT)])
 
     def get_files_pattern(self):
-        return f'{self.get_dataset_folder()}/{self.get_table_name()}*{self.FILE_EXTENSION}'
+        return f'{self.get_dataset_folder()}/{self.get_table_name()}*{DATA_FORMAT}'
 
     def get_generated_queries_folder(self):
         return os.path.abspath(os.path.join(self.get_queries_folder(), 'generated'))
