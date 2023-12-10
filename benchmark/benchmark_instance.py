@@ -9,6 +9,7 @@ from benchmarks.benchmark_osm import BenchmarkOSM
 from benchmarks.benchmark_taxi import BenchmarkTaxi
 from benchmarks.benchmark_tpch import BenchmarkTPCH
 from config import DATA_FORMAT
+from storage_manager import StorageManager
 
 
 class BenchmarkInstance:
@@ -51,8 +52,6 @@ class BenchmarkInstance:
         if not self.benchmark.is_dataset_generated():
             self.logger.info("Generating dataset")
             self.benchmark.generate_dataset()
-        else:
-            self.logger.info("Dataset is already generated")
 
     def prepare_queries(self):
         """
@@ -61,8 +60,6 @@ class BenchmarkInstance:
         if not self.benchmark.is_query_workload_generated():
             self.logger.info("Generating queries")
             self.benchmark.generate_queries()
-        else:
-            self.logger.info("Queries are already generated")
 
     def runner_prepare(self):
         """
@@ -101,7 +98,7 @@ class BenchmarkInstance:
             [f'{self.duckdb_path}/build/release/benchmark/benchmark_runner PartitioningBenchmark'],
             shell=True, text=True, stderr=subprocess.STDOUT)).split('\n')
         latencies = []
-        if "ValueOrDie called on an error:" or "Aborted" in result_rows:
+        if "ValueOrDie called on an error:" in result_rows or "Aborted" in result_rows:
             self.logger.error(f"Error while running benchmarks: {result_rows}")
         for row in result_rows[1:]:
             try:
@@ -111,8 +108,14 @@ class BenchmarkInstance:
                     latencies.append(latency)
             except Exception as e:
                 self.logger.error(f"Error while parsing benchmark results: {str(e)}")
-        # TODO: get num partitions from log file
-        self.result = BenchmarkResult(self.benchmark, self.config, latencies, 0)
+        try:
+            num_partitions_filename = os.path.join(self.duckdb_path, 'cmake-build-benchmark', 'num_partitions.log')
+            with open(num_partitions_filename, 'r') as num_partitions_file:
+                used_partitions = int(num_partitions_file.read().strip('').strip('\n'))
+        except Exception as e:
+            self.logger.error(f"Could not load number of used partitions from the log file - {str(e)}")
+            used_partitions = 0
+        self.result = BenchmarkResult(self.benchmark, self.config, latencies, used_partitions)
         self.logger.info("Collected results from benchmark execution")
 
     def collect_results(self):
@@ -127,6 +130,5 @@ class BenchmarkInstance:
 
     def cleanup(self):
         # TODO: support deletion from remote object store (e.g. S3) at some point
-        subprocess.run(['rm', f'{self.benchmark.get_dataset_folder(self.config.partitioning)}/*{DATA_FORMAT}'],
-                       shell=True, stdout=subprocess.DEVNULL)
+        StorageManager.delete_files(self.benchmark.get_dataset_folder(self.config.partitioning))
         self.logger.info(f'Removed parquet files from folder {self.benchmark.get_dataset_folder(self.config.partitioning)}')

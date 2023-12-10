@@ -1,7 +1,5 @@
 import os
 
-from pathlib import Path
-
 from config import DATA_FORMAT
 
 
@@ -12,10 +10,11 @@ class StorageManager:
 
     @staticmethod
     def delete_files(path):
-        for deletion_path in Path(path).glob("*.parquet"):
-            if deletion_path.is_file():
-                deletion_path.unlink()
-        print(f'Deleted files from {path}')
+        if path == '' or path == '/' or path == '/home/':
+            raise Exception('Probably you do not want to delete these folders')
+        for filename in os.listdir(path):
+            if filename.endswith(DATA_FORMAT):
+                os.remove(os.path.join(path, filename))
 
     @staticmethod
     def get_num_files(path, extension=DATA_FORMAT):

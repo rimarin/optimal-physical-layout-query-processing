@@ -9,7 +9,6 @@ class BenchmarkConfig:
         self.partitioning_columns = partitioning_columns
         self.total_partitions = 0
         self.results_file = results_file
-        # TODO: add parameter for selected partitioning_columns (partitioning_columns used in the query predicate)
 
     def __str__(self):
         return f'{self.dataset} {self.partitioning} {self.partition_size} q{self.query_number}{self.query_variant}'
