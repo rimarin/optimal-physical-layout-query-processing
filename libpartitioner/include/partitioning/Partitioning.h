@@ -8,6 +8,7 @@
 #include <arrow/api.h>
 #include <arrow/dataset/api.h>
 #include <arrow/compute/api.h>
+#include <arrow/util/type_fwd.h>
 #include <parquet/arrow/writer.h>
 
 namespace partitioning {
@@ -81,11 +82,21 @@ namespace partitioning {
             std::shared_ptr<arrow::Table> partitionedTable = scanner.ValueOrDie()->ToTable().ValueOrDie();
             partitionedTablesNumRows += partitionedTable->num_rows();
             auto outfile = arrow::io::FileOutputStream::Open(outputFolder.string() + "/" + std::to_string(partitionId) + ".parquet");
-            PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*partitionedTable, arrow::default_memory_pool(), *outfile, table->num_rows()));
+            std::unique_ptr<parquet::arrow::FileWriter> writer;
+            std::shared_ptr<parquet::WriterProperties> props = parquet::WriterProperties::Builder()
+                    .max_row_group_length(100000)
+                    ->created_by("Optimal Layout Partitioner")
+                    ->version(parquet::ParquetVersion::PARQUET_2_6)
+                    ->data_page_version(parquet::ParquetDataPageVersion::V2)
+                    ->compression(arrow::Compression::SNAPPY)
+                    ->build();
+            // Options to store Arrow schema for easier reads back into Arrow
+            std::shared_ptr<parquet::ArrowWriterProperties> arrow_props = parquet::ArrowWriterProperties::Builder().store_schema()->build();
+            PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*partitionedTable, arrow::default_memory_pool(), *outfile,
+                                                            table->num_rows(), props, arrow_props));
             completedPartitions += 1;
             std::cout << "[Partitioning] Generate partitioned table with " << partitionedTable->num_rows() << " rows" << std::endl;
-            // std::cout << "Allocated memory " << arrow::default_memory_pool()->bytes_allocated() << " bytes" << std::endl;
-            int progress = (float(completedPartitions) / float(numPartitions)) * 100;
+            int progress = float(completedPartitions) / float(numPartitions) * 100;
             std::cout << "[Partitioning] Progress: " << progress << " %" << std::endl;
         }
         if (numRows != partitionedTablesNumRows){
