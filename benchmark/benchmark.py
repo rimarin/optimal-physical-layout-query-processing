@@ -2,7 +2,7 @@ import abc
 import duckdb
 import os
 
-from config import DATA_FORMAT
+from config import DATA_FORMAT, NO_PARTITION
 from path import Path
 
 
@@ -22,10 +22,10 @@ class Benchmark(abc.ABC):
     def generate_queries(self):
         pass
 
-    def get_dataset_folder(self, partitioning='no-partition'):
+    def get_dataset_folder(self, partitioning=NO_PARTITION):
         return os.path.abspath(os.path.join(self.DATASETS_FOLDER, self.get_name(), partitioning))
 
-    def get_num_total_partitions(self, partitioning='no-partition'):
+    def get_num_total_partitions(self, partitioning=NO_PARTITION):
         return len([f for f in os.listdir(self.get_dataset_folder(partitioning)) if f.endswith(DATA_FORMAT)])
 
     def get_files_pattern(self):
