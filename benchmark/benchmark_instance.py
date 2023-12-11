@@ -8,7 +8,7 @@ from benchmark_result import BenchmarkResult
 from benchmarks.benchmark_osm import BenchmarkOSM
 from benchmarks.benchmark_taxi import BenchmarkTaxi
 from benchmarks.benchmark_tpch import BenchmarkTPCH
-from config import DATA_FORMAT
+from config import DATA_FORMAT, PARTITIONS_LOG_FILE, NO_PARTITION
 from storage_manager import StorageManager
 
 
@@ -83,15 +83,21 @@ class BenchmarkInstance:
         generated_query_file = f"{self.benchmark.get_generated_queries_folder()}/{self.config.query_number}{self.config.query_variant}.sql"
         subprocess.check_output(f"cp {generated_query_file} {tmp_folder}", shell=True)
         moved_query_file = os.path.join(tmp_folder, f'{self.config.query_number}{self.config.query_variant}.sql')
-        tmp_query_file = os.path.join(tmp_folder, "query.sql")
-        subprocess.check_output(f"mv {moved_query_file} {tmp_query_file}", shell=True)
+        tmp_query_path = os.path.join(tmp_folder, "query.sql")
+        subprocess.check_output(f"mv {moved_query_file} {tmp_query_path}", shell=True)
 
-        with open(tmp_query_file, 'r') as query_file:
-            original_query = query_file.read()
+        with open(tmp_query_path, 'r') as tmp_query_file:
+            original_query = tmp_query_file.read()
         from_clause = f'FROM read_parquet(\'{self.benchmark.get_dataset_folder(self.config.partitioning)}/*{DATA_FORMAT}\')'
-        query = re.sub('FROM?(.*?)where', f'{from_clause} where', original_query, flags=re.DOTALL)
-        with open(tmp_query_file, 'w') as query_file:
-            query_file.write(query)
+        tmp_query = re.sub('FROM?(.*?)where', f'{from_clause} where', original_query, flags=re.DOTALL)
+        with open(tmp_query_path, 'w') as tmp_query_file:
+            tmp_query_file.write(tmp_query)
+
+        verify_query_path = os.path.join(tmp_folder, "verify.sql")
+        from_clause = f'FROM read_parquet(\'{self.benchmark.get_dataset_folder(NO_PARTITION)}/*{DATA_FORMAT}\')'
+        verify_query = re.sub('FROM?(.*?)where', f'{from_clause} where', original_query, flags=re.DOTALL)
+        with open(verify_query_path, 'w') as verify_query_file:
+            verify_query_file.write(verify_query)
 
     def runner_launch(self):
         result_rows = str(subprocess.check_output(
@@ -109,7 +115,7 @@ class BenchmarkInstance:
             except Exception as e:
                 self.logger.error(f"Error while parsing benchmark results: {str(e)}")
         try:
-            num_partitions_filename = os.path.join(self.duckdb_path, 'cmake-build-benchmark', 'num_partitions.log')
+            num_partitions_filename = os.path.join(self.duckdb_path, 'cmake-build-benchmark', PARTITIONS_LOG_FILE)
             with open(num_partitions_filename, 'r') as num_partitions_file:
                 used_partitions = int(num_partitions_file.read().strip('').strip('\n'))
         except Exception as e:
