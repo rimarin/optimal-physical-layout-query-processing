@@ -117,7 +117,7 @@ class BenchmarkInstance:
         try:
             num_partitions_filename = os.path.join(self.duckdb_path, 'cmake-build-benchmark', PARTITIONS_LOG_FILE)
             with open(num_partitions_filename, 'r') as num_partitions_file:
-                used_partitions = int(num_partitions_file.read().strip('').strip('\n'))
+                used_partitions = int(num_partitions_file.read())
         except Exception as e:
             self.logger.error(f"Could not load number of used partitions from the log file - {str(e)}")
             used_partitions = 0
