@@ -80,6 +80,8 @@ class BenchmarkInstance:
             subprocess.check_output("BUILD_BENCHMARK=1 make", shell=True)
 
         tmp_folder = os.path.join(os.path.abspath(os.getcwd()), 'temp')
+        if not os.path.exists(tmp_folder):
+            os.makedirs(tmp_folder)
         generated_query_file = f"{self.benchmark.get_generated_queries_folder()}/{self.config.query_number}{self.config.query_variant}.sql"
         subprocess.check_output(f"cp {generated_query_file} {tmp_folder}", shell=True)
         moved_query_file = os.path.join(tmp_folder, f'{self.config.query_number}{self.config.query_variant}.sql')
