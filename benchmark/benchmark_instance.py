@@ -104,7 +104,7 @@ class BenchmarkInstance:
     def runner_launch(self):
         result_rows = str(subprocess.check_output(
             [f'{self.duckdb_path}/build/release/benchmark/benchmark_runner PartitioningBenchmark'],
-            shell=True, text=True, stderr=subprocess.STDOUT)).split('\n')
+            shell=True, universal_newlines=True, stderr=subprocess.STDOUT)).split('\n')
         latencies = []
         if "ValueOrDie called on an error:" in result_rows or "Aborted" in result_rows:
             self.logger.error(f"Error while running benchmarks: {result_rows}")

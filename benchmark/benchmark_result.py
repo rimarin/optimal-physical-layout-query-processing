@@ -1,3 +1,4 @@
+import datetime
 import statistics
 
 from query_parser import QueryParser
@@ -30,9 +31,9 @@ class BenchmarkResult:
         return (f'{self.dataset}; {self.partitioning}; q{self.query_number}{self.query_variant}; '
                 f'{self.partitioning_columns}; {self.used_columns}; '
                 f'{self.latencies}; {self.latency_avg}; {self.latency_std}; {self.partition_size}; '
-                f'{self.used_partitions}; {self.total_partitions}; \n')
+                f'{self.used_partitions}; {self.total_partitions};{datetime.datetime.now()}\n')
 
     @staticmethod
     def format_header():
         return ('dataset; partitioning; query; partitioning_columns; used_columns; latencies; latency_avg;'
-                'latency_std; partition_size; used_partitions; total_partitions; \n')
+                'latency_std; partition_size; used_partitions; total_partitions;timestamp\n')
