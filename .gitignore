@@ -15,6 +15,7 @@ cmake-build-release
 /benchmark/datasets/tpch-sf1
 /benchmark/datasets/tpch-sf10
 /benchmark/temp
+/partitioner/partitioner
 /test/fixed-grid
 /test/grid-file
 /test/hilbert-curve
