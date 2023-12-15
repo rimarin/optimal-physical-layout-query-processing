@@ -35,7 +35,7 @@ def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
         Write out the csv header of the results file
         """
         if not os.path.exists(RESULTS_FILE):
-            with open(RESULTS_FILE, 'w') as result_file:
+            with open(RESULTS_FILE, 'w+') as result_file:
                 result_file.write(BenchmarkResult.format_header())
 
     logger = initialize_logger()
