@@ -50,10 +50,11 @@ def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
                     continue
                 query_files = [f for f in os.listdir(benchmark.get_generated_queries_folder())
                                if f.endswith(".sql")]
-                min_num_dimensions = 2
                 columns = benchmark.get_relevant_columns()
+                min_num_dimensions = 2
+                max_num_dimensions = len(columns)
                 columns_combinations = sum([list(map(list, combinations(columns, i)))
-                                            for i in range(min_num_dimensions, len(columns) + 1)], [])
+                                            for i in range(min_num_dimensions, max_num_dimensions + 1)], [])
                 for columns_combination in columns_combinations:
                     for i, query_file in enumerate(query_files):
                         query_file_name = query_file.split('.sql')[0]
