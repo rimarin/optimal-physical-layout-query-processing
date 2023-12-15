@@ -21,7 +21,7 @@ class BenchmarkInstance:
         self.logger = logger
 
     def generate_partitions(self):
-        subprocess.run([f'../cmake-build-release/partitioner/partitioner', f'{self.config.dataset}',
+        subprocess.run([f'../partitioner/partitioner', f'{self.config.dataset}',
                         f'{self.config.partitioning}', f'{self.config.partition_size}',
                         f'{",".join(self.config.partitioning_columns)}'], stdout=subprocess.DEVNULL)
         self.config.total_partitions = self.benchmark.get_num_total_partitions(self.config.partitioning)
