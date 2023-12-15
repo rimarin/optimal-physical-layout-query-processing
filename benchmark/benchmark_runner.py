@@ -7,7 +7,7 @@ from itertools import combinations
 from benchmark_config import BenchmarkConfig
 from benchmark_instance import BenchmarkInstance
 from benchmark_result import BenchmarkResult
-from config import RESULTS_FILE, PARTITIONINGS, PARTITION_SIZES, DATASETS, LOG_TO_CONSOLE, LOG_TO_FILE
+from config import RESULTS_FILE, PARTITIONINGS, PARTITION_SIZES, DATASETS, LOG_TO_CONSOLE, LOG_TO_FILE, RESULTS_FOLDER
 
 
 def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
@@ -34,6 +34,8 @@ def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
         """
         Write out the csv header of the results file
         """
+        if not os.path.exists(RESULTS_FOLDER):
+            os.makedirs(RESULTS_FOLDER)
         if not os.path.exists(RESULTS_FILE):
             with open(RESULTS_FILE, 'w+') as result_file:
                 result_file.write(BenchmarkResult.format_header())
