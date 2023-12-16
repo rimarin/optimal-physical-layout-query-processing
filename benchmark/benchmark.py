@@ -41,10 +41,6 @@ class Benchmark(abc.ABC):
     def get_queries_folder(self):
         return os.path.abspath(os.path.join(self.QUERIES_FOLDER, self.get_name()))
 
-    @abc.abstractmethod
-    def get_table_name(self):
-        pass
-
     def get_total_rows(self):
         if not self.total_rows:
             self.total_rows = len(duckdb.sql(f'SELECT * FROM read_parquet(\'{self.get_files_pattern()}\')'))

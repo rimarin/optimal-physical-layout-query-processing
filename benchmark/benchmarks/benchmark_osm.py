@@ -17,9 +17,6 @@ class BenchmarkOSM(Benchmark):
     def get_name(self):
         return 'osm'
 
-    def get_table_name(self):
-        return ''
-
     def get_relevant_columns(self):
         return ["min_lon", "max_lon", "min_lat", "max_lat", "created_at", "version", "id"]
 
@@ -80,7 +77,7 @@ class BenchmarkOSM(Benchmark):
         for template in templates:
             with open(os.path.join(self.get_queries_folder(), f'{str(template)}.sql'), 'r') as template_file:
                 query_template = template_file.read()
-            from_clause = f'FROM read_parquet(\'{self.get_dataset_folder()}/{self.get_table_name()}*.parquet\')'
+            from_clause = f'FROM read_parquet(\'{self.get_dataset_folder()}/*.parquet\')'
             query = re.sub('FROM?(.*?)WHERE', f'{from_clause} where', query_template, flags=re.DOTALL)
             used_placeholders = re.findall('\':(\d+)\'', query)
             for i in range(num_queries_per_template):

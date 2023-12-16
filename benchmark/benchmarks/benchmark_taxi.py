@@ -6,6 +6,7 @@ import re
 import requests
 
 from benchmark import Benchmark
+from config import DATA_FORMAT
 
 
 class BenchmarkTaxi(Benchmark):
@@ -18,9 +19,6 @@ class BenchmarkTaxi(Benchmark):
 
     def get_name(self):
         return 'taxi'
-
-    def get_table_name(self):
-        return 'trips'
 
     def get_relevant_columns(self):
         return ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime", "passenger_count",
@@ -105,7 +103,7 @@ class BenchmarkTaxi(Benchmark):
         for template in templates:
             with open(os.path.join(self.get_queries_folder(), f'{str(template)}.sql'), 'r') as template_file:
                 query_template = template_file.read()
-            from_clause = f'FROM read_parquet(\'{self.get_dataset_folder()}/{self.get_table_name()}*.parquet\')'
+            from_clause = f'FROM read_parquet(\'{self.get_dataset_folder()}/*.parquet\')'
             query = re.sub('FROM?(.*?)WHERE', f'{from_clause} where', query_template, flags=re.DOTALL)
             used_placeholders = re.findall('\':(\d+)\'', query)
             for i in range(num_queries_per_template):
@@ -143,9 +141,8 @@ class BenchmarkTaxi(Benchmark):
                                                                                       str(round(num, digits)))))
 
     def is_dataset_generated(self) -> bool:
-        first_file = os.path.join(self.get_dataset_folder(), self.get_table_name() + f'_{self.start_year}-01.parquet')
-        last_file = os.path.join(self.get_dataset_folder(), self.get_table_name() + f'_{self.end_year}-12.parquet')
-        return os.path.exists(first_file) and os.path.exists(last_file)
+        taxi_file = os.path.join(self.get_dataset_folder(), f'{self.get_name()}{DATA_FORMAT}')
+        return os.path.exists(taxi_file)
 
     def is_query_workload_generated(self) -> bool:
         # TODO: implement
