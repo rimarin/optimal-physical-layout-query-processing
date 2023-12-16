@@ -2,8 +2,6 @@ import logging
 import os
 import sys
 
-from itertools import combinations
-
 from benchmark_config import BenchmarkConfig
 from benchmark_instance import BenchmarkInstance
 from benchmark_result import BenchmarkResult
@@ -43,25 +41,18 @@ def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
     logger = initialize_logger()
     initialize_results_file()
     for dataset in datasets:
+        try:
+            benchmark = BenchmarkInstance.get_benchmark(dataset)
+            query_files = BenchmarkInstance.get_query_files(benchmark)
+            columns_combinations = BenchmarkInstance.get_columns(benchmark)
+        except Exception as e:
+            logger.error(f"Error while preparing benchmark instance for dataset name {dataset} - " + str(e))
+            continue
         for partitioning in partitionings:
             for partition_size in partition_sizes:
-                try:
-                    benchmark = BenchmarkInstance.get_benchmark(dataset)
-                except Exception as e:
-                    logger.error(f"Error while retrieving benchmark instance for dataset name {dataset} - " + str(e))
-                    continue
-                query_files = [f for f in os.listdir(benchmark.get_generated_queries_folder())
-                               if f.endswith(".sql")]
-                columns = benchmark.get_relevant_columns()
-                min_num_dimensions = 2
-                max_num_dimensions = len(columns)
-                columns_combinations = sum([list(map(list, combinations(columns, i)))
-                                            for i in range(min_num_dimensions, max_num_dimensions + 1)], [])
                 for columns_combination in columns_combinations:
                     for i, query_file in enumerate(query_files):
-                        query_file_name = query_file.split('.sql')[0]
-                        num_query = int(''.join(filter(str.isdigit, query_file_name)))
-                        query_variant = ''.join(filter(str.isalpha, query_file_name))
+                        num_query, query_variant = BenchmarkInstance.get_query_num_and_variant(query_file)
                         try:
                             benchmark_instance = BenchmarkInstance(BenchmarkConfig(
                                 dataset=dataset,

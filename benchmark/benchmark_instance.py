@@ -9,6 +9,7 @@ from benchmarks.benchmark_osm import BenchmarkOSM
 from benchmarks.benchmark_taxi import BenchmarkTaxi
 from benchmarks.benchmark_tpch import BenchmarkTPCH
 from config import DATA_FORMAT, PARTITIONS_LOG_FILE, NO_PARTITION
+from itertools import combinations
 from storage_manager import StorageManager
 
 
@@ -26,6 +27,8 @@ class BenchmarkInstance:
                         f'{",".join(self.config.partitioning_columns)}'], stdout=subprocess.DEVNULL)
         self.config.total_partitions = self.benchmark.get_num_total_partitions(self.config.partitioning)
         self.logger.info(f'Partitioned dataset into {self.config.total_partitions} partitions')
+        if self.config.total_partitions == 0:
+            self.logger.warning('No partitions, something could be wrong')
         return self.config.total_partitions
 
     @staticmethod
@@ -44,6 +47,31 @@ class BenchmarkInstance:
         if name in name_to_workload:
             return name_to_workload[name]
         raise Exception('Benchmark not found')
+
+    @staticmethod
+    def get_query_files(benchmark):
+        """
+        List of sql queries files available in the generated query folder of the used dataset
+        """
+        return [f for f in os.listdir(benchmark.get_generated_queries_folder()) if f.endswith(".sql")]
+
+    @staticmethod
+    def get_columns(benchmark):
+        MIN_NUM_DIMENSIONS = 2
+        LIMIT_COMBINATIONS = 1
+        columns = benchmark.get_relevant_columns()
+        max_num_dimensions = len(columns)
+        columns_combinations = sum([list(map(list, combinations(columns, i)))
+                                    for i in range(MIN_NUM_DIMENSIONS, max_num_dimensions + 1)], [])
+        columns_combinations = columns_combinations[0:LIMIT_COMBINATIONS]
+        return columns_combinations
+
+    @staticmethod
+    def get_query_num_and_variant(query_file_name):
+        query_file_name = query_file_name.split('.sql')[0]
+        num_query = int(''.join(filter(str.isdigit, query_file_name)))
+        query_variant = ''.join(filter(str.isalpha, query_file_name))
+        return num_query, query_variant
 
     def prepare_dataset(self):
         """
@@ -140,3 +168,4 @@ class BenchmarkInstance:
         # TODO: support deletion from remote object store (e.g. S3) at some point
         StorageManager.delete_files(self.benchmark.get_dataset_folder(self.config.partitioning))
         self.logger.info(f'Removed parquet files from folder {self.benchmark.get_dataset_folder(self.config.partitioning)}')
+
