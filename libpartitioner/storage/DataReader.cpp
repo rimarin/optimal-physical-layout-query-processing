@@ -62,7 +62,7 @@ namespace storage {
 
     // TODO: reduce memory usage, see:
     //  https://github.com/lsst/qserv/blob/a5dbf4175159b874da1cb0907533ba6e3ffd5e7d/src/partition/ParquetInterface.cc#L114
-    arrow::Result<std::shared_ptr<arrow::Table>> DataReader::batchReadTable(std::filesystem::path &inputFile) {
+    arrow::Result<std::shared_ptr<::arrow::RecordBatchReader>> DataReader::getTableBatchReader(std::filesystem::path &inputFile) {
         arrow::MemoryPool* pool = arrow::default_memory_pool();
 
         // Enable parallel column decoding
@@ -84,29 +84,11 @@ namespace storage {
         std::unique_ptr<parquet::arrow::FileReader> arrow_reader;
         ARROW_ASSIGN_OR_RAISE(arrow_reader, reader_builder.Build());
 
-        std::shared_ptr<::arrow::RecordBatchReader> rb_reader;
+        std::shared_ptr<arrow::RecordBatchReader> rb_reader;
         ARROW_RETURN_NOT_OK(arrow_reader->GetRecordBatchReader(&rb_reader));
 
-        uint64_t numRows = 0;
-        auto nin = rb_reader->ToRecordBatches();
-        for (arrow::Result<std::shared_ptr<arrow::RecordBatch>> maybe_batch : *rb_reader) {
-            // Operate on each batch...
-            auto b = maybe_batch.ValueOrDie();
-            auto batchNumRows = b->num_rows();
-            numRows += batchNumRows;
-            std::cout << "Read record batch with " << batchNumRows << " rows";
-            b.reset();
-        }
-
-        // auto a = rb_reader->ToTable();
-        std::shared_ptr<arrow::Table> table;
-        // ARROW_RETURN_NOT_OK(arrow_reader->ReadColumn(1, *table));
-        std::cout << "[DataReader] Read table from file " << inputFile.string() << std::endl;
-        // return table;
-        return nullptr;
+        return rb_reader;
     }
-
-
 
     arrow::Result<std::vector<std::shared_ptr<arrow::Array>>>
     DataReader::getColumns(std::shared_ptr<arrow::Table> &table, std::vector<std::string> &columns) {
