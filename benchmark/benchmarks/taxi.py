@@ -6,7 +6,7 @@ import re
 import requests
 
 from benchmark import Benchmark
-from config import DATA_FORMAT
+from settings import DATA_FORMAT
 
 
 class BenchmarkTaxi(Benchmark):
