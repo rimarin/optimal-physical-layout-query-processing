@@ -2,7 +2,7 @@ import abc
 import duckdb
 import os
 
-from config import DATA_FORMAT, NO_PARTITION
+from settings import DATA_FORMAT, NO_PARTITION
 from path import Path
 
 
@@ -33,6 +33,10 @@ class Benchmark(abc.ABC):
 
     def get_generated_queries_folder(self):
         return os.path.abspath(os.path.join(self.get_queries_folder(), 'generated'))
+
+    @staticmethod
+    def get_partitioning_columns():
+        raise NotImplementedError
 
     @abc.abstractmethod
     def get_name(self):

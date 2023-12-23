@@ -16,9 +16,24 @@ class BenchmarkTPCH(Benchmark):
     def get_name(self):
         return f'tpch-sf{self.scale}'
 
-    def get_relevant_columns(self):
-        return ["c_custkey", "l_orderkey", "o_orderdate", "l_shipdate", "c_nationkey", "n_regionkey", "l_discount",
-                "l_quantity", "l_commitdate", "l_receiptdate", "l_commitdate", "p_size"]
+    @staticmethod
+    def get_partitioning_columns():
+        return [
+            ["c_custkey"],
+            ["c_custkey", "o_orderkey"],
+            ["c_custkey", "o_orderkey", "o_orderdate"],
+            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate"],
+            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey"],
+            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey"],
+            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey"],
+            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_discount"],
+            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_discount", "l_quantity"],
+            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_discount", "l_quantity", "l_commitdate"],
+            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_discount", "l_quantity", "l_commitdate", "l_receiptdate"],
+            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_discount", "l_quantity", "l_commitdate", "l_receiptdate", "l_commitdate"],
+            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_discount", "l_quantity", "l_commitdate", "l_receiptdate", "l_commitdate", "p_size"],
+            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_discount", "l_quantity", "l_commitdate", "l_receiptdate", "l_commitdate", "p_size", "p_partkey"],
+        ]
 
     def get_schema(self):
         raise NotImplementedError

@@ -20,9 +20,17 @@ class BenchmarkTaxi(Benchmark):
     def get_name(self):
         return 'taxi'
 
-    def get_relevant_columns(self):
-        return ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime", "passenger_count",
-                "fare_amount", "trip_distance"]
+    @staticmethod
+    def get_partitioning_columns():
+        return [
+            ["PULocationID"],
+            ["PULocationID", "DOLocationID"],
+            ["PULocationID", "DOLocationID", "tpep_pickup_datetime"],
+            ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime"],
+            ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime", "passenger_count"],
+            ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime", "passenger_count", "fare_amount"],
+            ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime", "passenger_count", "fare_amount", "trip_distance"]
+        ]
 
     def get_schema(self):
         return {

@@ -2,10 +2,10 @@ import logging
 import os
 import sys
 
-from benchmark_config import BenchmarkConfig
-from benchmark_instance import BenchmarkInstance
-from benchmark_result import BenchmarkResult
-from config import RESULTS_FILE, PARTITIONINGS, PARTITION_SIZES, DATASETS, LOG_TO_CONSOLE, LOG_TO_FILE, RESULTS_FOLDER
+from config import BenchmarkConfig
+from instance import BenchmarkInstance
+from result import BenchmarkResult
+from settings import RESULTS_FILE, PARTITIONINGS, PARTITION_SIZES, DATASETS, LOG_TO_CONSOLE, LOG_TO_FILE, RESULTS_FOLDER
 
 
 def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
@@ -44,13 +44,13 @@ def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
         try:
             benchmark = BenchmarkInstance.get_benchmark(dataset)
             query_files = BenchmarkInstance.get_query_files(benchmark)
-            columns_combinations = BenchmarkInstance.get_columns(benchmark)
+            partitioning_columns_groups = benchmark.get_partitioning_columns()
         except Exception as e:
             logger.error(f"Error while preparing benchmark instance for dataset name {dataset} - " + str(e))
             continue
         for partitioning in partitionings:
             for partition_size in partition_sizes:
-                for columns_combination in columns_combinations:
+                for partitioning_columns in partitioning_columns_groups:
                     for i, query_file in enumerate(query_files):
                         num_query, query_variant = BenchmarkInstance.get_query_num_and_variant(query_file)
                         try:
@@ -60,7 +60,7 @@ def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
                                 partition_size=partition_size,
                                 query_number=num_query,
                                 query_variant=query_variant,
-                                partitioning_columns=columns_combination,
+                                partitioning_columns=partitioning_columns,
                                 results_file=RESULTS_FILE
                             ), logger)
                             benchmark_instance.prepare_dataset()
@@ -71,7 +71,7 @@ def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
                         except Exception as e:
                             logger.error(f"Error while running benchmark instance with settings: "
                                          f"{dataset}-{partitioning}-{partition_size}-{num_query}-{query_variant}-"
-                                         f"{columns_combination} - " + str(e))
+                                         f"{partitioning_columns} - " + str(e))
                             continue
                     benchmark_instance.cleanup()
 

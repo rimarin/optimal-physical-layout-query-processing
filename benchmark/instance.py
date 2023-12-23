@@ -3,13 +3,12 @@ import os
 import re
 import subprocess
 
-from benchmark_config import BenchmarkConfig
-from benchmark_result import BenchmarkResult
-from benchmarks.benchmark_osm import BenchmarkOSM
-from benchmarks.benchmark_taxi import BenchmarkTaxi
-from benchmarks.benchmark_tpch import BenchmarkTPCH
-from config import DATA_FORMAT, PARTITIONS_LOG_FILE, NO_PARTITION
-from itertools import combinations
+from config import BenchmarkConfig
+from result import BenchmarkResult
+from benchmarks.osm import BenchmarkOSM
+from benchmarks.taxi import BenchmarkTaxi
+from benchmarks.tpch import BenchmarkTPCH
+from settings import DATA_FORMAT, PARTITIONS_LOG_FILE, NO_PARTITION
 from storage_manager import StorageManager
 
 
@@ -54,17 +53,6 @@ class BenchmarkInstance:
         List of sql queries files available in the generated query folder of the used dataset
         """
         return [f for f in os.listdir(benchmark.get_generated_queries_folder()) if f.endswith(".sql")]
-
-    @staticmethod
-    def get_columns(benchmark):
-        MIN_NUM_DIMENSIONS = 2
-        LIMIT_COMBINATIONS = 1
-        columns = benchmark.get_relevant_columns()
-        max_num_dimensions = len(columns)
-        columns_combinations = sum([list(map(list, combinations(columns, i)))
-                                    for i in range(MIN_NUM_DIMENSIONS, max_num_dimensions + 1)], [])
-        columns_combinations = columns_combinations[0:LIMIT_COMBINATIONS]
-        return columns_combinations
 
     @staticmethod
     def get_query_num_and_variant(query_file_name):

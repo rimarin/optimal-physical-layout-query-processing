@@ -2,7 +2,7 @@ import os
 import re
 import subprocess
 
-from config import DATA_FORMAT
+from settings import DATA_FORMAT
 
 
 class StorageManager:

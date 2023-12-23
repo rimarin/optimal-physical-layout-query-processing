@@ -17,8 +17,17 @@ class BenchmarkOSM(Benchmark):
     def get_name(self):
         return 'osm'
 
-    def get_relevant_columns(self):
-        return ["min_lon", "max_lon", "min_lat", "max_lat", "created_at", "version", "id"]
+    @staticmethod
+    def get_partitioning_columns():
+        return [
+            ["min_lon"],
+            ["min_lon", "max_lon"],
+            ["min_lon", "max_lon", "min_lat"],
+            ["min_lon", "max_lon", "min_lat", "max_lat"],
+            ["min_lon", "max_lon", "min_lat", "max_lat", "created_at"],
+            ["min_lon", "max_lon", "min_lat", "max_lat", "created_at", "version"],
+            ["min_lon", "max_lon", "min_lat", "max_lat", "created_at", "version", "id"]
+        ]
 
     def get_schema(self):
         return {

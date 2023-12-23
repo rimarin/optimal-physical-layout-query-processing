@@ -1,26 +1,14 @@
-import os
+class BenchmarkConfig:
+    def __init__(self, dataset: str, partitioning: str, partition_size: int, query_number: int, query_variant: str,
+                 partitioning_columns: list, results_file: str):
+        self.dataset = dataset
+        self.partitioning = partitioning
+        self.partition_size = partition_size
+        self.query_number = query_number
+        self.query_variant = query_variant
+        self.partitioning_columns = partitioning_columns
+        self.total_partitions = 0
+        self.results_file = results_file
 
-TPCH_SF1 = 'tpch-sf1'
-TPCH_SF10 = 'tpch-sf10'
-OSM = 'osm'
-TAXI = 'taxi'
-DATASETS = [TPCH_SF1, OSM, TAXI]
-
-NO_PARTITION = 'no-partition'
-FIXED_GRID = 'fixed-grid'
-GRID_FILE = 'grid-file'
-HILBERT_CURVE = 'hilbert-curve'
-KD_TREE = 'kd-tree'
-QUAD_TREE = 'quad-tree'
-STR_TREE = 'str-tree'
-Z_ORDER_CURVE = 'z-curve-order'
-PARTITIONINGS = [FIXED_GRID, GRID_FILE, HILBERT_CURVE, KD_TREE, QUAD_TREE, STR_TREE, Z_ORDER_CURVE]
-PARTITION_SIZES = [1000, 10000, 50000, 100000, 250000, 500000, 1000000]
-
-DATA_FORMAT = '.parquet'
-RESULTS_FOLDER = 'results'
-RESULTS_FILE = os.path.join(RESULTS_FOLDER, 'results.csv')
-PARTITIONS_LOG_FILE = 'partitions.log'
-
-LOG_TO_CONSOLE = True
-LOG_TO_FILE = True
+    def __str__(self):
+        return f'{self.dataset} {self.partitioning} {self.partition_size} q{self.query_number}{self.query_variant}'
