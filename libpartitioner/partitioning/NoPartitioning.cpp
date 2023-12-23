@@ -1,4 +1,4 @@
-#include "../include/partitioning/NoPartitioning.h"
+#include "partitioning/NoPartitioning.h"
 
 namespace partitioning {
 

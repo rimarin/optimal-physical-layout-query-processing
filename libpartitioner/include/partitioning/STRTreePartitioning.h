@@ -15,11 +15,11 @@
 #include <arrow/status.h>
 #include <arrow/table.h>
 
-#include "Partitioning.h"
-#include "../common/ColumnDataConverter.h"
-#include "../common/Point.h"
-#include "../storage/DataWriter.h"
-#include "../storage/DataReader.h"
+#include "common/ColumnDataConverter.h"
+#include "common/Point.h"
+#include "partitioning/Partitioning.h"
+#include "storage/DataWriter.h"
+#include "storage/DataReader.h"
 
 namespace partitioning {
 

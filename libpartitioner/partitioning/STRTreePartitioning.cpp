@@ -1,4 +1,4 @@
-#include "../include/partitioning/STRTreePartitioning.h"
+#include "partitioning/STRTreePartitioning.h"
 
 namespace partitioning {
 

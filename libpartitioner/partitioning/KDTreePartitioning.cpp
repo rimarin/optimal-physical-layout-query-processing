@@ -1,4 +1,4 @@
-#include "../include/partitioning/KDTreePartitioning.h"
+#include "partitioning/KDTreePartitioning.h"
 
 namespace partitioning {
 

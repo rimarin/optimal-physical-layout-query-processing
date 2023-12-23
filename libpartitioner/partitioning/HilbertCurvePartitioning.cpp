@@ -1,4 +1,4 @@
-#include "../include/partitioning/HilbertCurvePartitioning.h"
+#include "partitioning/HilbertCurvePartitioning.h"
 
 namespace partitioning {
 

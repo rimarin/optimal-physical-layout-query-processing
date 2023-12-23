@@ -1,4 +1,4 @@
-#include "../include/common/KDTree.h"
+#include "common/KDTree.h"
 
 namespace common {
 

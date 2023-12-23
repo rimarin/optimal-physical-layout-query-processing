@@ -2,8 +2,7 @@
 #include <iostream>
 #include <set>
 
-#include "../libpartitioner/include/storage/DataWriter.h"
-#include "../libpartitioner/include/storage/DataReader.h"
+#include "include/storage/DataReader.h"
 #include "experimentsConfig.cpp"
 
 int main(int argc, char **argv) {
@@ -40,6 +39,10 @@ int main(int argc, char **argv) {
 
     std::filesystem::path datasetPath = std::filesystem::current_path().parent_path() / "benchmark" / "datasets" / argDatasetName /
             ExperimentsConfig::noPartition / (argDatasetName + ".parquet");
+    if (!std::filesystem::exists(datasetPath)){
+        std::cout << "Dataset not found in " << datasetPath;
+        exit(1);
+    }
     std::filesystem::path outputPath = std::filesystem::current_path().parent_path() / "benchmark" / "datasets" / argDatasetName / argPartitioningTechnique;
     arrow::Result<std::shared_ptr<arrow::Table>> table = storage::DataReader::readTable(datasetPath);
     auto mapNameToTechnique = ExperimentsConfig::nameToPartitioningTechnique;

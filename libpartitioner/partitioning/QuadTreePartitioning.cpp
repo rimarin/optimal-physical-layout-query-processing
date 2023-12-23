@@ -1,4 +1,4 @@
-#include "../include/partitioning/QuadTreePartitioning.h"
+#include "partitioning/QuadTreePartitioning.h"
 
 namespace partitioning {
 

@@ -1,6 +1,8 @@
 #ifndef STORAGE_DATAWRITER_H
 #define STORAGE_DATAWRITER_H
 
+#include <filesystem>
+
 #include <arrow/api.h>
 #include <arrow/csv/api.h>
 #include <arrow/io/api.h>
@@ -9,8 +11,8 @@
 #include <parquet/arrow/writer.h>
 #include <parquet/api/reader.h>
 #include <parquet/api/writer.h>
-#include "../partitioning/Partitioning.h"
-#include <filesystem>
+
+#include "partitioning/Partitioning.h"
 
 namespace storage {
 

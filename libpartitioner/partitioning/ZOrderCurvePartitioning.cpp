@@ -1,4 +1,4 @@
-#include "../include/partitioning/ZOrderCurvePartitioning.h"
+#include "partitioning/ZOrderCurvePartitioning.h"
 
 namespace partitioning {
 

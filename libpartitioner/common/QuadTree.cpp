@@ -1,4 +1,4 @@
-#include "../include/common/QuadTree.h"
+#include "common/QuadTree.h"
 
 namespace common {
 

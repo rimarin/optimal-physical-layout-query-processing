@@ -17,6 +17,11 @@ add_executable(partitioner_test ${SOURCES})
 
 target_link_libraries(partitioner_test libpartitioner gtest gtest_main gmock_main)
 
+target_include_directories(partitioner_test
+        PUBLIC ../libpartitioner/include
+        PUBLIC ../partitioner
+)
+
 target_include_directories(partitioner_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_test(NAME partitioner_test

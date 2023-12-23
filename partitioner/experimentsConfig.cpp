@@ -1,16 +1,15 @@
 #include <set>
 #include <string>
 
-#include "../libpartitioner/include/storage/DataReader.h"
-#include "../libpartitioner/include/partitioning/FixedGridPartitioning.h"
-#include "../libpartitioner/include/partitioning/GridFilePartitioning.h"
-#include "../libpartitioner/include/partitioning/HilbertCurvePartitioning.h"
-#include "../libpartitioner/include/partitioning/KDTreePartitioning.h"
-#include "../libpartitioner/include/partitioning/NoPartitioning.h"
-#include "../libpartitioner/include/partitioning/Partitioning.h"
-#include "../libpartitioner/include/partitioning/QuadTreePartitioning.h"
-#include "../libpartitioner/include/partitioning/STRTreePartitioning.h"
-#include "../libpartitioner/include/partitioning/ZOrderCurvePartitioning.h"
+#include "storage/DataReader.h"
+#include "partitioning/FixedGridPartitioning.h"
+#include "partitioning/GridFilePartitioning.h"
+#include "partitioning/HilbertCurvePartitioning.h"
+#include "partitioning/KDTreePartitioning.h"
+#include "partitioning/NoPartitioning.h"
+#include "partitioning/QuadTreePartitioning.h"
+#include "partitioning/STRTreePartitioning.h"
+#include "partitioning/ZOrderCurvePartitioning.h"
 
 
 class ExperimentsConfig {

@@ -1,4 +1,4 @@
-#include "../include/partitioning/GridFilePartitioning.h"
+#include "partitioning/GridFilePartitioning.h"
 
 namespace partitioning {
 

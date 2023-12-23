@@ -1,4 +1,4 @@
-#include "../include/partitioning/FixedGridPartitioning.h"
+#include "partitioning/FixedGridPartitioning.h"
 
 namespace partitioning {
 

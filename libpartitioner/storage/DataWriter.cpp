@@ -6,7 +6,7 @@
 #include <arrow/io/api.h>
 #include <parquet/arrow/writer.h>
 
-#include "../include/storage/DataWriter.h"
+#include "storage/DataWriter.h"
 
 namespace storage {
 
