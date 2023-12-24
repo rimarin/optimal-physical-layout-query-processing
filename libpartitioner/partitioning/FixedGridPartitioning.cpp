@@ -1,50 +1,100 @@
+#include <algorithm>
+#include <numeric>
+
 #include "partitioning/FixedGridPartitioning.h"
 
 namespace partitioning {
 
-    arrow::Status FixedGridPartitioning::partition(std::shared_ptr<arrow::Table> table,
-                                                   std::vector<std::string> partitionColumns,
-                                                   int32_t partitionSize,
-                                                   std::filesystem::path &outputFolder){
-        // Note: for FixedGrid the partition size is not applicable. In fact, we can only
-        // define the cell size/width in the grid and that will determine the number of elements per partition.
-        // Here the partition size is used as cell width.
+    arrow::Status FixedGridPartitioning::partition(storage::DataReader &dataReader,
+                                                      const std::vector<std::string> &partitionColumns,
+                                                      const size_t partitionSize,
+                                                      const std::filesystem::path &outputFolder) {
         std::cout << "[FixedGridPartitioning] Initializing partitioning technique" << std::endl;
-        std::string displayColumns;
-        for (const auto &column : partitionColumns) displayColumns + " " += column;
+        std::string displayColumns = std::accumulate(partitionColumns.begin(), partitionColumns.end(), std::string(" "));
         std::cout << "[FixedGridPartitioning] Partition has to be done on columns: " << displayColumns << std::endl;
-        std::cout << "[FixedGridPartitioning] Regardless of number of passed columns, the FixedGrid technique will "
-                     "consider the first 2 columns and overlap the 2-dimensional space with a grid of fixed-sized cells" << std::endl;
-        std::vector<std::shared_ptr<arrow::Array>> columnArrowArrays;
-        if (partitionColumns.size() >= 2){
-            columnArrowArrays = storage::DataReader::getColumns(table, partitionColumns).ValueOrDie();
+
+        auto columnArrowArrays = dataReader.getColumns(partitionColumns).ValueOrDie();
+        auto numColumns = partitionColumns.size();
+        auto numRows = columnArrowArrays[0]->length();
+
+        if (partitionSize > numRows){
+            std::cout << "[FixedGridPartitioning] Partition size greater than the available rows" << std::endl;
+            std::cout << "[FixedGridPartitioning] Therefore put all data in one partition" << std::endl;
+            std::vector<int64_t> cellIndexes(numRows, 0);
+            arrow::Int64Builder int64Builder;
+            ARROW_RETURN_NOT_OK(int64Builder.AppendValues(cellIndexes));
+            std::cout << "[FixedGridPartitioning] Mapped columns to partition ids" << std::endl;
+            std::shared_ptr<arrow::Array> partitionIds;
+            ARROW_ASSIGN_OR_RAISE(partitionIds, int64Builder.Finish());
+            auto table = dataReader.readTable();
+            return partitioning::MultiDimensionalPartitioning::writeOutPartitions(*table,
+                                                                                  partitionIds,
+                                                                                  outputFolder);
         }
-        else{
-            auto cols = table->columns();
-            columnArrowArrays.emplace_back(cols[0]->chunk(0));
-            columnArrowArrays.emplace_back(cols[1]->chunk(0));
+
+        // Number of cells is = (domain(x) / cellSize) * (domain(y) / cellSize) ... * (domain(n) / cellSize)
+        // e.g. 20x20 grid, 100x100 coordinates -> (100 / 20) * (100 / 20) = 5 * 5 = 25 squares
+        std::cout << "[FixedGridPartitioning] Analyzing span of column values to determine cell width" << std::endl;
+        uint64_t columnDomainAverage = 0;
+        std::unordered_map<uint8_t, uint64_t> columnToDomain;
+        for (int j = 0; j < numColumns; ++j) {
+            auto columnStats = dataReader.getColumnStats(partitionColumns[j]).ValueOrDie();
+            uint64_t columnDomain = (columnStats.second - columnStats.first) * 1.2;
+            columnToDomain[j] = columnDomain;
+            columnDomainAverage += columnDomain;
         }
-        auto converter = common::ColumnDataConverter();
-        auto columnData = converter.toDouble(columnArrowArrays).ValueOrDie();
-        std::shared_ptr<arrow::Array> partitionIds;
-        arrow::Int64Builder int64Builder;
-        auto x = columnData[0];
-        auto y = columnData[1];
-        std::cout << "[FixedGridPartitioning] Using cell width " << partitionSize << std::endl;
-        std::cout << "[FixedGridPartitioning] First value x is: " << x[0] << std::endl;
-        std::cout << "[FixedGridPartitioning] First value y is: " << y[0] << std::endl;
-        std::cout << "[FixedGridPartitioning] Computing cell index" << std::endl;
+        columnDomainAverage /= numColumns;
+        // uint64_t cellWidth = columnDomainAverage / 5 * partitionSize;
+        uint64_t cellWidth = columnDomainAverage / 10;
+        std::cout << "[FixedGridPartitioning] Computed cell width is: " << cellWidth << std::endl;
+
+        std::vector<int64_t> cellIndexes = {};
+        for (int i = 0; i < numRows; ++i){
+            int64_t cellIndex = 0;
+            for (int j = 0; j < numColumns; ++j){
+                auto dimensionNumCells = std::floor(columnToDomain[j] / cellWidth);
+                auto arrow_int32_array = std::static_pointer_cast<arrow::Int32Array>(columnArrowArrays[j]->chunk(0));
+                auto value = arrow_int32_array->Value(i);
+                auto cellDimensionIndex = std::floor(value / cellWidth);
+                if (j > 0){
+                    cellIndex += cellDimensionIndex * dimensionNumCells;
+                }
+                else{
+                    cellIndex += cellDimensionIndex;
+                }
+            }
+            cellIndexes.emplace_back(cellIndex);
+        }
+
+        std::vector<size_t> idx(cellIndexes.size());
+        iota(idx.begin(), idx.end(), 0);
+
+        std::stable_sort(idx.begin(), idx.end(),
+                    [&cellIndexes](size_t i1, size_t i2) {return cellIndexes[i1] < cellIndexes[i2];});
+
+        std::map<uint64_t, uint64_t> cellIndexToPartition;
+        std::sort(std::begin(cellIndexes), std::end(cellIndexes));
+        for (int i = 0; i < cellIndexes.size(); ++i) {
+            cellIndexToPartition[idx[i]] = i / partitionSize;
+        }
+
         std::vector<int64_t> values = {};
-        for (int64_t i = 0; i < x.size(); ++i) {
-            long grid_x = x[i] / partitionSize;
-            long grid_y = y[i] / partitionSize;
-            long grid_idx = grid_y * partitionSize + grid_x;
-            values.emplace_back(grid_idx);
+        values.reserve(numRows);
+        for (int i = 0; i < numRows; ++i){
+            values.emplace_back(cellIndexToPartition[i]);
         }
+
+        arrow::Int64Builder int64Builder;
         ARROW_RETURN_NOT_OK(int64Builder.AppendValues(values));
         std::cout << "[FixedGridPartitioning] Mapped columns to partition ids" << std::endl;
+        std::shared_ptr<arrow::Array> partitionIds;
         ARROW_ASSIGN_OR_RAISE(partitionIds, int64Builder.Finish());
-        return partitioning::MultiDimensionalPartitioning::writeOutPartitions(table, partitionIds, outputFolder);
+        auto table = dataReader.readTable();
+        auto batch_reader = dataReader.getTableBatchReader();
+
+        return partitioning::MultiDimensionalPartitioning::writeOutPartitions(*table,
+                                                                              partitionIds,
+                                                                              outputFolder);
     }
 
 }

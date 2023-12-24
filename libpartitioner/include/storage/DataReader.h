@@ -10,8 +10,6 @@
 #include <parquet/arrow/reader.h>
 #include <parquet/api/reader.h>
 
-#include "partitioning/Partitioning.h"
-
 namespace storage {
 
 class DataReader {
@@ -21,8 +19,8 @@ class DataReader {
         arrow::Status load(std::filesystem::path &filePath, bool useBatchRead = false);
         arrow::Result<std::shared_ptr<arrow::Table>> readTable();
         arrow::Result<std::shared_ptr<::arrow::RecordBatchReader>> getTableBatchReader();
-        static arrow::Result<std::vector<std::shared_ptr<arrow::Array>>> getColumns(std::shared_ptr<arrow::Table> &table,
-                                                                                    std::vector<std::string> &columns);
+        static arrow::Result<std::vector<std::shared_ptr<arrow::Array>>> getColumnsOld(const std::shared_ptr<arrow::Table> &table,
+                                                                                       const std::vector<std::string> &columns);
         arrow::Result<std::vector<std::shared_ptr<arrow::ChunkedArray>>> getColumns(const std::vector<std::string> &columns);
         void displayFileProperties();
         arrow::Result<std::pair<uint64_t, uint64_t>> getColumnStats(const std::string &columnName);

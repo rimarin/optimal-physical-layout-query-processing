@@ -13,20 +13,22 @@
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningSTRTree){
     auto folder = ExperimentsConfig::strTreeFolder;
-    auto dataset = ExperimentsConfig::datasetSchool;
+    auto dataset = getDatasetPath(ExperimentsConfig::datasetSchool);
     auto fileExtension = ExperimentsConfig::fileExtension;
     cleanUpFolder(folder);
     arrow::Result<std::shared_ptr<arrow::Table>> table = storage::TableGenerator::GenerateSchoolTable().ValueOrDie();
     std::filesystem::path outputFolder = std::filesystem::current_path() / folder;
     std::vector<std::string> partitioningColumns = {"Age", "Student_id"};
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> strTreePartitioning = std::make_shared<partitioning::STRTreePartitioning>();
-    arrow::Status statusSTRTree1 = strTreePartitioning->partition(*table, partitioningColumns, 8, folder);
+    auto dataReader = storage::DataReader();
+    ASSERT_EQ(dataReader.load(dataset), arrow::Status::OK());
+    arrow::Status statusSTRTree1 = strTreePartitioning->partition(dataReader, partitioningColumns, 8, folder);
     auto pathPartition1_0 = folder / ("0" + fileExtension);
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition1_0, "Student_id"), std::vector<int32_t>({16, 45, 21, 7, 74, 34, 111, 91}));
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition1_0, "Age"), std::vector<int32_t>({30, 21, 18, 27, 41, 37, 23, 22}));
     ASSERT_EQ(readColumn<arrow::Int64Array>(pathPartition1_0, "partition_id"), std::vector<int64_t>({0, 0, 0, 0, 0, 0, 0, 0}));
     cleanUpFolder(folder);
-    arrow::Status statusSTRTree2 = strTreePartitioning->partition(*table, partitioningColumns, 2, folder);
+    arrow::Status statusSTRTree2 = strTreePartitioning->partition(dataReader, partitioningColumns, 2, folder);
     auto pathPartition2_0 = folder / ("0" + fileExtension);
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition2_0, "Student_id"), std::vector<int32_t>({45, 21}));
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition2_0, "Age"), std::vector<int32_t>({21, 18}));

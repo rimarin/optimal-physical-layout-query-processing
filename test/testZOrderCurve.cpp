@@ -13,7 +13,7 @@
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningZOrderCurve){
     auto folder = ExperimentsConfig::zOrderCurveFolder;
-    auto dataset = ExperimentsConfig::datasetSchool;
+    auto dataset = getDatasetPath(ExperimentsConfig::datasetSchool);
     auto partitionSize = 2;
     auto fileExtension = ExperimentsConfig::fileExtension;
     auto zOrderCurve = common::ZOrderCurve();
@@ -30,7 +30,9 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningZOrderCurve){
     arrow::Result<std::shared_ptr<arrow::Table>> table = storage::TableGenerator::GenerateSchoolTable().ValueOrDie();
     std::vector<std::string> partitioningColumns = {"Age", "Student_id"};
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> zOrderCurvePartitioning = std::make_shared<partitioning::ZOrderCurvePartitioning>();
-    arrow::Status statusZOrderCurve = zOrderCurvePartitioning->partition(*table, partitioningColumns, partitionSize, folder);
+    auto dataReader = storage::DataReader();
+    ASSERT_EQ(dataReader.load(dataset), arrow::Status::OK());
+    arrow::Status statusZOrderCurve = zOrderCurvePartitioning->partition(dataReader, partitioningColumns, partitionSize, folder);
     auto pathPartition0 = folder / ("0" + fileExtension);
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition0, "Student_id"), std::vector<int32_t>({21, 7}));
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition0, "Age"), std::vector<int32_t>({18, 27}));

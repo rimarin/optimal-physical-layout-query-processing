@@ -13,14 +13,16 @@
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningQuadTree){
     auto folder = ExperimentsConfig::quadTreeFolder;
-    auto dataset = ExperimentsConfig::datasetSchool;
+    auto dataset = getDatasetPath(ExperimentsConfig::datasetSchool);
     auto partitionSize = 20;
     auto fileExtension = ExperimentsConfig::fileExtension;
     cleanUpFolder(folder);
     arrow::Result<std::shared_ptr<arrow::Table>> table = storage::TableGenerator::GenerateSchoolTable().ValueOrDie();
     std::vector<std::string> partitioningColumns = {"Age", "Student_id"};
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> quadTreePartitioning = std::make_shared<partitioning::QuadTreePartitioning>();
-    arrow::Status statusQuadTree = quadTreePartitioning->partition(*table, partitioningColumns, partitionSize, folder);
+    auto dataReader = storage::DataReader();
+    ASSERT_EQ(dataReader.load(dataset), arrow::Status::OK());
+    arrow::Status statusQuadTree = quadTreePartitioning->partition(dataReader, partitioningColumns, partitionSize, folder);
     auto pathPartition0 = folder / ("0" + fileExtension);
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition0, "Student_id"), std::vector<int32_t>({111, 91}));
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition0, "Age"), std::vector<int32_t>({23, 22}));

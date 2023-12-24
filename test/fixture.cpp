@@ -43,25 +43,24 @@ public:
     }
 
     static arrow::Result<std::shared_ptr<arrow::Table>> getDataset(const std::string &datasetName){
-        std::filesystem::path datasetFile;
-        if(ExperimentsConfig::testDatasets.count(datasetName)){
-            datasetFile = getDatasetPath(datasetName);
-        }
-        else{
-            return arrow::Status::IOError("Dataset not found");
-        }
+        std::filesystem::path datasetFile = getDatasetPath(datasetName);
         return storage::DataReader::getTable(datasetFile);
     }
 
     static std::filesystem::path getDatasetPath(const std::string &datasetName){
-        return ExperimentsConfig::noPartitionFolder / (datasetName + "0" + ExperimentsConfig::fileExtension);
+        if(ExperimentsConfig::testDatasets.count(datasetName)) {
+            return ExperimentsConfig::noPartitionFolder / (datasetName + "0" + ExperimentsConfig::fileExtension);
+        }
+        else if(ExperimentsConfig::realDatasets.count(datasetName)){
+            return ExperimentsConfig::datasetsFolder / datasetName / ExperimentsConfig::noPartition / (datasetName + ExperimentsConfig::fileExtension);
+        }
+        throw std::invalid_argument("Dataset not found");
     }
 
     template <typename ArrayType, typename T = typename ArrayType::TypeClass>
     arrow::enable_if_number<T, arrow::Result<std::vector<typename T::c_type>>> readColumn(std::filesystem::path &filename,
                                                                                           const std::string &columnName){
         std::shared_ptr<arrow::Table> partition = storage::DataReader::getTable(filename).ValueOrDie();
-        std::vector<arrow::Datum> columnData;
             auto columnChunk = std::static_pointer_cast<arrow::NumericArray<T>>(
                     partition->GetColumnByName(columnName)->chunk(0));
         std::vector<typename T::c_type> columnVector;

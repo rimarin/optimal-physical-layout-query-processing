@@ -2,8 +2,9 @@
 
 namespace partitioning {
 
-    arrow::Status NoPartitioning::partition(std::shared_ptr<arrow::Table> table, std::vector<std::string> partitionColumns,
-                              int32_t partitionSize, std::filesystem::path &outputFolder) {
+    arrow::Status NoPartitioning::partition(storage::DataReader &dataReader,
+                                            const std::vector<std::string> &partitionColumns,
+                                            const size_t partitionSize, const std::filesystem::path &outputFolder) {
         return arrow::Status::OK();
     }
 

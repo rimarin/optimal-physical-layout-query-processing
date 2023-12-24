@@ -2,10 +2,11 @@
 #include <iostream>
 #include <string>
 
+#include <arrow/compute/kernel.h>
 #include <arrow/filesystem/localfs.h>
 #include <arrow/io/api.h>
-#include <parquet/arrow/reader.h>
 
+#include <parquet/arrow/reader.h>
 #include "storage/DataReader.h"
 
 namespace storage {
@@ -94,7 +95,7 @@ namespace storage {
     }
 
     arrow::Result<std::vector<std::shared_ptr<arrow::Array>>>
-    DataReader::getColumns(std::shared_ptr<arrow::Table> &table, std::vector<std::string> &columns) {
+    DataReader::getColumnsOld(const std::shared_ptr<arrow::Table> &table, const std::vector<std::string> &columns) {
         if (table == nullptr){
             throw std::invalid_argument("Cannot getColumns from empty table");
         }
@@ -127,7 +128,7 @@ namespace storage {
     }
 
     arrow::Result<std::shared_ptr<arrow::ChunkedArray>> DataReader::getColumn(const std::string &columnName){
-        std::cout << "Reading first column of parquet-arrow-example.parquet" << std::endl;
+        std::cout << "[DataReader] Reading column <" << columnName << "> " << std::endl;
         std::shared_ptr<arrow::ChunkedArray> columnArray;
         auto fieldIndex = getColumnIndex(columnName).ValueOrDie();
         if (fieldIndex == -1){
@@ -144,16 +145,17 @@ namespace storage {
     }
 
     arrow::Result<std::pair<uint64_t, uint64_t>> DataReader::getColumnStats(const std::string &columnName){
+        auto columnIndex = getColumnIndex(columnName).ValueOrDie();
         auto numRowGroups = metadata->num_row_groups();
         std::unique_ptr<parquet::RowGroupMetaData> rowGroup = metadata->RowGroup(0);
-        std::shared_ptr<parquet::Statistics> stats = (rowGroup->ColumnChunk(getColumnIndex(columnName).ValueOrDie()))->statistics();
-        const auto *typed_stats = dynamic_cast<const parquet::TypedStatistics<arrow::Int64Type>*>(stats.get());
+        std::shared_ptr<parquet::Statistics> stats = (rowGroup->ColumnChunk(columnIndex))->statistics();
+        const auto *typed_stats = static_cast<const parquet::TypedStatistics<arrow::Int32Type>*>(stats.get());
         auto minValue = typed_stats->min();
         auto maxValue = typed_stats->max();
         for (int i = 1; i < numRowGroups; ++i){
             rowGroup = metadata->RowGroup(i);
-            stats = (rowGroup->ColumnChunk(0))->statistics();
-            typed_stats = dynamic_cast<const parquet::TypedStatistics<arrow::Int64Type>*>(stats.get());
+            stats = (rowGroup->ColumnChunk(columnIndex))->statistics();
+            typed_stats = static_cast<const parquet::TypedStatistics<arrow::Int32Type>*>(stats.get());
             minValue = std::min(minValue, typed_stats->min());
             maxValue = std::max(maxValue, typed_stats->max());
         }

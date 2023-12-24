@@ -2,10 +2,10 @@
 
 namespace partitioning {
 
-    arrow::Status STRTreePartitioning::partition(std::shared_ptr<arrow::Table> table,
-                                                 std::vector<std::string> partitionColumns,
-                                                 int32_t partitionSize,
-                                                 std::filesystem::path &outputFolder) {
+    arrow::Status STRTreePartitioning::partition(storage::DataReader &dataReader,
+                                                 const std::vector<std::string> &partitionColumns,
+                                                 const size_t partitionSize,
+                                                 const std::filesystem::path &outputFolder) {
         /* Implementation based on:
          * STR: A Simple and Efficient Algorithm for R-Tree Packing, https://dl.acm.org/doi/10.5555/870314
          * An R-tree is a hierarchical data structure derived from the B-tree, which stores a collection of
@@ -29,7 +29,8 @@ namespace partitioning {
         std::string displayColumns;
         for (const auto &column: partitionColumns) displayColumns + " " += column;
         std::cout << "[STRTreePartitioning] Partition has to be done on columns: " << displayColumns << std::endl;
-        auto columnArrowArrays = storage::DataReader::getColumns(table, partitionColumns).ValueOrDie();
+        auto table = dataReader.readTable().ValueOrDie();
+        auto columnArrowArrays = storage::DataReader::getColumnsOld(table, partitionColumns).ValueOrDie();
         auto converter = common::ColumnDataConverter();
         auto columnData = converter.toDouble(columnArrowArrays).ValueOrDie();
         std::vector<common::Point> points = common::ColumnDataConverter::toRows(columnData);

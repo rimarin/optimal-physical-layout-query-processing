@@ -1,5 +1,5 @@
-#ifndef PARTITIONING_PARTITIONING_H
-#define PARTITIONING_PARTITIONING_H
+#ifndef PARTITIONING_MULTIDIMENSIONAL_PARTITIONING_H
+#define PARTITIONING_MULTIDIMENSIONAL_PARTITIONING_H
 
 #include <iostream>
 #include <filesystem>
@@ -11,16 +11,18 @@
 #include <arrow/util/type_fwd.h>
 #include <parquet/arrow/writer.h>
 
+#include "storage/DataReader.h"
+
 namespace partitioning {
 
     class MultiDimensionalPartitioning {
     public:
         MultiDimensionalPartitioning() = default;
         virtual ~MultiDimensionalPartitioning() = default;
-        virtual arrow::Status partition(std::shared_ptr<arrow::Table> table,
-                                        std::vector<std::string> partitionColumns,
-                                        int32_t partitionSize,
-                                        std::filesystem::path &outputFolder) = 0;
+        virtual arrow::Status partition(storage::DataReader &dataReader,
+                                        const std::vector<std::string> &partitionColumns,
+                                        const size_t partitionSize,
+                                        const std::filesystem::path &outputFolder) = 0;
         inline static arrow::Status writeOutPartitions(std::shared_ptr<arrow::Table> &table,
                                                        std::shared_ptr<arrow::Array> &partitionIds,
                                                        const std::filesystem::path &outputFolder);
@@ -63,7 +65,7 @@ namespace partitioning {
         }
         auto numPartitions = uniquePartitionIds.size();
         std::cout << "[Partitioning] Computed " << numPartitions << " unique partition ids" << std::endl;
-        assert(("Number of partitions is too high, component might freeze or crash", numPartitions < 20000));
+        assert(("Number of partitions is too high, component might freeze or crash", numPartitions < 100000));
         // For each distinct partition_id we filter the table by that partition_id (the newly created column)
         // Construct new table with the partitioning column from the record batches and
         // Wrap the Table in a Dataset, so we can use a Scanner
@@ -107,4 +109,4 @@ namespace partitioning {
     }
 }
 
-#endif //PARTITIONING_PARTITIONING_H
+#endif //PARTITIONING_MULTIDIMENSIONAL_PARTITIONING_H

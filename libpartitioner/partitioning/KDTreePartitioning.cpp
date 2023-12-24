@@ -2,15 +2,16 @@
 
 namespace partitioning {
 
-    arrow::Status KDTreePartitioning::partition(std::shared_ptr<arrow::Table> table,
-                                                std::vector<std::string> partitionColumns,
-                                                int32_t partitionSize,
-                                                std::filesystem::path &outputFolder){
+    arrow::Status KDTreePartitioning::partition(storage::DataReader &dataReader,
+                                                const std::vector<std::string> &partitionColumns,
+                                                const size_t partitionSize,
+                                                const std::filesystem::path &outputFolder){
         std::cout << "[KDTreePartitioning] Initializing partitioning technique" << std::endl;
         std::string displayColumns;
         for (const auto &column : partitionColumns) displayColumns + " " += column;
         std::cout << "[KDTreePartitioning] Partition has to be done on columns: " << displayColumns << std::endl;
-        auto columnArrowArrays = storage::DataReader::getColumns(table, partitionColumns).ValueOrDie();
+        auto table = dataReader.readTable().ValueOrDie();
+        auto columnArrowArrays = storage::DataReader::getColumnsOld(table, partitionColumns).ValueOrDie();
         auto converter = common::ColumnDataConverter();
         auto columnData = converter.toDouble(columnArrowArrays).ValueOrDie();
 

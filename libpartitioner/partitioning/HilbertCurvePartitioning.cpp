@@ -2,15 +2,16 @@
 
 namespace partitioning {
 
-    arrow::Status HilbertCurvePartitioning::partition(std::shared_ptr<arrow::Table> table,
-                                                      std::vector<std::string> partitionColumns,
-                                                      int32_t partitionSize,
-                                                      std::filesystem::path &outputFolder){
+    arrow::Status HilbertCurvePartitioning::partition(storage::DataReader &dataReader,
+                                                      const std::vector<std::string> &partitionColumns,
+                                                      const size_t partitionSize,
+                                                      const std::filesystem::path &outputFolder){
         std::cout << "[HilbertCurvePartitioning] Initializing partitioning technique" << std::endl;
         std::string displayColumns;
         for (const auto &column : partitionColumns) displayColumns + " " += column;
         std::cout << "[HilbertCurvePartitioning] Partition has to be done on columns: " << displayColumns << std::endl;
-        auto columnArrowArrays = storage::DataReader::getColumns(table, partitionColumns).ValueOrDie();
+        auto table = dataReader.readTable().ValueOrDie();
+        auto columnArrowArrays = storage::DataReader::getColumnsOld(table, partitionColumns).ValueOrDie();
         auto converter = common::ColumnDataConverter();
         auto columnData = converter.toInt64(columnArrowArrays).ValueOrDie();
         std::shared_ptr<arrow::Array> partitionIds;

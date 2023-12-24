@@ -1,5 +1,5 @@
-#ifndef STORAGE_DATAWRITER_H
-#define STORAGE_DATAWRITER_H
+#ifndef STORAGE_DATA_WRITER_H
+#define STORAGE_DATA_WRITER_H
 
 #include <filesystem>
 
@@ -26,9 +26,9 @@ class DataWriter {
         static arrow::Status WritePartitions(std::vector<std::shared_ptr<arrow::Table>>& partitions,
                                              std::string &tableName,
                                              std::filesystem::path &outputFolder);
-        static arrow::Result<std::shared_ptr<arrow::Table>> GenerateExampleWeatherTable();
-        static arrow::Result<std::shared_ptr<arrow::Table>> GenerateExampleSchoolTable();
+        static std::shared_ptr<parquet::ParquetFileWriter> getWriter();
+        static std::shared_ptr<parquet::ArrowWriterProperties> getProperties();
 };
 } // storage
 
-#endif //STORAGE_DATAWRITER_H
+#endif //STORAGE_DATA_WRITER_H
