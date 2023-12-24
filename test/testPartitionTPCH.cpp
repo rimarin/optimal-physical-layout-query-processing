@@ -10,12 +10,15 @@
 TEST_F(TestOptimalLayoutFixture, TestPartitioningFixedGridTPCH){
     auto folder = ExperimentsConfig::fixedGridFolder;
     auto dataset = ExperimentsConfig::datasetTPCH1;
+    auto partitioningTechnique = ExperimentsConfig::noPartition;
     auto partitionSize = 20000;
     cleanUpFolder(folder);
-    arrow::Result<std::shared_ptr<arrow::Table>> table = getDataset(dataset);
+    auto dataReader = storage::DataReader();
+    auto datasetPath = storage::DataReader::getDatasetPath(folder, dataset, partitioningTechnique);
+    ASSERT_EQ(dataReader.load(datasetPath), arrow::Status::OK());
     std::vector<std::string> partitioningColumns = {"c_custkey", "l_orderkey"};
-    std::shared_ptr<partitioning::MultiDimensionalPartitioning> fixedGridPartitioning = std::make_shared<partitioning::FixedGridPartitioning>();
-    arrow::Status statusTPCH1 = fixedGridPartitioning->partition(*table, partitioningColumns, partitionSize, folder);
+    std::shared_ptr<partitioning::FixedGridPartitioning> fixedGridPartitioning = std::make_shared<partitioning::FixedGridPartitioning>();
+    arrow::Status statusTPCH1 = fixedGridPartitioning->partitionNew(dataReader, partitioningColumns, partitionSize, folder);
     auto dirIter = std::filesystem::directory_iterator(folder);
     int fileCount = std::count_if(
             begin(dirIter),

@@ -54,6 +54,7 @@ set(LIBPARTITIONER_SOURCES
         common/QuadTree.cpp
         storage/DataWriter.cpp
         storage/DataReader.cpp
+        storage/TableGenerator.cpp
         partitioning/NoPartitioning.cpp
         partitioning/FixedGridPartitioning.cpp
         partitioning/GridFilePartitioning.cpp

@@ -6,6 +6,7 @@
 #include "include/partitioning/STRTreePartitioning.h"
 #include "include/storage/DataWriter.h"
 #include "include/storage/DataReader.h"
+#include "include/storage/TableGenerator.h"
 #include "fixture.cpp"
 
 #include "gtest/gtest.h"
@@ -15,7 +16,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningSTRTree){
     auto dataset = ExperimentsConfig::datasetSchool;
     auto fileExtension = ExperimentsConfig::fileExtension;
     cleanUpFolder(folder);
-    arrow::Result<std::shared_ptr<arrow::Table>> table = storage::DataWriter::GenerateExampleSchoolTable().ValueOrDie();
+    arrow::Result<std::shared_ptr<arrow::Table>> table = storage::TableGenerator::GenerateSchoolTable().ValueOrDie();
     std::filesystem::path outputFolder = std::filesystem::current_path() / folder;
     std::vector<std::string> partitioningColumns = {"Age", "Student_id"};
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> strTreePartitioning = std::make_shared<partitioning::STRTreePartitioning>();

@@ -23,7 +23,7 @@ namespace partitioning {
                                         std::filesystem::path &outputFolder) = 0;
         inline static arrow::Status writeOutPartitions(std::shared_ptr<arrow::Table> &table,
                                                        std::shared_ptr<arrow::Array> &partitionIds,
-                                                       std::filesystem::path &outputFolder);
+                                                       const std::filesystem::path &outputFolder);
     };
 
     // Splitting method to divide a table into sub-tables according to the partition ids
@@ -31,7 +31,7 @@ namespace partitioning {
     // Can slice like in https://github.com/apache/arrow/blob/353139680311e809d2413ea46e17e1656069ac5e/cpp/src/arrow/dataset/partition.cc#L90C20-L90C20
     arrow::Status MultiDimensionalPartitioning::writeOutPartitions(std::shared_ptr<arrow::Table> &table,
                                                                    std::shared_ptr<arrow::Array> &partitionIds,
-                                                                   std::filesystem::path &outputFolder) {
+                                                                   const std::filesystem::path &outputFolder) {
         // Extract the distinct values of partitions ids.
         // Split the table into a set of different tables, one for each partition:
         // For each distinct partition_id we filter the table by that partition_id (the newly created column)

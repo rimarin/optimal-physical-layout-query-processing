@@ -6,6 +6,7 @@
 #include "include/partitioning/QuadTreePartitioning.h"
 #include "include/storage/DataWriter.h"
 #include "include/storage/DataReader.h"
+#include "include/storage/TableGenerator.h"
 #include "fixture.cpp"
 
 #include "gtest/gtest.h"
@@ -16,7 +17,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningQuadTree){
     auto partitionSize = 20;
     auto fileExtension = ExperimentsConfig::fileExtension;
     cleanUpFolder(folder);
-    arrow::Result<std::shared_ptr<arrow::Table>> table = storage::DataWriter::GenerateExampleSchoolTable().ValueOrDie();
+    arrow::Result<std::shared_ptr<arrow::Table>> table = storage::TableGenerator::GenerateSchoolTable().ValueOrDie();
     std::vector<std::string> partitioningColumns = {"Age", "Student_id"};
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> quadTreePartitioning = std::make_shared<partitioning::QuadTreePartitioning>();
     arrow::Status statusQuadTree = quadTreePartitioning->partition(*table, partitioningColumns, partitionSize, folder);

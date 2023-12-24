@@ -6,6 +6,7 @@
 #include "include/partitioning/ZOrderCurvePartitioning.h"
 #include "include/storage/DataWriter.h"
 #include "include/storage/DataReader.h"
+#include "include/storage/TableGenerator.h"
 #include "fixture.cpp"
 
 #include "gtest/gtest.h"
@@ -26,7 +27,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningZOrderCurve){
     ASSERT_EQ(9118, zOrderCurve.encode(arr3, 2));
     ASSERT_EQ(std::vector<uint64_t>(std::begin(arr3), std::end(arr3)), zOrderCurve.decode(9118, 2));
     cleanUpFolder(folder);
-    arrow::Result<std::shared_ptr<arrow::Table>> table = storage::DataWriter::GenerateExampleSchoolTable().ValueOrDie();
+    arrow::Result<std::shared_ptr<arrow::Table>> table = storage::TableGenerator::GenerateSchoolTable().ValueOrDie();
     std::vector<std::string> partitioningColumns = {"Age", "Student_id"};
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> zOrderCurvePartitioning = std::make_shared<partitioning::ZOrderCurvePartitioning>();
     arrow::Status statusZOrderCurve = zOrderCurvePartitioning->partition(*table, partitioningColumns, partitionSize, folder);

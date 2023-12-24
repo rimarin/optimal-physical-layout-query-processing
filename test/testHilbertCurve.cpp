@@ -6,6 +6,7 @@
 #include "include/partitioning/HilbertCurvePartitioning.h"
 #include "include/storage/DataWriter.h"
 #include "include/storage/DataReader.h"
+#include "include/storage/TableGenerator.h"
 #include "fixture.cpp"
 
 #include "gtest/gtest.h"
@@ -32,7 +33,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurve){
     ASSERT_EQ(0, hilbertCurve.interleaveBits(X4, 5, 2));
     ASSERT_EQ(2, hilbertCurve.interleaveBits(X5, 5, 3));
     cleanUpFolder(folder);
-    arrow::Result<std::shared_ptr<arrow::Table>> table = storage::DataWriter::GenerateExampleSchoolTable().ValueOrDie();
+    arrow::Result<std::shared_ptr<arrow::Table>> table = storage::TableGenerator::GenerateSchoolTable().ValueOrDie();
     std::vector<std::string> partitioningColumns = {"Age", "Student_id"};
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> hilbertCurvePartitioning = std::make_shared<partitioning::HilbertCurvePartitioning>();
     arrow::Status statusHilbertCurve = hilbertCurvePartitioning->partition(*table, partitioningColumns, partitionSize, folder);

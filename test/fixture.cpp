@@ -42,28 +42,47 @@ public:
         }
     }
 
-    arrow::Result<std::shared_ptr<arrow::Table>> getDataset(std::string &datasetName){
-        if (ExperimentsConfig::testDatasets.count(datasetName)){
-            std::filesystem::path datasetFile = ExperimentsConfig::noPartitionFolder / (datasetName + "0" + ExperimentsConfig::fileExtension);
-            return storage::DataReader::readTable(datasetFile);
-        } else if(ExperimentsConfig::realDatasets.count(datasetName)){
-            std::filesystem::path datasetFile = ExperimentsConfig::datasetsFolder / datasetName / "no-partition" / (datasetName + ExperimentsConfig::fileExtension);
-            return storage::DataReader::readTable(datasetFile);
-        } else {
+    static arrow::Result<std::shared_ptr<arrow::Table>> getDataset(const std::string &datasetName){
+        std::filesystem::path datasetFile;
+        if(ExperimentsConfig::testDatasets.count(datasetName)){
+            datasetFile = getDatasetPath(datasetName);
+        }
+        else{
             return arrow::Status::IOError("Dataset not found");
         }
+        return storage::DataReader::getTable(datasetFile);
+    }
+
+    static std::filesystem::path getDatasetPath(const std::string &datasetName){
+        return ExperimentsConfig::noPartitionFolder / (datasetName + "0" + ExperimentsConfig::fileExtension);
     }
 
     template <typename ArrayType, typename T = typename ArrayType::TypeClass>
-    arrow::Result<std::vector<typename T::c_type>> readColumn(std::filesystem::path &filename, std::string columnName){
-        std::shared_ptr<arrow::Table> partition = storage::DataReader::readTable(filename).ValueOrDie();
+    arrow::enable_if_number<T, arrow::Result<std::vector<typename T::c_type>>> readColumn(std::filesystem::path &filename,
+                                                                                          const std::string &columnName){
+        std::shared_ptr<arrow::Table> partition = storage::DataReader::getTable(filename).ValueOrDie();
         std::vector<arrow::Datum> columnData;
-        auto columnChunk = std::static_pointer_cast<arrow::NumericArray<T>>(
-                partition->GetColumnByName(columnName)->chunk(0));
+            auto columnChunk = std::static_pointer_cast<arrow::NumericArray<T>>(
+                    partition->GetColumnByName(columnName)->chunk(0));
         std::vector<typename T::c_type> columnVector;
         for (int64_t i = 0; i < columnChunk->length(); ++i)
         {
             columnVector.push_back(columnChunk->Value(i));
+        }
+        return columnVector;
+    }
+
+    template <typename ArrayType, typename T = typename ArrayType::TypeClass>
+    arrow::enable_if_string<T, arrow::Result<std::vector<std::string>>> readColumn(std::filesystem::path &filename,
+                                                                                   const std::string &columnName){
+        std::shared_ptr<arrow::Table> partition = storage::DataReader::getTable(filename).ValueOrDie();
+        std::vector<arrow::Datum> columnData;
+        auto columnChunk = std::static_pointer_cast<arrow::StringArray>(
+                partition->GetColumnByName(columnName)->chunk(0));
+        std::vector<std::string> columnVector;
+        for (int64_t i = 0; i < columnChunk->length(); ++i)
+        {
+            columnVector.emplace_back(columnChunk->Value(i));
         }
         return columnVector;
     }

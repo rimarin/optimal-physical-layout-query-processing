@@ -6,6 +6,7 @@
 #include "include/partitioning/NoPartitioning.h"
 #include "include/storage/DataWriter.h"
 #include "include/storage/DataReader.h"
+#include "include/storage/TableGenerator.h"
 #include "fixture.cpp"
 
 #include "gtest/gtest.h"
@@ -13,18 +14,24 @@
 
 TEST_F(TestOptimalLayoutFixture, TestGenerateParquetExamples){
     auto folder = ExperimentsConfig::noPartitionFolder;
-    auto dataset1 = ExperimentsConfig::datasetWeather;
-    auto dataset2 = ExperimentsConfig::datasetSchool;
-    auto partitionSize = 20;
     auto fileExtension = ExperimentsConfig::fileExtension;
-    arrow::Result<std::shared_ptr<arrow::Table>> weatherTable = storage::DataWriter::GenerateExampleWeatherTable().ValueOrDie();
-    arrow::Result<std::shared_ptr<arrow::Table>> schoolTable = storage::DataWriter::GenerateExampleSchoolTable().ValueOrDie();
+    auto dataset1 = ExperimentsConfig::datasetWeather + "0" + fileExtension;
+    auto dataset2 = ExperimentsConfig::datasetSchool + "0" + fileExtension;
+    auto dataset3 = ExperimentsConfig::datasetCities + "0" + fileExtension;
+    auto partitionSize = 20;
+    arrow::Result<std::shared_ptr<arrow::Table>> weatherTable = storage::TableGenerator::GenerateWeatherTable().ValueOrDie();
+    arrow::Result<std::shared_ptr<arrow::Table>> schoolTable = storage::TableGenerator::GenerateSchoolTable().ValueOrDie();
+    arrow::Result<std::shared_ptr<arrow::Table>> citiesTable = storage::TableGenerator::GenerateCitiesTable().ValueOrDie();
+    ASSERT_EQ(storage::DataWriter::WriteTable(*weatherTable, dataset1, folder), arrow::Status::OK());
+    ASSERT_EQ(storage::DataWriter::WriteTable(*schoolTable, dataset2, folder), arrow::Status::OK());
+    ASSERT_EQ(storage::DataWriter::WriteTable(*citiesTable, dataset3, folder), arrow::Status::OK());
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> noPartitioning = std::make_shared<partitioning::NoPartitioning>();
     arrow::Status statusWeather = noPartitioning->partition(*weatherTable, {std::string("")}, partitionSize, folder);
     arrow::Status statusSchool = noPartitioning->partition(*schoolTable, {std::string("")}, partitionSize, folder);
-    std::filesystem::path expectedPath = folder / (dataset1 + "0" + fileExtension);
-    ASSERT_EQ(std::filesystem::exists( folder / (dataset1 + "0" + fileExtension)), true);
-    ASSERT_EQ(std::filesystem::exists( folder / (dataset2 + "0" + fileExtension)), true);
+    arrow::Status statusCities = noPartitioning->partition(*citiesTable, {std::string("")}, partitionSize, folder);
+    ASSERT_EQ(std::filesystem::exists( folder / (dataset1)), true);
+    ASSERT_EQ(std::filesystem::exists( folder / (dataset2)), true);
+    ASSERT_EQ(std::filesystem::exists( folder / (dataset3)), true);
 }
 
 TEST_F(TestOptimalLayoutFixture, TestReadParquet){
@@ -34,7 +41,7 @@ TEST_F(TestOptimalLayoutFixture, TestReadParquet){
     auto dataset3 = ExperimentsConfig::datasetTPCH1;
     auto fileExtension = ExperimentsConfig::fileExtension;
     std::filesystem::path inputFile = folder / (dataset1 + "0" + fileExtension);
-    arrow::Result<std::shared_ptr<arrow::Table>> tableFromDisk = storage::DataReader::readTable(inputFile);
+    arrow::Result<std::shared_ptr<arrow::Table>> tableFromDisk = storage::DataReader::getTable(inputFile);
     ASSERT_EQ(tableFromDisk.status(), arrow::Status::OK());
     arrow::Result<std::shared_ptr<arrow::Table>> testDatasetSchool = getDataset(dataset2);
     ASSERT_EQ(testDatasetSchool.status(), arrow::Status::OK());
