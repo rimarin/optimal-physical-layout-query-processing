@@ -19,7 +19,7 @@ public:
     static inline const std::string datasetSchool = "school";
     static inline const std::string datasetWeather = "weather";
     static inline const std::string datasetCities = "cities";
-    static inline const std::set<std::string> testDatasets = {datasetSchool, datasetWeather};
+    static inline const std::set<std::string> testDatasets = {datasetSchool, datasetWeather, datasetCities};
     static inline const std::string datasetOSM = "osm";
     static inline const std::string datasetTaxi = "taxi";
     static inline const std::string datasetTPCH1 = "tpch-sf1";

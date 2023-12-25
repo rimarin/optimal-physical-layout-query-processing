@@ -15,16 +15,16 @@
 TEST_F(TestOptimalLayoutFixture, TestGenerateParquetExamples){
     auto folder = ExperimentsConfig::noPartitionFolder;
     auto fileExtension = ExperimentsConfig::fileExtension;
-    auto dataset1 = ExperimentsConfig::datasetWeather + "0" + fileExtension;
-    auto dataset2 = ExperimentsConfig::datasetSchool + "0" + fileExtension;
-    auto dataset3 = ExperimentsConfig::datasetCities + "0" + fileExtension;
+    std::filesystem::path dataset1 = folder.string() + ExperimentsConfig::datasetWeather + "0" + fileExtension;
+    std::filesystem::path dataset2 = folder.string() + ExperimentsConfig::datasetSchool + "0" + fileExtension;
+    std::filesystem::path dataset3 = folder.string() + ExperimentsConfig::datasetCities + "0" + fileExtension;
     auto partitionSize = 20;
     arrow::Result<std::shared_ptr<arrow::Table>> weatherTable = storage::TableGenerator::GenerateWeatherTable().ValueOrDie();
     arrow::Result<std::shared_ptr<arrow::Table>> schoolTable = storage::TableGenerator::GenerateSchoolTable().ValueOrDie();
     arrow::Result<std::shared_ptr<arrow::Table>> citiesTable = storage::TableGenerator::GenerateCitiesTable().ValueOrDie();
-    ASSERT_EQ(storage::DataWriter::WriteTable(*weatherTable, dataset1, folder), arrow::Status::OK());
-    ASSERT_EQ(storage::DataWriter::WriteTable(*schoolTable, dataset2, folder), arrow::Status::OK());
-    ASSERT_EQ(storage::DataWriter::WriteTable(*citiesTable, dataset3, folder), arrow::Status::OK());
+    ASSERT_EQ(storage::DataWriter::WriteTable(*weatherTable, dataset1), arrow::Status::OK());
+    ASSERT_EQ(storage::DataWriter::WriteTable(*schoolTable, dataset2), arrow::Status::OK());
+    ASSERT_EQ(storage::DataWriter::WriteTable(*citiesTable, dataset3), arrow::Status::OK());
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> noPartitioning = std::make_shared<partitioning::NoPartitioning>();
     auto dataReader = storage::DataReader();
     auto datasetWeather = getDatasetPath(ExperimentsConfig::datasetWeather);

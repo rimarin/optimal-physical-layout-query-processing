@@ -21,13 +21,9 @@ class DataWriter {
         DataWriter() = default;
         virtual ~DataWriter() = default;
         static arrow::Status WriteTable(std::shared_ptr<arrow::Table>& table,
-                                        std::string &filename,
-                                        std::filesystem::path &outputFolder);
-        static arrow::Status WritePartitions(std::vector<std::shared_ptr<arrow::Table>>& partitions,
-                                             std::string &tableName,
-                                             std::filesystem::path &outputFolder);
-        static std::shared_ptr<parquet::ParquetFileWriter> getWriter();
-        static std::shared_ptr<parquet::ArrowWriterProperties> getProperties();
+                                        std::filesystem::path &outputPath);
+        static std::shared_ptr<parquet::WriterProperties> getWriterProperties();
+        static std::shared_ptr<parquet::ArrowWriterProperties> getArrowWriterProperties();
 };
 } // storage
 

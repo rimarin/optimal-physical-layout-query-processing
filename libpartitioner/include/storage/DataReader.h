@@ -17,17 +17,19 @@ class DataReader {
         DataReader() = default;
         virtual ~DataReader() = default;
         arrow::Status load(std::filesystem::path &filePath, bool useBatchRead = false);
+        std::filesystem::path getReaderPath();
         arrow::Result<std::shared_ptr<arrow::Table>> readTable();
         arrow::Result<std::shared_ptr<::arrow::RecordBatchReader>> getTableBatchReader();
         static arrow::Result<std::vector<std::shared_ptr<arrow::Array>>> getColumnsOld(const std::shared_ptr<arrow::Table> &table,
                                                                                        const std::vector<std::string> &columns);
         arrow::Result<std::vector<std::shared_ptr<arrow::ChunkedArray>>> getColumns(const std::vector<std::string> &columns);
         void displayFileProperties();
-        arrow::Result<std::pair<uint64_t, uint64_t>> getColumnStats(const std::string &columnName);
-        uint64_t getNumRows();
+        arrow::Result<std::pair<uint32_t, uint32_t>> getColumnStats(const std::string &columnName);
+        uint32_t getNumRows();
         static arrow::Result<std::shared_ptr<arrow::Table>> getTable(std::filesystem::path &inputFile);
         static std::filesystem::path getDatasetPath(const std::filesystem::path &folder, const std::string &datasetName,
                                                     const std::string &partitioningTechnique);
+        arrow::Result<int> getColumnIndex(const std::string &columnName);
     private:
         std::filesystem::path path;
         bool batchRead = false;
@@ -35,7 +37,6 @@ class DataReader {
         std::unique_ptr<parquet::arrow::FileReader> reader;
         std::shared_ptr<parquet::FileMetaData> metadata;
         arrow::Result<std::shared_ptr<arrow::ChunkedArray>> getColumn(const std::string &columnName);
-        arrow::Result<int> getColumnIndex(const std::string &columnName);
 };
 } // storage
 

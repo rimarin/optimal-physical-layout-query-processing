@@ -27,7 +27,7 @@ namespace storage {
 
             // Configure Arrow-specific Parquet reader settings
             auto arrow_reader_props = parquet::ArrowReaderProperties(/*use_threads=*/true);
-            arrow_reader_props.set_batch_size(128 * 1024);  // default 64 * 1024
+            arrow_reader_props.set_batch_size(64 * 1024);  // default 64 * 1024
 
             parquet::arrow::FileReaderBuilder reader_builder;
             ARROW_RETURN_NOT_OK(reader_builder.OpenFile(path, /*memory_map=*/false, reader_properties));
@@ -55,7 +55,11 @@ namespace storage {
         std::cout << "[DataReader] File has " << metadata->num_rows() << " rows" << std::endl;
     }
 
-    uint64_t DataReader::getNumRows() {
+    std::filesystem::path DataReader::getReaderPath(){
+        return path;
+    }
+
+    uint32_t DataReader::getNumRows() {
         return metadata->num_rows();
     }
 
@@ -144,7 +148,7 @@ namespace storage {
         return schema->GetFieldIndex(columnName);
     }
 
-    arrow::Result<std::pair<uint64_t, uint64_t>> DataReader::getColumnStats(const std::string &columnName){
+    arrow::Result<std::pair<uint32_t, uint32_t>> DataReader::getColumnStats(const std::string &columnName){
         auto columnIndex = getColumnIndex(columnName).ValueOrDie();
         auto numRowGroups = metadata->num_row_groups();
         std::unique_ptr<parquet::RowGroupMetaData> rowGroup = metadata->RowGroup(0);

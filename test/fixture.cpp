@@ -71,6 +71,14 @@ public:
         return columnVector;
     }
 
+    static bool addColumnPartitionId(const std::string &datasetName){
+        // Test datasets should have an additional column with the partition id
+        if(ExperimentsConfig::testDatasets.count(datasetName)) {
+            return true;
+        }
+        return false;
+    };
+
     template <typename ArrayType, typename T = typename ArrayType::TypeClass>
     arrow::enable_if_string<T, arrow::Result<std::vector<std::string>>> readColumn(std::filesystem::path &filename,
                                                                                    const std::string &columnName){
