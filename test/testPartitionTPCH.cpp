@@ -8,17 +8,25 @@
 #include "include/partitioning/FixedGridPartitioning.h"
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningFixedGridTPCH){
+    // GTEST_SKIP();
     auto folder = ExperimentsConfig::fixedGridFolder;
-    auto dataset = ExperimentsConfig::datasetTPCH1;
+    auto dataset = getDatasetPath(ExperimentsConfig::datasetTPCH1);
     auto partitioningTechnique = ExperimentsConfig::noPartition;
     auto partitionSize = 20000;
     cleanUpFolder(folder);
-    auto dataReader = storage::DataReader();
-    auto datasetPath = storage::DataReader::getDatasetPath(folder, dataset, partitioningTechnique);
-    ASSERT_EQ(dataReader.load(datasetPath), arrow::Status::OK());
     std::vector<std::string> partitioningColumns = {"c_custkey", "l_orderkey"};
     std::shared_ptr<partitioning::FixedGridPartitioning> fixedGridPartitioning = std::make_shared<partitioning::FixedGridPartitioning>();
-    arrow::Status statusTPCH1 = fixedGridPartitioning->partitionNew(dataReader, partitioningColumns, partitionSize, folder);
+    auto dataReader = storage::DataReader();
+    ASSERT_EQ(dataReader.load(dataset), arrow::Status::OK());
+    auto totalNumRows = 239917;
+    ASSERT_EQ(dataReader.getNumRows(), totalNumRows);
+    arrow::Status statusTPCH1 = fixedGridPartitioning->partition(dataReader, partitioningColumns, partitionSize, folder);
+    std::filesystem::path partition0 = folder / "0.parquet";
+    ASSERT_EQ(dataReader.load(partition0), arrow::Status::OK());
+    auto a = dataReader.getNumRows();
+    std::filesystem::path partition1 = folder / "1.parquet";
+    ASSERT_EQ(dataReader.load(partition1), arrow::Status::OK());
+    auto b = dataReader.getNumRows();
     auto dirIter = std::filesystem::directory_iterator(folder);
     int fileCount = std::count_if(
             begin(dirIter),
