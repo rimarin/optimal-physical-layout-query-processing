@@ -26,8 +26,8 @@ namespace storage {
             reader_properties.enable_buffered_stream();
 
             // Configure Arrow-specific Parquet reader settings
-            auto arrow_reader_props = parquet::ArrowReaderProperties(/*use_threads=*/true);
-            arrow_reader_props.set_batch_size(64 * 1024);  // default 64 * 1024
+            auto arrow_reader_props = parquet::ArrowReaderProperties(/*use_threads=*/false);
+            arrow_reader_props.set_batch_size(32 * 1024);  // default 64 * 1024
 
             parquet::arrow::FileReaderBuilder reader_builder;
             ARROW_RETURN_NOT_OK(reader_builder.OpenFile(path, /*memory_map=*/false, reader_properties));
