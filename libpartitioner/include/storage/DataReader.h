@@ -26,6 +26,7 @@ class DataReader {
         void displayFileProperties();
         arrow::Result<std::pair<uint32_t, uint32_t>> getColumnStats(const std::string &columnName);
         uint32_t getNumRows();
+        uint32_t getExpectedNumBatches();
         static arrow::Result<std::shared_ptr<arrow::Table>> getTable(std::filesystem::path &inputFile);
         static std::filesystem::path getDatasetPath(const std::filesystem::path &folder, const std::string &datasetName,
                                                     const std::string &partitioningTechnique);
@@ -37,6 +38,8 @@ class DataReader {
         std::unique_ptr<parquet::arrow::FileReader> reader;
         std::shared_ptr<parquet::FileMetaData> metadata;
         arrow::Result<std::shared_ptr<arrow::ChunkedArray>> getColumn(const std::string &columnName);
+        const uint32_t batchSize = 64 * 1024;
+        const uint32_t bufferSize = 4096 * 4;
 };
 } // storage
 

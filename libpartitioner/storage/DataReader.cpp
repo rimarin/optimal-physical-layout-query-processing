@@ -22,12 +22,12 @@ namespace storage {
             // Enable parallel column decoding
             auto reader_properties = parquet::ReaderProperties(pool);
 
-            reader_properties.set_buffer_size(4096 * 4);
+            reader_properties.set_buffer_size(bufferSize);
             reader_properties.enable_buffered_stream();
 
             // Configure Arrow-specific Parquet reader settings
             auto arrow_reader_props = parquet::ArrowReaderProperties(/*use_threads=*/false);
-            arrow_reader_props.set_batch_size(64 * 1024);  // default 64 * 1024
+            arrow_reader_props.set_batch_size(batchSize);  // default 64 * 1024
 
             parquet::arrow::FileReaderBuilder reader_builder;
             ARROW_RETURN_NOT_OK(reader_builder.OpenFile(path, /*memory_map=*/false, reader_properties));
@@ -61,6 +61,10 @@ namespace storage {
 
     uint32_t DataReader::getNumRows() {
         return metadata->num_rows();
+    }
+
+    uint32_t DataReader::getExpectedNumBatches(){
+        return (uint32_t) std::ceil((float) getNumRows() / (float) batchSize);
     }
 
     arrow::Result<std::shared_ptr<arrow::Table>> DataReader::getTable(std::filesystem::path &inputFile){
