@@ -29,7 +29,7 @@ namespace partitioning {
                                 const size_t partitionSize,
                                 const std::filesystem::path &outputFolder) override;
     private:
-        void packSlicesRecursive(std::vector<common::Point> points, int coord);
+        void assignBucketsRecursive(std::vector<std::shared_ptr<arrow::ChunkedArray>> columns, uint32_t coord);
         std::vector<std::vector<common::Point>> slices = {};
         std::vector<int> columnIndexes;
         int k;

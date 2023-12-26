@@ -8,92 +8,62 @@ namespace partitioning {
                                                   const std::filesystem::path &outputFolder){
         /*
          * In the literature there are different implementations of adaptive grid.
-         * Here we use a simplified version of the algorithm described in Flood:
-         * "Learning Multi-Dimensional Indexes", https://dl.acm.org/doi/10.1145/3318464.3380579
-         * A certain dimension is chosen and the data space is divided into equally spaced slices.
-         * Each slice is then sorted by the other dimension. Flood adapts the slice size using a model
-         * of the underlying data (Recursive Model Index - RMI) and at the same time takes into account
-         * the workload characteristics.
-         * Unlike Flood, this approach is not workload-aware, we only provide trivial data-awareness
-         * through the sort dimension selection. For that, we'll pick the most skewed dimension.
-         * The skewness is measured with the notion of nonparametric skew, defined as: (\mu -\nu )/ \sigma
-         * where \mu is the mean, \nu is the median, and \sigma is the standard deviation.
-         * In many ways it is similar to STRTree, with a couple of differences:
-         * - we do not have partially-filled cells, except possibly the last one
-         * - the choice of sort dimension (which has a relevant impact) does not take the first
-         *   column among the partitioning dimensions, but the most skewed dimension
+         * Here we use a bulk-load implementation of the original paper:
+         * "The Grid File: An Adaptable, Symmetric Multikey File Structure",
+         * https://www.cs.ucr.edu/~tsotras/cs236/W15/grid-file.pdf
+         * A grid directory consists of two parts: first, a dynamic k-dimensional array called the grid array;
+         * its elements (pointers to data buckets) are in one-to-one correspondence with the grid blocks of the
+         * partition; and second, k one-dimensional arrays called linear scales, each defines a partition of a domain S;
+         * As shown in Fig 9 and Fig 15, we'll try to fit elements in each bucket according to their capacity c,
+         * that here is equal to the partition size. This is achieved by splitting the linear scales in half
+         * until the desired bucket size is reached. This is done in a circular fashion on all partitioning dimensions.
         */
         std::cout << "[GridFilePartitioning] Initializing partitioning technique" << std::endl;
         std::string displayColumns;
         for (const auto &column : partitionColumns) displayColumns + " " += column;
         std::cout << "[GridFilePartitioning] Partition has to be done on columns: " << displayColumns << std::endl;
-        auto table = dataReader.readTable().ValueOrDie();
-        auto columnArrowArrays = storage::DataReader::getColumnsOld(table, partitionColumns).ValueOrDie();
-        auto converter = common::ColumnDataConverter();
-        auto columnData = converter.toDouble(columnArrowArrays).ValueOrDie();
 
-        std::vector<common::Point> points = common::ColumnDataConverter::toRows(columnData);
+        auto numRows = dataReader.getNumRows();
 
-        std::vector<std::tuple<int, double>> columnIndexToSkewPairs;
-        for(int i = 0; i <columnData.size(); ++i) {
-            auto skew = common::ColumnDataConverter::getColumnSkew(columnData[i]);
-            columnIndexToSkewPairs.emplace_back(i, skew);
-        }
-        std::sort(columnIndexToSkewPairs.begin(), columnIndexToSkewPairs.end(),
-                  [](const std::tuple<int, double>& a, const std::tuple<int, double>& b) {
-                      return std::get<1>(a) < std::get<1>(b);
-                  });
-        for (auto &indexAndSkew: columnIndexToSkewPairs) {
-            columnIndexes.emplace_back(std::get<0>(indexAndSkew));
+        if (partitionSize > numRows) {
+            std::cout << "[GridFilePartitioning] Partition size greater than the available rows" << std::endl;
+            std::cout << "[GridFilePartitioning] Therefore put all data in one partition" << std::endl;
+            std::filesystem::path source = dataReader.getReaderPath();
+            std::filesystem::path destination = outputFolder / "0.parquet";
+            std::filesystem::copy(source, destination);
+            return arrow::Status::OK();
         }
 
-        k = columnData.size();
-        r = points.size();
-        n = partitionSize;
-        P = r / n;
-        S = ceil(sqrt(P));
-        slices = {};
+        std::vector<std::shared_ptr<arrow::ChunkedArray>> columns = dataReader.getColumns(partitionColumns).ValueOrDie();
 
-        int coordIdx = 0;
-        packSlicesRecursive(points, coordIdx);
+        std::cout << "[GridFilePartitioning] Loaded columns of size: " << sizeof(columns) << " bytes" << std::endl;
 
-        std::map<common::Point, int64_t> pointToPartitionId;
-        for (int i = 0; i < slices.size(); ++i) {
-            for (const auto &point: slices[i]){
-                pointToPartitionId[point] = i;
-            }
-        }
-        std::vector<int64_t> values = {};
-        for (const auto &point: points){
-            values.emplace_back(pointToPartitionId[point]);
-        }
-        arrow::Int64Builder int64Builder;
-        ARROW_RETURN_NOT_OK(int64Builder.AppendValues(values));
+        uint32_t coordIdx = 0;
+        dataReader.getNumRows();
+        // assignBucketsRecursive(columns, coordIdx);
+
+        // 1. Read only partitioning columns
+        // 2. Create the linear scales
+        // 3. Read the dataset by batches
+        // 4. For each batch, assign the right bucket by using the created scales
+        //      generate combinations from the scales and filter
+        // 5. Export the batch into different partition files
+        // 6. Merge the batches into partition files
+
+        arrow::UInt32Builder int32Builder;
+        ARROW_RETURN_NOT_OK(int32Builder.AppendValues({}));
         std::cout << "[GridFilePartitioning] Mapped columns to partition ids" << std::endl;
         std::shared_ptr<arrow::Array> partitionIds;
-        ARROW_ASSIGN_OR_RAISE(partitionIds, int64Builder.Finish());
-        return partitioning::MultiDimensionalPartitioning::writeOutPartitions(table, partitionIds, outputFolder);
+        ARROW_ASSIGN_OR_RAISE(partitionIds, int32Builder.Finish());
+        // return partitioning::MultiDimensionalPartitioning::writeOutPartitions(table, partitionIds, outputFolder);
     }
 
-    void GridFilePartitioning::packSlicesRecursive(std::vector<common::Point> points, int coord) {
-        if (points.size() <= n){
-            slices.emplace_back(points);
+    void GridFilePartitioning::assignBucketsRecursive(std::vector<std::shared_ptr<arrow::ChunkedArray>> columns, uint32_t coord) {
+        if (columns[0]->length() <= n){
+            // TODO: write out partition fragment
             return;
         }
-        int coordToUse = columnIndexes[coord % k];
-        std::sort(points.begin(), points.end(),
-                  [&coordToUse](const std::vector<double>& a, const std::vector<double>& b) {
-                      return a[coordToUse] < b[coordToUse];
-                  });
-        for (int i = 0; i < S; ++i) {
-            auto begin = points.begin() + (i * (points.size() / S) );
-            auto end = points.begin() + ((i + 1) * (points.size() / S) );
-            if (end >= points.end()){
-                end = points.end();
-            }
-            auto slice = std::vector<common::Point>(begin, end);
-            packSlicesRecursive(slice, coordToUse+1);
-        }
+
     }
 
 }

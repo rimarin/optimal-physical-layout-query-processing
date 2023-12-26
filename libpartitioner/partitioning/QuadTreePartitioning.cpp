@@ -48,14 +48,14 @@ namespace partitioning {
         // Therefore, iterate over points (as passed in the first place) and assign to the return value
         // the mapped partition
         std::shared_ptr<arrow::Array> partitionIds;
-        arrow::Int64Builder int64Builder;
-        std::vector<int64_t> values = {};
+        arrow::UInt32Builder int32Builder;
+        std::vector<uint32_t> values = {};
         for(const auto & point : points){
             values.emplace_back(pointToPartitionId[point]);
         }
-        ARROW_RETURN_NOT_OK(int64Builder.AppendValues(values));
+        ARROW_RETURN_NOT_OK(int32Builder.AppendValues(values));
         std::cout << "[QuadTreePartitioning] Mapped columns to partition ids" << std::endl;
-        ARROW_ASSIGN_OR_RAISE(partitionIds, int64Builder.Finish());
+        ARROW_ASSIGN_OR_RAISE(partitionIds, int32Builder.Finish());
         return partitioning::MultiDimensionalPartitioning::writeOutPartitions(table, partitionIds, outputFolder);
     }
 
