@@ -24,7 +24,11 @@ class DataWriter {
                                         std::filesystem::path &outputPath);
         static std::shared_ptr<parquet::WriterProperties> getWriterProperties();
         static std::shared_ptr<parquet::ArrowWriterProperties> getArrowWriterProperties();
-};
+        static arrow::Status mergeBatches(const std::filesystem::path &basePath, const std::set<uint32_t> partitionIds);
+        static arrow::Status mergeBatchesForPartition(const uint32_t &partitionId,
+                                               const std::shared_ptr<arrow::fs::FileSystem> &filesystem,
+                                               const std::string &base_dir);
+        };
 } // storage
 
 #endif //STORAGE_DATA_WRITER_H

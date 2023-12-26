@@ -33,8 +33,49 @@ namespace storage {
     }
 
     std::shared_ptr<parquet::ArrowWriterProperties> DataWriter::getArrowWriterProperties(){
-        // Options to store Arrow schema for easier reads back into Arrow
         return parquet::ArrowWriterProperties::Builder().store_schema()->build();
+    }
+
+    arrow::Status DataWriter::mergeBatches(const std::filesystem::path &basePath, const std::set<uint32_t> partitionIds){
+        std::cout << "[FixedGridPartitioning] Start merging batches" << std::endl;
+        for (const uint32_t &partitionId: partitionIds){
+            std::string root_path;
+            std::filesystem::path subPartitionsFolder = basePath / std::to_string(partitionId);
+            ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(subPartitionsFolder, &root_path));
+            std::cout << "[FixedGridPartitioning] Start merging batches for partition id " << partitionId << std::endl;
+            ARROW_RETURN_NOT_OK(mergeBatchesForPartition(partitionId, fs, root_path));
+        }
+        return arrow::Status::OK();
+    }
+
+
+    arrow::Status DataWriter::mergeBatchesForPartition(const uint32_t &partitionId,
+                                                       const std::shared_ptr<arrow::fs::FileSystem> &filesystem,
+                                                       const std::string &base_dir) {
+        arrow::fs::FileSelector selector;
+        selector.base_dir = base_dir;
+        ARROW_ASSIGN_OR_RAISE(auto factory,
+                              arrow::dataset::FileSystemDatasetFactory::Make(
+                                      filesystem,
+                                      selector,
+                                      std::make_shared<arrow::dataset::ParquetFileFormat>(),
+                                      arrow::dataset::FileSystemFactoryOptions()
+                              )
+        );
+        ARROW_ASSIGN_OR_RAISE(auto dataset, factory->Finish());
+        ARROW_ASSIGN_OR_RAISE(auto fragments, dataset->GetFragments())
+        for (const auto& fragment : fragments) {
+            std::cout << "[FixedGridPartitioning] Found partition fragment: " << (*fragment)->ToString() << std::endl;
+        }
+        ARROW_ASSIGN_OR_RAISE(auto scan_builder, dataset->NewScan());
+        ARROW_ASSIGN_OR_RAISE(auto scanner, scan_builder->Finish());
+        auto mergedTable = scanner->ToTable();
+        std::filesystem::path mergedFragmentsFilePath = base_dir + ".parquet";
+        std::cout << "[FixedGridPartitioning] Exporting merged batches from folder " << base_dir << std::endl;
+        std::cout << "[FixedGridPartitioning] Merged table has " << mergedTable.ValueOrDie()->num_rows() << " rows" << std::endl;
+        ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTable(*mergedTable, mergedFragmentsFilePath));
+        mergedTable->reset();
+        return arrow::Status::OK();
     }
 
 } // storage
