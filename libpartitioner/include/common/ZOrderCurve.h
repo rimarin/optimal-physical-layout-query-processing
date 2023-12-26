@@ -1,5 +1,5 @@
-#ifndef COMMON_ZORDERCURVE_H
-#define COMMON_ZORDERCURVE_H
+#ifndef COMMON_Z_ORDER_CURVE_H
+#define COMMON_Z_ORDER_CURVE_H
 
 #include <cstdio>
 #include <vector>
@@ -71,4 +71,4 @@ namespace common {
     };
 }
 
-#endif //COMMON_ZORDERCURVE_H
+#endif //COMMON_Z_ORDER_CURVE_H

@@ -1,5 +1,5 @@
-#ifndef PARTITIONING_STRTREE_H
-#define PARTITIONING_STRTREE_H
+#ifndef PARTITIONING_STR_TREE_H
+#define PARTITIONING_STR_TREE_H
 
 #include <iostream>
 #include <map>
@@ -40,4 +40,4 @@ namespace partitioning {
     };
 }
 
-#endif //PARTITIONING_STRTREE_H
+#endif //PARTITIONING_STR_TREE_H

@@ -1,5 +1,5 @@
-#ifndef COMMON_QUADTREE_H
-#define COMMON_QUADTREE_H
+#ifndef COMMON_QUAD_TREE_H
+#define COMMON_QUAD_TREE_H
 
 #include <algorithm>
 #include <iostream>
@@ -49,4 +49,4 @@ namespace common {
 
 }
 
-#endif //COMMON_QUADTREE_H
+#endif //COMMON_QUAD_TREE_H

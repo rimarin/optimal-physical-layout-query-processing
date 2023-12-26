@@ -1,5 +1,5 @@
-#ifndef PARTITIONING_GRIDFILE_H
-#define PARTITIONING_GRIDFILE_H
+#ifndef PARTITIONING_GRID_FILE_H
+#define PARTITIONING_GRID_FILE_H
 
 #include <iostream>
 #include <map>
@@ -40,4 +40,4 @@ namespace partitioning {
     };
 }
 
-#endif //PARTITIONING_GRIDFILE_H
+#endif //PARTITIONING_GRID_FILE_H

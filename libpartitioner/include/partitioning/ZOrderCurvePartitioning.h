@@ -1,5 +1,5 @@
-#ifndef PARTITIONING_ZORDERCURVE_H
-#define PARTITIONING_ZORDERCURVE_H
+#ifndef PARTITIONING_Z_ORDER_CURVE_H
+#define PARTITIONING_Z_ORDER_CURVE_H
 
 #include <iostream>
 #include <map>
@@ -33,4 +33,4 @@ namespace partitioning {
     };
 }
 
-#endif //PARTITIONING_ZORDERCURVE_H
+#endif //PARTITIONING_ZORDER_CURVE_H

@@ -1,5 +1,5 @@
-#ifndef COMMON_KDTREE_H
-#define COMMON_KDTREE_H
+#ifndef COMMON_KD_TREE_H
+#define COMMON_KD_TREE_H
 
 #include <iostream>
 #include <map>
@@ -46,4 +46,4 @@ namespace common {
 
 }
 
-#endif //COMMON_KDTREE_H
+#endif //COMMON_KD_TREE_H

@@ -1,5 +1,5 @@
-#ifndef PARTITIONING_HILBERTCURVE_H
-#define PARTITIONING_HILBERTCURVE_H
+#ifndef PARTITIONING_HILBERT_CURVE_H
+#define PARTITIONING_HILBERT_CURVE_H
 
 #include <iostream>
 #include <map>
@@ -35,4 +35,4 @@ namespace partitioning {
     };
 }
 
-#endif //PARTITIONING_HILBERTCURVE_H
+#endif //PARTITIONING_HILBERT_CURVE_H

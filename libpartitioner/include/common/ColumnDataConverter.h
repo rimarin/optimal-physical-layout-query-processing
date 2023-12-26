@@ -1,5 +1,5 @@
-#ifndef COMMON_COLUMNDATACONVERTER_H
-#define COMMON_COLUMNDATACONVERTER_H
+#ifndef COMMON_COLUMN_DATA_CONVERTER_H
+#define COMMON_COLUMN_DATA_CONVERTER_H
 
 #include <iostream>
 #include <map>
@@ -121,4 +121,4 @@ namespace common {
     };
 }
 
-#endif //COMMON_COLUMNDATACONVERTER_H
+#endif //COMMON_COLUMN_DATA_CONVERTER_H

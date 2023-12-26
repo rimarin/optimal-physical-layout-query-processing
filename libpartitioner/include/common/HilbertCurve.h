@@ -1,5 +1,5 @@
-#ifndef COMMON_HILBERTCURVE_H
-#define COMMON_HILBERTCURVE_H
+#ifndef COMMON_HILBERT_CURVE_H
+#define COMMON_HILBERT_CURVE_H
 
 #include <cstdio>
 
@@ -123,4 +123,4 @@ namespace common
     };
 }
 
-#endif //COMMON_HILBERTCURVE_H
+#endif //COMMON_HILBERT_CURVE_H
