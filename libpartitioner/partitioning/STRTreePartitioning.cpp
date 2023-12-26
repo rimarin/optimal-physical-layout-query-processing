@@ -51,15 +51,15 @@ namespace partitioning {
                 pointToPartitionId[point] = i;
             }
         }
-        std::vector<int64_t> values = {};
+        std::vector<uint32_t> values = {};
         for (const auto &point: points){
             values.emplace_back(pointToPartitionId[point]);
         }
-        arrow::Int64Builder int64Builder;
-        ARROW_RETURN_NOT_OK(int64Builder.AppendValues(values));
+        arrow::UInt32Builder int32Builder;
+        ARROW_RETURN_NOT_OK(int32Builder.AppendValues(values));
         std::cout << "[STRTreePartitioning] Mapped columns to partition ids" << std::endl;
         std::shared_ptr<arrow::Array> partitionIds;
-        ARROW_ASSIGN_OR_RAISE(partitionIds, int64Builder.Finish());
+        ARROW_ASSIGN_OR_RAISE(partitionIds, int32Builder.Finish());
         return partitioning::MultiDimensionalPartitioning::writeOutPartitions(table, partitionIds, outputFolder);
     }
 

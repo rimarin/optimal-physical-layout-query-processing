@@ -15,7 +15,7 @@ namespace partitioning {
         auto converter = common::ColumnDataConverter();
         auto columnData = converter.toInt64(columnArrowArrays).ValueOrDie();
         std::shared_ptr<arrow::Array> partitionIds;
-        arrow::Int64Builder int64Builder;
+        arrow::UInt32Builder int32Builder;
         auto hilbertCurve = common::HilbertCurve();
         int numBits = 8;
         int numDims = columnData.size();
@@ -45,22 +45,22 @@ namespace partitioning {
         std::sort(std::begin(hilbertValues), std::end(hilbertValues));
 
         // Iterate over sorted values and group them according to partition size
-        std::map<int64_t, int64_t> hilbertValueToPartitionId;
+        std::map<int64_t, uint32_t> hilbertValueToPartitionId;
         for (int i = 0; i < hilbertValues.size(); ++i) {
             hilbertValueToPartitionId[hilbertValues[i]] = i / partitionSize;
         }
 
         // Iterate over rows, get HilbertValue from rowToHilbertValue, use it to get partitionId
         // from hilbertValueToPartitionId. Append the obtained partitionId to the result values
-        std::vector<int64_t> values = {};
+        std::vector<uint32_t> values = {};
         for (auto &row : rows) {
             auto hilbertValueForRow = rowToHilbertValue[row];
             auto partitionId = hilbertValueToPartitionId[hilbertValueForRow];
             values.emplace_back(partitionId);
         }
-        ARROW_RETURN_NOT_OK(int64Builder.AppendValues(values));
+        ARROW_RETURN_NOT_OK(int32Builder.AppendValues(values));
         std::cout << "[HilbertCurvePartitioning] Mapped columns to partition ids" << std::endl;
-        ARROW_ASSIGN_OR_RAISE(partitionIds, int64Builder.Finish());
+        ARROW_ASSIGN_OR_RAISE(partitionIds, int32Builder.Finish());
         return partitioning::MultiDimensionalPartitioning::writeOutPartitions(table, partitionIds, outputFolder);
     }
 
