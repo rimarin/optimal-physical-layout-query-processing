@@ -51,15 +51,15 @@ namespace partitioning {
             }
             columnFields.push_back(table->schema()->field(i));
         }
-        columnFields.push_back(arrow::field("partition_id", arrow::int64()));
+        columnFields.push_back(arrow::field("partition_id", arrow::uint32()));
         columnArrays.push_back(partitionIds);
         std::shared_ptr<arrow::Schema> newSchema = arrow::schema(columnFields);
         std::shared_ptr<arrow::RecordBatch> batch = arrow::RecordBatch::Make(newSchema, table->num_rows(), std::move(columnArrays));
         auto newTablePreview = batch->ToString();
         // Retrieve the distinct partition ids
-        auto arrow_array = std::static_pointer_cast<arrow::Int64Array>(partitionIds);
-        std::set<int64_t> uniquePartitionIds;
-        for (int64_t i = 0; i < partitionIds->length(); ++i)
+        auto arrow_array = std::static_pointer_cast<arrow::UInt32Array>(partitionIds);
+        std::set<uint32_t> uniquePartitionIds;
+        for (uint32_t i = 0; i < partitionIds->length(); ++i)
         {
             uniquePartitionIds.insert(arrow_array->Value(i));
         }
@@ -70,7 +70,7 @@ namespace partitioning {
         // Construct new table with the partitioning column from the record batches and
         // Wrap the Table in a Dataset, so we can use a Scanner
         int partitionedTablesNumRows = 0;
-        uint64_t completedPartitions = 0;
+        uint32_t completedPartitions = 0;
         for (const auto &partitionId: uniquePartitionIds){
             auto writeTable = arrow::Table::FromRecordBatches({batch}).ValueOrDie();
             std::shared_ptr<arrow::dataset::Dataset> dataset = std::make_shared<arrow::dataset::InMemoryDataset>(writeTable);
