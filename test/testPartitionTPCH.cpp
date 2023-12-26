@@ -8,10 +8,8 @@
 #include "include/partitioning/FixedGridPartitioning.h"
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningFixedGridTPCH){
-    // GTEST_SKIP();
     auto folder = ExperimentsConfig::fixedGridFolder;
     auto dataset = getDatasetPath(ExperimentsConfig::datasetTPCH1);
-    auto partitioningTechnique = ExperimentsConfig::noPartition;
     auto partitionSize = 20000;
     cleanUpFolder(folder);
     std::vector<std::string> partitioningColumns = {"c_custkey", "l_orderkey"};
@@ -23,16 +21,14 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningFixedGridTPCH){
     arrow::Status statusTPCH1 = fixedGridPartitioning->partition(dataReader, partitioningColumns, partitionSize, folder);
     std::filesystem::path partition0 = folder / "0.parquet";
     ASSERT_EQ(dataReader.load(partition0), arrow::Status::OK());
-    auto a = dataReader.getNumRows();
-    std::filesystem::path partition1 = folder / "1.parquet";
+    std::filesystem::path partition1 = folder / "13.parquet";
     ASSERT_EQ(dataReader.load(partition1), arrow::Status::OK());
-    auto b = dataReader.getNumRows();
     auto dirIter = std::filesystem::directory_iterator(folder);
     int fileCount = std::count_if(
             begin(dirIter),
             end(dirIter),
             [](auto& entry) { return entry.is_regular_file(); }
     );
-    ASSERT_EQ(fileCount, 2400);
+    ASSERT_EQ(fileCount, 14);
 }
 

@@ -18,6 +18,7 @@ namespace partitioning {
         columnToDomain = {};
         partitionIds = {};
         uniquePartitionIds = {};
+        expectedNumBatches = dataReader.getExpectedNumBatches();
         std::cout << "[FixedGridPartitioning] Initializing partitioning technique" << std::endl;
         std::string displayColumns = std::accumulate(partitionColumns.begin(), partitionColumns.end(),
                                                      std::string(" "));
@@ -46,9 +47,7 @@ namespace partitioning {
         }
         columnDomainAverage /= numColumns;
         std::cout << "[FixedGridPartitioning] Average of the columns domain is: " << columnDomainAverage << std::endl;
-        // cellWidth = columnDomainAverage / 5 * partitionSize;
-        cellWidth = columnDomainAverage / 2 * partitionSize / (numRows / 4);
-        // cellWidth = 2000;
+        cellWidth = columnDomainAverage * numRows / partitionSize / 10;
         std::cout << "[FixedGridPartitioning] Computed cell width is: " << cellWidth << std::endl;
 
         auto batch_reader = dataReader.getTableBatchReader().ValueOrDie();
@@ -67,7 +66,7 @@ namespace partitioning {
             batchId += 1;
         }
         std::cout << "[FixedGridPartitioning] Partitioning of the batches completed" << std::endl;
-        ARROW_RETURN_NOT_OK(mergeBatches());
+        ARROW_RETURN_NOT_OK(storage::DataWriter::mergeBatches(folder, uniquePartitionIds));
         std::cout << "[FixedGridPartitioning] Partitioned batches have been merged into partitions" << std::endl;
         for (const auto &partitionId: uniquePartitionIds){
             std::filesystem::path fragmentsFolder = folder / std::to_string(partitionId);
@@ -117,8 +116,8 @@ namespace partitioning {
 
         std::map<uint32_t, uint32_t> cellIndexToPartition;
         std::sort(std::begin(cellIndexes), std::end(cellIndexes));
-        for (int i = 0; i < cellIndexes.size(); ++i) {
-            cellIndexToPartition[idx[i]] = i / cellWidth;
+        for (int i = 0; i < idx.size(); ++i) {
+            cellIndexToPartition[idx[i]] = i / (size / expectedNumBatches);
         }
         cellIndexes.clear();
         for (int i = 0; i < batchNumRows; ++i){
@@ -166,44 +165,4 @@ namespace partitioning {
         return arrow::Status::OK();
     }
 
-    arrow::Status FixedGridPartitioning::mergeBatches(){
-        std::cout << "[FixedGridPartitioning] Start merging batches" << std::endl;
-        for (const uint32_t &partitionId: uniquePartitionIds){
-            std::string root_path;
-            std::filesystem::path subPartitionsFolder = folder / std::to_string(partitionId);
-            ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(subPartitionsFolder, &root_path));
-            std::cout << "[FixedGridPartitioning] Start merging batches for partition id " << partitionId << std::endl;
-            ARROW_RETURN_NOT_OK(mergeBatchesForPartition(partitionId, fs, root_path));
-        }
-        return arrow::Status::OK();
-    }
-
-    // Read the whole dataset with the given format, without partitioning.
-    arrow::Status FixedGridPartitioning::mergeBatchesForPartition(const uint32_t &partitionId,
-            const std::shared_ptr<arrow::fs::FileSystem> &filesystem, const std::string &base_dir) {
-        arrow::fs::FileSelector selector;
-        selector.base_dir = base_dir;
-        ARROW_ASSIGN_OR_RAISE(auto factory,
-                              arrow::dataset::FileSystemDatasetFactory::Make(
-                                      filesystem,
-                                      selector,
-                                      std::make_shared<arrow::dataset::ParquetFileFormat>(),
-                                      arrow::dataset::FileSystemFactoryOptions()
-                                      )
-                              );
-        ARROW_ASSIGN_OR_RAISE(auto dataset, factory->Finish());
-        ARROW_ASSIGN_OR_RAISE(auto fragments, dataset->GetFragments())
-        for (const auto& fragment : fragments) {
-            std::cout << "[FixedGridPartitioning] Found partition fragment: " << (*fragment)->ToString() << std::endl;
-        }
-        ARROW_ASSIGN_OR_RAISE(auto scan_builder, dataset->NewScan());
-        ARROW_ASSIGN_OR_RAISE(auto scanner, scan_builder->Finish());
-        auto mergedTable = scanner->ToTable();
-        std::filesystem::path mergedFragmentsFilePath = folder / (std::to_string(partitionId) + ".parquet");
-        std::cout << "[FixedGridPartitioning] Exporting merged batches from folder " << base_dir << std::endl;
-        std::cout << "[FixedGridPartitioning] Merged table has " << mergedTable.ValueOrDie()->num_rows() << " rows" << std::endl;
-        ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTable(*mergedTable, mergedFragmentsFilePath));
-        mergedTable->reset();
-        return arrow::Status::OK();
-    }
 }

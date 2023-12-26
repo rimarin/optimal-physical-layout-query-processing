@@ -1,5 +1,5 @@
-#ifndef PARTITIONING_FIXEDGRID_H
-#define PARTITIONING_FIXEDGRID_H
+#ifndef PARTITIONING_FIXED_GRID_H
+#define PARTITIONING_FIXED_GRID_H
 
 #include <iostream>
 #include <map>
@@ -32,10 +32,6 @@ namespace partitioning {
         arrow::Status partitionBatch(const uint32_t &batchId,
                                      std::shared_ptr<arrow::RecordBatch> &recordBatch,
                                      storage::DataReader &dataReader);
-        arrow::Status mergeBatches();
-        arrow::Status mergeBatchesForPartition(const uint32_t &partitionId,
-                                               const std::shared_ptr<arrow::fs::FileSystem> &filesystem,
-                                               const std::string &base_dir);
     private:
         std::vector<std::string> columns;
         size_t numColumns;
@@ -46,7 +42,8 @@ namespace partitioning {
         std::vector<uint32_t> partitionIds;
         std::set<uint32_t> uniquePartitionIds;
         bool addColumnPartitionId = true;
+        uint32_t expectedNumBatches;
     };
 }
 
-#endif //PARTITIONING_FIXEDGRID_H
+#endif //PARTITIONING_FIXED_GRID_H
