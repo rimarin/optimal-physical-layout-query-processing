@@ -15,9 +15,9 @@
 TEST_F(TestOptimalLayoutFixture, TestGenerateParquetExamples){
     auto folder = ExperimentsConfig::noPartitionFolder;
     auto fileExtension = ExperimentsConfig::fileExtension;
-    std::filesystem::path dataset1 = folder.string() + ExperimentsConfig::datasetWeather + "0" + fileExtension;
-    std::filesystem::path dataset2 = folder.string() + ExperimentsConfig::datasetSchool + "0" + fileExtension;
-    std::filesystem::path dataset3 = folder.string() + ExperimentsConfig::datasetCities + "0" + fileExtension;
+    std::filesystem::path dataset1 = folder.string() + "/" + ExperimentsConfig::datasetWeather + "0" + fileExtension;
+    std::filesystem::path dataset2 = folder.string() + "/" + ExperimentsConfig::datasetSchool + "0" + fileExtension;
+    std::filesystem::path dataset3 = folder.string() + "/" + ExperimentsConfig::datasetCities + "0" + fileExtension;
     auto partitionSize = 20;
     arrow::Result<std::shared_ptr<arrow::Table>> weatherTable = storage::TableGenerator::GenerateWeatherTable().ValueOrDie();
     arrow::Result<std::shared_ptr<arrow::Table>> schoolTable = storage::TableGenerator::GenerateSchoolTable().ValueOrDie();
