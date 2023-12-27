@@ -23,8 +23,18 @@ namespace common {
     class ColumnDataConverter {
     public:
 
+        std::vector<std::shared_ptr<Point>> toRows(std::vector<std::shared_ptr<arrow::ChunkedArray>> &columnsData) {
+            std::vector<std::shared_ptr<arrow::Array>> columnsArrays = {};
+            for (const auto &columnData: columnsData){
+                std::shared_ptr<arrow::Array> columnArray = std::static_pointer_cast<arrow::Array>(arrow::ChunkedArray(columnData->chunks()).chunk(0));
+                columnsArrays.emplace_back(columnArray);
+            }
+            std::vector<std::shared_ptr<common::Point>> columnDataDouble = toDouble(columnsArrays).ValueOrDie();
+            return toRows(columnDataDouble);
+        }
+
         // Columnar to row layout: vector of columns is transformed into a vector of points (rows)
-        static std::vector<std::shared_ptr<Point>> toRows(std::vector<std::shared_ptr<std::vector<double>>> &columnData) {
+        static std::vector<std::shared_ptr<Point>> toRows(std::vector<std::shared_ptr<common::Point>> &columnData) {
             std::vector<std::shared_ptr<Point>> points;
             auto numColumns = columnData.size();
             auto numRows = columnData[0]->size();
@@ -53,7 +63,7 @@ namespace common {
             return std::abs(3 * (mean - median) / stdev);
         }
 
-        arrow::Result<std::vector<std::shared_ptr<std::vector<double>>>> toDouble(std::vector<std::shared_ptr<arrow::Array>> &columnData){
+        arrow::Result<std::vector<std::shared_ptr<common::Point>>> toDouble(std::vector<std::shared_ptr<arrow::Array>> &columnData){
             outputType = "double";
             for (const auto &data: columnData){
                 ARROW_RETURN_NOT_OK(arrow::VisitArrayInline(*data, this));
@@ -61,7 +71,7 @@ namespace common {
             return convertedData;
         }
 
-        arrow::Result<std::vector<std::shared_ptr<std::vector<double>>>> toInt64(std::vector<std::shared_ptr<arrow::Array>> &columnData){
+        arrow::Result<std::vector<std::shared_ptr<common::Point>>> toInt64(std::vector<std::shared_ptr<arrow::Array>> &columnData){
             outputType = "int64";
             for (const auto &data: columnData){
                 ARROW_RETURN_NOT_OK(arrow::VisitArrayInline(*data, this));
@@ -133,7 +143,7 @@ namespace common {
         }
 
     private:
-        std::vector<std::shared_ptr<std::vector<double>>> convertedData = {};
+        std::vector<std::shared_ptr<common::Point>> convertedData = {};
         std::string outputType = "double";
     };
 }
