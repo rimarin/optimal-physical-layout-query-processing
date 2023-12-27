@@ -12,7 +12,7 @@
 #include "gtest/gtest.h"
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFile){
-    GTEST_SKIP();
+    // GTEST_SKIP();
     auto folder = ExperimentsConfig::gridFileFolder;
     auto dataset = getDatasetPath(ExperimentsConfig::datasetSchool);
     auto partitionSize = 2;

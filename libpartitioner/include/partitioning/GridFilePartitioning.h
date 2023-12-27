@@ -29,14 +29,12 @@ namespace partitioning {
                                 const size_t partitionSize,
                                 const std::filesystem::path &outputFolder) override;
     private:
-        void assignBucketsRecursive(std::vector<std::shared_ptr<arrow::ChunkedArray>> columns, uint32_t coord);
-        std::vector<std::vector<common::Point>> slices = {};
-        std::vector<int> columnIndexes;
-        int k;
-        int n;
-        int r;
-        int P;
-        int S;
+        void computeLinearScales(std::vector<std::shared_ptr<common::Point>> rows, uint32_t coord);
+        std::vector<std::vector<double>> linearScales;
+        size_t cellCapacity;
+        std::vector<std::string> columns;
+        size_t numColumns;
+        std::filesystem::path folder;
     };
 }
 
