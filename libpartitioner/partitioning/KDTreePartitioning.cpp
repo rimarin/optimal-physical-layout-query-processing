@@ -19,14 +19,14 @@ namespace partitioning {
         std::vector<common::Point> partitioningColumnValues = {};
         for(const auto & column : columnData){
             common::Point columnValues;
-            for (int64_t i = 0; i < column.size(); ++i) {
-                columnValues.push_back(column[i]);
+            for (int64_t i = 0; i < column->size(); ++i) {
+                columnValues.push_back(column->at(i));
             }
             partitioningColumnValues.emplace_back(columnValues);
         }
 
         // Columnar to row layout: vector of columns is transformed into a vector of points (rows)
-        std::vector<common::Point> points = common::ColumnDataConverter::toRows(columnData);
+        std::vector<std::shared_ptr<common::Point>> points = common::ColumnDataConverter::toRows(columnData);
 
         // Build a kd-tree on the vector of points
         std::shared_ptr<common::KDTree> kdTree = std::make_shared<common::KDTree>(points, partitionSize);
@@ -35,7 +35,7 @@ namespace partitioning {
         std::vector<std::shared_ptr<common::KDNode>> leaves = kdTree->getLeaves();
 
         // Build a hashmap to link each point to the partition induced by the kd-tree
-        std::map<common::Point, uint32_t> pointToPartitionId;
+        std::map<std::shared_ptr<common::Point>, uint32_t> pointToPartitionId;
         for (int i = 0; i < leaves.size(); i++){
             auto partitionedPoints = leaves[i]->data;
             for (auto &point: partitionedPoints){

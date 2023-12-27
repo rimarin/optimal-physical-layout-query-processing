@@ -2,12 +2,12 @@
 
 namespace common {
 
-    QuadTree::QuadTree(std::vector<Point> &points) {
+    QuadTree::QuadTree(std::vector<std::shared_ptr<Point>> &points) {
         // Construct the tree from the given points and store the root
         root = buildTree(points, 0);
     }
 
-    std::shared_ptr<QuadNode> QuadTree::buildTree(std::vector<Point> points, int depth){
+    std::shared_ptr<QuadNode> QuadTree::buildTree(std::vector<std::shared_ptr<Point>> points, int depth){
         // Recursive implementation of QuadTree construction from a set of multidimensional points
         if (points.empty()) {
             return nullptr;
@@ -24,8 +24,8 @@ namespace common {
         std::vector<double> pointsX;
         std::vector<double> pointsY;
         for (auto &point: points){
-            pointsX.emplace_back(point[0]);
-            pointsY.emplace_back(point[1]);
+            pointsX.emplace_back(point->at(0));
+            pointsY.emplace_back(point->at(1));
         }
         // Compute the mean point of both dimensions for the split
         auto minmaxX = std::minmax_element(pointsX.begin(), pointsX.end());
@@ -36,13 +36,13 @@ namespace common {
         // Create a split node (no data is passed, only the split value)
         auto node = std::make_shared<QuadNode>(meanDims);
         // Assign the values bigger and smaller than the median point to the respective arrays
-        std::vector<Point> northWestPoints;
-        std::vector<Point> northEastPoints;
-        std::vector<Point> southWestPoints;
-        std::vector<Point> southEastPoints;
+        std::vector<std::shared_ptr<Point>> northWestPoints;
+        std::vector<std::shared_ptr<Point>> northEastPoints;
+        std::vector<std::shared_ptr<Point>> southWestPoints;
+        std::vector<std::shared_ptr<Point>> southEastPoints;
         for (auto &point: points){
-            auto x = point.at(0);
-            auto y = point.at(1);
+            auto x = point->at(0);
+            auto y = point->at(1);
             if (x < meanDimX && y > meanDimY){
                 northWestPoints.emplace_back(point);
             }

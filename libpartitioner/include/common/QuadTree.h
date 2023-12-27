@@ -21,14 +21,14 @@ namespace common {
 
     struct QuadNode {
         std::pair<double, double> splitValues;
-        std::vector<Point> data;
+        std::vector<std::shared_ptr<Point>> data;
         std::shared_ptr<QuadNode> northWest;
         std::shared_ptr<QuadNode> northEast;
         std::shared_ptr<QuadNode> southWest;
         std::shared_ptr<QuadNode> southEast;
 
         // Leaf node constructor, has associated points
-        QuadNode(std::vector<Point> &values) : northWest(nullptr), northEast(nullptr), southWest(nullptr),
+        QuadNode(std::vector<std::shared_ptr<Point>> &values) : northWest(nullptr), northEast(nullptr), southWest(nullptr),
         southEast(nullptr), splitValues(0, 0), data(values) {};
         // Empty node constructor, only define a split value
         QuadNode(std::pair<double, double> &splitNums) : northWest(nullptr), northEast(nullptr), southWest(nullptr),
@@ -37,8 +37,8 @@ namespace common {
 
     class QuadTree {
     public:
-        QuadTree(std::vector<Point> &points);
-        std::shared_ptr<QuadNode> buildTree(std::vector<Point> points, int depth);
+        QuadTree(std::vector<std::shared_ptr<Point>> &points);
+        std::shared_ptr<QuadNode> buildTree(std::vector<std::shared_ptr<Point>> points, int depth);
         virtual ~QuadTree() = default;
         std::shared_ptr<QuadNode> getRoot();
         std::vector<std::shared_ptr<QuadNode>> getLeaves();

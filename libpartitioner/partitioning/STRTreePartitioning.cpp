@@ -33,7 +33,7 @@ namespace partitioning {
         auto columnArrowArrays = storage::DataReader::getColumnsOld(table, partitionColumns).ValueOrDie();
         auto converter = common::ColumnDataConverter();
         auto columnData = converter.toDouble(columnArrowArrays).ValueOrDie();
-        std::vector<common::Point> points = common::ColumnDataConverter::toRows(columnData);
+        std::vector<std::shared_ptr<common::Point>> points = common::ColumnDataConverter::toRows(columnData);
 
         k = columnData.size();
         r = points.size();
@@ -45,7 +45,7 @@ namespace partitioning {
         int coord = 0;
         sortTileRecursive(points, coord);
 
-        std::map<common::Point, int64_t> pointToPartitionId;
+        std::map<std::shared_ptr<common::Point>, int64_t> pointToPartitionId;
         for (int i = 0; i < slices.size(); ++i) {
             for (const auto &point: slices[i]){
                 pointToPartitionId[point] = i;
@@ -63,15 +63,15 @@ namespace partitioning {
         return partitioning::MultiDimensionalPartitioning::writeOutPartitions(table, partitionIds, outputFolder);
     }
 
-    void STRTreePartitioning::sortTileRecursive(std::vector<common::Point> points, int coord) {
+    void STRTreePartitioning::sortTileRecursive(std::vector<std::shared_ptr<common::Point>> points, int coord) {
         if (points.size() <= n){
             slices.emplace_back(points);
             return;
         }
         int coordToUse = coord % k;
         std::sort(points.begin(), points.end(),
-                  [&coordToUse](const std::vector<double>& a, const std::vector<double>& b) {
-                      return a[coordToUse] < b[coordToUse];
+                  [&coordToUse](const std::shared_ptr<std::vector<double>>& a, const std::shared_ptr<std::vector<double>>& b) {
+                      return a->at(coordToUse) < b->at(coordToUse);
                   });
         for (int i = 0; i < S; ++i) {
             auto begin = points.begin() + (i * (points.size() / S) );
@@ -79,7 +79,7 @@ namespace partitioning {
             if (end >= points.end()){
                 end = points.end();
             }
-            auto slice = std::vector<common::Point>(begin, end);
+            auto slice = std::vector<std::shared_ptr<common::Point>>(begin, end);
             sortTileRecursive(slice, coordToUse+1);
         }
     }

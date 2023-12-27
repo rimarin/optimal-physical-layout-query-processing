@@ -35,7 +35,7 @@ namespace partitioning {
     private:
         std::vector<std::string> columns;
         size_t numColumns;
-        size_t size;
+        size_t cellCapacity;
         std::filesystem::path folder;
         uint64_t cellWidth;
         std::unordered_map<uint8_t, uint64_t> columnToDomain;

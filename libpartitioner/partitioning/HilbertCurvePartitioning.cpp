@@ -19,7 +19,7 @@ namespace partitioning {
         auto hilbertCurve = common::HilbertCurve();
         int numBits = 8;
         int numDims = columnData.size();
-        int columnSize = columnData[0].size();
+        int columnSize = columnData[0]->size();
         std::map<IntRow, int64_t> rowToHilbertValue;
         std::vector<IntRow> rows;
         std::vector<int64_t> hilbertValues = {};
@@ -30,7 +30,7 @@ namespace partitioning {
         for (int i = 0; i < columnSize; ++i) {
             IntRow rowVector;
             for (int j = 0; j < numDims; ++j) {
-                rowVector.emplace_back(columnData[j][i]);
+                rowVector.emplace_back(columnData[j]->at(i));
             }
             rows.emplace_back(rowVector);
             auto coordinatesVector = IntRow(rowVector);

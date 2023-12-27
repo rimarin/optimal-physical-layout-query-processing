@@ -11,7 +11,7 @@ namespace partitioning {
                                                       const size_t partitionSize,
                                                       const std::filesystem::path &outputFolder) {
         columns = partitionColumns;
-        size = partitionSize;
+        cellCapacity = partitionSize;
         folder = outputFolder;
         numColumns = columns.size();
         cellWidth = 1;
@@ -47,7 +47,7 @@ namespace partitioning {
         }
         columnDomainAverage /= numColumns;
         std::cout << "[FixedGridPartitioning] Average of the columns domain is: " << columnDomainAverage << std::endl;
-        cellWidth = columnDomainAverage * numRows / partitionSize / 10;
+        cellWidth = columnDomainAverage * numRows / cellCapacity / 10;
         std::cout << "[FixedGridPartitioning] Computed cell width is: " << cellWidth << std::endl;
 
         auto batch_reader = dataReader.getTableBatchReader().ValueOrDie();
@@ -117,7 +117,7 @@ namespace partitioning {
         std::map<uint32_t, uint32_t> cellIndexToPartition;
         std::sort(std::begin(cellIndexes), std::end(cellIndexes));
         for (int i = 0; i < idx.size(); ++i) {
-            cellIndexToPartition[idx[i]] = i / (size / expectedNumBatches);
+            cellIndexToPartition[idx[i]] = i / (cellCapacity / expectedNumBatches);
         }
         cellIndexes.clear();
         for (int i = 0; i < batchNumRows; ++i){

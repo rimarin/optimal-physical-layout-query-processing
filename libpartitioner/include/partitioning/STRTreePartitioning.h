@@ -30,8 +30,8 @@ namespace partitioning {
                                 const size_t partitionSize,
                                 const std::filesystem::path &outputFolder) override;
     private:
-        void sortTileRecursive(std::vector<common::Point> points, int coord);
-        std::vector<std::vector<common::Point>> slices = {};
+        void sortTileRecursive(std::vector<std::shared_ptr<common::Point>> points, int coord);
+        std::vector<std::vector<std::shared_ptr<common::Point>>> slices = {};
         int k;
         int n;
         int r;

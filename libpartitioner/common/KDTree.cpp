@@ -2,14 +2,14 @@
 
 namespace common {
 
-    KDTree::KDTree(std::vector<Point> &points, int32_t partitionSize) {
+    KDTree::KDTree(std::vector<std::shared_ptr<Point>> &points, int32_t partitionSize) {
         // Construct the tree from the given points and store the root
         leafSize = partitionSize;
         std::cout << "[KDTree] Start building a kd-tree for " << points.size() << " points and partition size " << partitionSize << std::endl;
         root = buildTree(points, 0);
     }
 
-    std::shared_ptr<KDNode> KDTree::buildTree(std::vector<Point> points, int depth){
+    std::shared_ptr<KDNode> KDTree::buildTree(std::vector<std::shared_ptr<Point>> points, int depth){
         std::cout << "[KDTree] Reached depth " << depth << " with " << points.size() << " elements" << std::endl;
         // Recursive implementation of kdTree construction from a set of multidimensional points
         if (points.empty()) {
@@ -23,22 +23,22 @@ namespace common {
             return node;
         }
         // At each level we choose the dimension to split, in a circular fashion
-        int dimension = depth % points[0].size();
+        int dimension = depth % points[0]->size();
         // Sort the points by the dimension
         std::sort(points.begin(), points.end(),
-                  [&](const Point & a, const Point & b) {
-                      return a[dimension] < b[dimension];
+                  [&](const std::shared_ptr<Point> &a, const std::shared_ptr<Point> & b) {
+                      return a->at(dimension) < b->at(dimension);
                   });
         // Pick the median point for the split
         // Data partitioning kd-tree: pick median
         // Space partitioning kd-tree: (max-min) / 2
         int medianIdx = points.size() / 2;
         // Create a split node (no data is passed, only the split value)
-        auto node = std::make_shared<KDNode>(points[medianIdx][dimension]);
+        auto node = std::make_shared<KDNode>(points[medianIdx]->at(dimension));
         // Assign the values bigger and smaller than the median point to the respective arrays
-        std::vector<Point> leftPoints(medianIdx);
+        std::vector<std::shared_ptr<Point>> leftPoints(medianIdx);
         std::copy(points.begin(), points.begin() + medianIdx, leftPoints.begin());
-        std::vector<Point> rightPoints(points.size() - medianIdx);
+        std::vector<std::shared_ptr<Point>> rightPoints(points.size() - medianIdx);
         std::copy(points.begin() + medianIdx, points.end(), rightPoints.begin());
         // Recursive call to the right and left children, pass increased depth and values
         node->left = buildTree(leftPoints, depth + 1);

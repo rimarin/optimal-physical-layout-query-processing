@@ -18,14 +18,14 @@ namespace partitioning {
         std::shared_ptr<arrow::Array> partitionIds;
         arrow::UInt32Builder int32Builder;
         // Columnar to row layout: vector of columns is transformed into a vector of points (rows)
-        std::vector<common::Point> rows = common::ColumnDataConverter::toRows(columnData);
+        std::vector<std::shared_ptr<common::Point>> rows = common::ColumnDataConverter::toRows(columnData);
 
-        std::map<common::Point, int64_t> rowToZValue;
+        std::map<std::shared_ptr<common::Point>, int64_t> rowToZValue;
         std::vector<int64_t> zOrderValues = {};
         auto zOrderCurve = common::ZOrderCurve();
         for (auto &row: rows){
             double pointArr[numDims];
-            std::copy(row.begin(), row.end(), pointArr);
+            std::copy(row->begin(), row->end(), pointArr);
             uint64_t zOrderValue = zOrderCurve.encode(pointArr, numDims);
             rowToZValue[row] = zOrderValue;
             zOrderValues.emplace_back(zOrderValue);
