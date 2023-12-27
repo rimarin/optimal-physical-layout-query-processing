@@ -113,7 +113,24 @@ namespace common {
             return arrow::Status::OK();
         }
 
-        // TODO: arrow::enable_if_decimal<T, arrow::Status> Visit(const ArrayType &array) {
+        template<typename ArrayType, typename DataType = typename ArrayType::TypeClass, typename CType = typename DataType::c_type>
+        arrow::enable_if_decimal<DataType, arrow::Status> Visit(const ArrayType &array) {
+            auto castedArray = std::make_shared<std::vector<double>>();
+            for (std::optional<CType> value: array) {
+                if (value.has_value()) {
+                    if (outputType == "int64"){
+                        castedArray->emplace_back(static_cast<int64_t>(value.value()));
+                    }
+                    else{
+                        castedArray->emplace_back(static_cast<double>(value.value()));
+                    }
+                }
+            }
+            if (!castedArray->empty()) {
+                convertedData.emplace_back(castedArray);
+            }
+            return arrow::Status::OK();
+        }
 
     private:
         std::vector<std::shared_ptr<std::vector<double>>> convertedData = {};
