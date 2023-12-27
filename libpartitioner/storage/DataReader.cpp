@@ -152,7 +152,7 @@ namespace storage {
         return schema->GetFieldIndex(columnName);
     }
 
-    arrow::Result<std::pair<uint32_t, uint32_t>> DataReader::getColumnStats(const std::string &columnName){
+    arrow::Result<std::pair<double_t, double_t>> DataReader::getColumnStats(const std::string &columnName){
         auto columnIndex = getColumnIndex(columnName).ValueOrDie();
         auto numRowGroups = metadata->num_row_groups();
         std::unique_ptr<parquet::RowGroupMetaData> rowGroup = metadata->RowGroup(0);

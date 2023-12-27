@@ -40,8 +40,8 @@ namespace partitioning {
         std::cout << "[FixedGridPartitioning] Analyzing span of column values to determine cell width" << std::endl;
         uint32_t columnDomainAverage = 0;
         for (int j = 0; j < numColumns; ++j) {
-            std::pair<uint32_t, uint32_t> columnStats = dataReader.getColumnStats(partitionColumns[j]).ValueOrDie();
-            auto columnDomain = (uint32_t) ((columnStats.second - columnStats.first) * 1.1);
+            std::pair<double_t, double_t> columnStats = dataReader.getColumnStats(partitionColumns[j]).ValueOrDie();
+            auto columnDomain = (columnStats.second - columnStats.first) * 1.1;
             columnToDomain[j] = columnDomain;
             columnDomainAverage += columnDomain;
         }
