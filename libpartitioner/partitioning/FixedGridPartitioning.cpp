@@ -133,7 +133,7 @@ namespace partitioning {
         ARROW_ASSIGN_OR_RAISE(updatedRecordBatch, recordBatch->AddColumn(0, "partition_id", partitionIdsArrow));
         uniquePartitionIds.merge(std::set(partitionIds.begin(), partitionIds.end()));
         auto numPartitions = uniquePartitionIds.size();
-        std::cout << "[Partitioning] Computed " << numPartitions << " unique partition ids" << std::endl;
+        std::cout << "[FixedGridPartitioning] Computed " << numPartitions << " unique partition ids" << std::endl;
 
         uint64_t partitionedTablesNumRows = 0;
         uint32_t completedPartitions = 0;
@@ -158,9 +158,9 @@ namespace partitioning {
             std::filesystem::path outfile = subPartitionsFolder / ("b" + std::to_string(batchId) + ".parquet");
             ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTable(partitionedTable, outfile));
             completedPartitions += 1;
-            std::cout << "[Partitioning] Generate partitioned table with " << partitionedTable->num_rows() << " rows" << std::endl;
+            std::cout << "[FixedGridPartitioning] Generate partitioned table with " << partitionedTable->num_rows() << " rows" << std::endl;
             int progress = (int) (float(completedPartitions) / float(numPartitions) * 100);
-            std::cout << "[Partitioning] Progress: " << progress << " %" << std::endl;
+            std::cout << "[FixedGridPartitioning] Progress: " << progress << " %" << std::endl;
         }
         return arrow::Status::OK();
     }
