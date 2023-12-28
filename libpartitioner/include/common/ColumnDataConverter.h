@@ -23,11 +23,21 @@ namespace common {
     class ColumnDataConverter {
     public:
 
-        std::vector<std::shared_ptr<Point>> toRows(std::vector<std::shared_ptr<arrow::ChunkedArray>> &columnsData) {
+        std::vector<std::shared_ptr<Point>> toRows(std::vector<std::shared_ptr<arrow::ChunkedArray>> &columnsData,
+                                                   bool addIndex = false) {
             std::vector<std::shared_ptr<arrow::Array>> columnsArrays = {};
             for (const auto &columnData: columnsData){
                 std::shared_ptr<arrow::Array> columnArray = std::static_pointer_cast<arrow::Array>(arrow::ChunkedArray(columnData->chunks()).chunk(0));
                 columnsArrays.emplace_back(columnArray);
+            }
+            if(addIndex){
+                std::vector<uint32_t> rowIndexesRaw(columnsData[0]->length());
+                std::iota(rowIndexesRaw.begin(), rowIndexesRaw.end(), 0);
+                arrow::UInt32Builder int32builder;
+                std::ignore = int32builder.AppendValues(rowIndexesRaw);
+                std::shared_ptr<arrow::Array> rowIndexes;
+                rowIndexes = int32builder.Finish().ValueOrDie();
+                columnsArrays.emplace_back(rowIndexes);
             }
             std::vector<std::shared_ptr<common::Point>> columnDataDouble = toDouble(columnsArrays).ValueOrDie();
             return toRows(columnDataDouble);
