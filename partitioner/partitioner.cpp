@@ -46,6 +46,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
     std::filesystem::path outputPath = datasetPath / argPartitioningTechnique;
+    storage::DataWriter::cleanUpFolder(outputPath);
     auto dataReader = storage::DataReader();
     std::ignore = dataReader.load(datasetFilePath);
     auto mapNameToTechnique = ExperimentsConfig::nameToPartitioningTechnique;

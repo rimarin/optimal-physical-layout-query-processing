@@ -36,7 +36,7 @@ namespace storage {
         return parquet::ArrowWriterProperties::Builder().store_schema()->build();
     }
 
-    arrow::Status DataWriter::mergeBatches(const std::filesystem::path &basePath, const std::set<uint32_t> partitionIds){
+    arrow::Status DataWriter::mergeBatches(const std::filesystem::path &basePath, const std::set<uint32_t> &partitionIds){
         std::cout << "[DataWriter] Start merging batches" << std::endl;
         for (const uint32_t &partitionId: partitionIds){
             std::string root_path;
@@ -81,6 +81,18 @@ namespace storage {
         ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTable(*mergedTable, mergedFragmentsFilePath));
         mergedTable->reset();
         return arrow::Status::OK();
+    }
+
+    void DataWriter::cleanUpFolder(const std::filesystem::path &folder){
+        if (std::filesystem::is_directory(folder)){
+            for (const auto &folderIter : std::filesystem::directory_iterator(folder))
+            {
+                if (folderIter.path().extension() == ".parquet")
+                {
+                    std::filesystem::remove(folderIter.path());
+                }
+            }
+        }
     }
 
 } // storage

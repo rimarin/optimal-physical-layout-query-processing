@@ -31,7 +31,7 @@ namespace partitioning {
             std::cout << "[FixedGridPartitioning] Therefore put all data in one partition" << std::endl;
             std::filesystem::path source = dataReader.getReaderPath();
             std::filesystem::path destination = outputFolder / "0.parquet";
-            std::filesystem::copy(source, destination);
+            std::filesystem::copy(source, destination, std::filesystem::copy_options::overwrite_existing);
             return arrow::Status::OK();
         }
 
