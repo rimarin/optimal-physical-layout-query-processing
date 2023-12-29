@@ -26,7 +26,7 @@ namespace partitioning {
 
         auto numRows = dataReader.getNumRows();
 
-        if (partitionSize > numRows) {
+        if (partitionSize >= numRows) {
             std::cout << "[FixedGridPartitioning] Partition size greater than the available rows" << std::endl;
             std::cout << "[FixedGridPartitioning] Therefore put all data in one partition" << std::endl;
             std::filesystem::path source = dataReader.getReaderPath();
