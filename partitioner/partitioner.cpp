@@ -45,10 +45,9 @@ int main(int argc, char **argv) {
     }
     std::filesystem::path outputPath = std::filesystem::current_path().parent_path() / "benchmark" / "datasets" / argDatasetName / argPartitioningTechnique;
     auto dataReader = storage::DataReader();
-    dataReader.load(datasetPath);
-    arrow::Result<std::shared_ptr<arrow::Table>> table = dataReader.readTable();
+    std::ignore = dataReader.load(datasetPath);
     auto mapNameToTechnique = ExperimentsConfig::nameToPartitioningTechnique;
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> partitioningTechnique = mapNameToTechnique[argPartitioningTechnique];
-    arrow::Status status = partitioningTechnique->partition(*table, partitioningColumns, partitionSize, outputPath);
+    arrow::Status status = partitioningTechnique->partition(dataReader, partitioningColumns, partitionSize, outputPath);
     return 0;
 }
