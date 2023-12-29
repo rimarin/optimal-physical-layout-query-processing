@@ -21,17 +21,22 @@ class BenchmarkInstance:
         self.logger = logger
 
     def generate_partitions(self):
-        subprocess.run([f'../cmake-build-release/partitioner/partitioner', f'{self.config.dataset}',
-                        f'{self.config.partitioning}', f'{self.config.partition_size}',
-                        f'{",".join(self.config.partitioning_columns)}'], stdout=subprocess.DEVNULL)
+        partitioner_command = [f'../cmake-build-release/partitioner/partitioner',
+                               f'{self.benchmark.get_dataset_folder("")}',
+                               f'{self.config.dataset}',
+                               f'{self.config.partitioning}',
+                               f'{self.config.partition_size}',
+                               f'{",".join(self.config.partitioning_columns)}']
+
+        try:
+            subprocess.run(partitioner_command)
+        except subprocess.SubprocessError as e:
+            self.logger.warning(f'Partitioning failed: {str(e)}')
+
         self.config.total_partitions = self.benchmark.get_num_total_partitions(self.config.partitioning)
-        self.logger.info(f'Partitioned dataset into {self.config.total_partitions} partitions')
         if self.config.total_partitions == 0:
             self.logger.warning('No partitions, something could be wrong. Used command:')
-            self.logger.warning(f'../cmake-build-release/partitioner/partitioner {self.config.dataset} '
-                                f'{self.config.partitioning} {self.config.partition_size} '
-                                f'{",".join(self.config.partitioning_columns)}')
-        return self.config.total_partitions
+            self.logger.warning(f'{" ".join(partitioner_command)}')
 
     @staticmethod
     def get_benchmark(name):
@@ -149,11 +154,6 @@ class BenchmarkInstance:
         with open(self.config.results_file, 'a') as result_file:
             result_file.write(self.result.format())
         self.logger.info(f'Completed run for benchmark {self.config}, results saved to {self.config.results_file}')
-
-    def run(self):
-        self.runner_prepare()
-        self.runner_launch()
-        self.collect_results()
 
     def cleanup(self):
         # TODO: support deletion from remote object store (e.g. S3) at some point

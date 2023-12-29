@@ -67,7 +67,9 @@ def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
                             benchmark_instance.prepare_queries()
                             if i == 0:
                                 benchmark_instance.generate_partitions()
-                            benchmark_instance.run()
+                            benchmark_instance.runner_prepare()
+                            benchmark_instance.runner_launch()
+                            benchmark_instance.collect_results()
                         except Exception as e:
                             logger.error(f"Error while running benchmark instance with settings: "
                                          f"{dataset}-{partitioning}-{partition_size}-{num_query}-{query_variant}-"
