@@ -37,15 +37,17 @@ int main(int argc, char **argv) {
         partitioningColumns.push_back(segment);
     }
 
-    std::filesystem::path datasetPath = std::filesystem::current_path().parent_path() / "benchmark" / "datasets" / argDatasetName /
-            ExperimentsConfig::noPartition / (argDatasetName + ".parquet");
+    std::filesystem::path projectPath = std::filesystem::current_path().parent_path().parent_path();
+    std::filesystem::path datasetPath = projectPath / "benchmark" / "datasets" / argDatasetName;
+
+    std::filesystem::path datasetFilePath = datasetPath / ExperimentsConfig::noPartition / (argDatasetName + ".parquet");
     if (!std::filesystem::exists(datasetPath)){
         std::cout << "Dataset not found in " << datasetPath;
         exit(1);
     }
-    std::filesystem::path outputPath = std::filesystem::current_path().parent_path() / "benchmark" / "datasets" / argDatasetName / argPartitioningTechnique;
+    std::filesystem::path outputPath = datasetPath / argPartitioningTechnique;
     auto dataReader = storage::DataReader();
-    std::ignore = dataReader.load(datasetPath);
+    std::ignore = dataReader.load(datasetFilePath);
     auto mapNameToTechnique = ExperimentsConfig::nameToPartitioningTechnique;
     std::shared_ptr<partitioning::MultiDimensionalPartitioning> partitioningTechnique = mapNameToTechnique[argPartitioningTechnique];
     arrow::Status status = partitioningTechnique->partition(dataReader, partitioningColumns, partitionSize, outputPath);
