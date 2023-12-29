@@ -37,17 +37,22 @@ namespace storage {
     }
 
     arrow::Status DataWriter::mergeBatches(const std::filesystem::path &basePath, const std::set<uint32_t> partitionIds){
-        std::cout << "[FixedGridPartitioning] Start merging batches" << std::endl;
+        std::cout << "[DataWriter] Start merging batches" << std::endl;
         for (const uint32_t &partitionId: partitionIds){
             std::string root_path;
             std::filesystem::path subPartitionsFolder = basePath / std::to_string(partitionId);
             ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(subPartitionsFolder, &root_path));
-            std::cout << "[FixedGridPartitioning] Start merging batches for partition id " << partitionId << std::endl;
+            std::cout << "[DataWriter] Start merging batches for partition id " << partitionId << std::endl;
             ARROW_RETURN_NOT_OK(mergeBatchesForPartition(partitionId, fs, root_path));
+        }
+        std::cout << "[DataWriter] Partitioned batches have been merged into partitions" << std::endl;
+        for (const auto &partitionId: partitionIds){
+            std::filesystem::path subPartitionsFolder = basePath / std::to_string(partitionId);
+            auto numDeleted = std::filesystem::remove_all(subPartitionsFolder);
+            std::cout << "[FixedGridPartitioning] Cleaned up folder with " << numDeleted << " partition fragments" << std::endl;
         }
         return arrow::Status::OK();
     }
-
 
     arrow::Status DataWriter::mergeBatchesForPartition(const uint32_t &partitionId,
                                                        const std::shared_ptr<arrow::fs::FileSystem> &filesystem,

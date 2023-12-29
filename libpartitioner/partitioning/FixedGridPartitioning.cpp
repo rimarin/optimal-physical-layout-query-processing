@@ -67,12 +67,6 @@ namespace partitioning {
         }
         std::cout << "[FixedGridPartitioning] Partitioning of the batches completed" << std::endl;
         ARROW_RETURN_NOT_OK(storage::DataWriter::mergeBatches(folder, uniquePartitionIds));
-        std::cout << "[FixedGridPartitioning] Partitioned batches have been merged into partitions" << std::endl;
-        for (const auto &partitionId: uniquePartitionIds){
-            std::filesystem::path fragmentsFolder = folder / std::to_string(partitionId);
-            auto numDeleted = std::filesystem::remove_all(fragmentsFolder);
-            std::cout << "[FixedGridPartitioning] Cleaned up folder with " << numDeleted << " partition fragments" << std::endl;
-        }
         return arrow::Status::OK();
     }
 
