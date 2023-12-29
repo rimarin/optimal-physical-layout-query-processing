@@ -29,6 +29,20 @@ class BenchmarkOSM(Benchmark):
             ["min_lon", "max_lon", "min_lat", "max_lat", "created_at", "version", "id"]
         ]
 
+    @staticmethod
+    def get_query_columns(query_number):
+        query_number = str(query_number)
+        query_to_cols = {
+            '1': ['min_lon'],
+            '2': ['min_lon', 'max_lon'],
+            '3': ['min_lon', 'max_lon', 'min_lat'],
+            '4': ['min_lon', 'max_lon', 'min_lat', 'max_lat'],
+            '5': ['min_lon', 'max_lon', 'min_lat', 'max_lat', 'created_at'],
+            '6': ['min_lon', 'max_lon', 'min_lat', 'max_lat', 'created_at', 'version'],
+            '7': ['min_lon', 'max_lon', 'min_lat', 'max_lat', 'created_at', 'version', 'id']
+        }
+        return query_to_cols.get(query_number, [])
+
     def get_schema(self):
         return {
             "id": int,

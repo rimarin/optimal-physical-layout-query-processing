@@ -35,6 +35,22 @@ class BenchmarkTPCH(Benchmark):
             ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_discount", "l_quantity", "l_commitdate", "l_receiptdate", "l_commitdate", "p_size", "p_partkey"],
         ]
 
+    @staticmethod
+    def get_query_columns(query_number):
+        query_number = str(query_number)
+        query_to_cols = {
+            '3': ['l_suppkey', 'o_orderkey', 'c_custkey', 's_suppkey', 's_nationkey', 'o_orderdate', 'c_nationkey',
+                  'l_orderkey', 'o_custkey', 'n_nationkey', 'n_regionkey', 'r_name', 'r_regionkey'],
+            '5': ['o_orderkey', 'c_custkey', 'o_orderdate', 'l_orderkey', 'o_custkey', 'c_mktsegment', 'l_shipdate'],
+            '6': ['l_shipdate', 'l_quantity', 'l_discount'],
+            '10': ['o_orderkey', 'o_orderdate', 'c_custkey', 'l_returnflag', 'c_nationkey', 'l_orderkey', 'o_custkey',
+                   'n_nationkey'],
+            '12': ['l_shipmode', 'o_orderkey', 'l_receiptdate', 'l_commitdate', 'l_orderkey', 'l_shipdate'],
+            '14': ['p_partkey', 'l_shipdate', 'l_partkey'],
+            '19': ['p_partkey', 'p_brand', 'p_container', 'l_quantity', 'l_shipmode', 'l_shipinstruct']
+        }
+        return query_to_cols.get(query_number, [])
+
     def get_schema(self):
         raise NotImplementedError
 

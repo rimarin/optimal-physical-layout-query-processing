@@ -38,6 +38,10 @@ class Benchmark(abc.ABC):
     def get_partitioning_columns():
         raise NotImplementedError
 
+    @staticmethod
+    def get_query_columns(queryNumber):
+        raise NotImplementedError
+
     @abc.abstractmethod
     def get_name(self):
         pass

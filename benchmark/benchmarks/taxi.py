@@ -32,6 +32,22 @@ class BenchmarkTaxi(Benchmark):
             ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime", "passenger_count", "fare_amount", "trip_distance"]
         ]
 
+    @staticmethod
+    def get_query_columns(query_number):
+        query_number = str(query_number)
+        query_to_cols = {
+            '1': ['PULocationID'],
+            '2': ['PULocationID', 'DOLocationID'],
+            '3': ['PULocationID', 'DOLocationID', 'tpep_pickup_datetime'],
+            '4': ['PULocationID', 'DOLocationID', 'tpep_pickup_datetime', 'tpep_dropoff_datetime'],
+            '5': ['PULocationID', 'DOLocationID', 'tpep_pickup_datetime', 'tpep_dropoff_datetime', 'passenger_count'],
+            '6': ['PULocationID', 'DOLocationID', 'tpep_pickup_datetime', 'tpep_dropoff_datetime', 'passenger_count',
+                  'fare_amount'],
+            '7': ['PULocationID', 'DOLocationID', 'tpep_pickup_datetime', 'tpep_dropoff_datetime', 'passenger_count',
+                  'fare_amount', 'trip_distance']
+        }
+        return query_to_cols.get(query_number, [])
+
     def get_schema(self):
         return {
             "VendorID": int,

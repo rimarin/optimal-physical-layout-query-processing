@@ -21,13 +21,16 @@ class BenchmarkInstance:
         self.logger = logger
 
     def generate_partitions(self):
-        subprocess.run([f'../partitioner/partitioner', f'{self.config.dataset}',
+        subprocess.run([f'../cmake-build-release/partitioner/partitioner', f'{self.config.dataset}',
                         f'{self.config.partitioning}', f'{self.config.partition_size}',
                         f'{",".join(self.config.partitioning_columns)}'], stdout=subprocess.DEVNULL)
         self.config.total_partitions = self.benchmark.get_num_total_partitions(self.config.partitioning)
         self.logger.info(f'Partitioned dataset into {self.config.total_partitions} partitions')
         if self.config.total_partitions == 0:
-            self.logger.warning('No partitions, something could be wrong')
+            self.logger.warning('No partitions, something could be wrong. Used command:')
+            self.logger.warning(f'../cmake-build-release/partitioner/partitioner {self.config.dataset} '
+                                f'{self.config.partitioning} {self.config.partition_size} '
+                                f'{",".join(self.config.partitioning_columns)}')
         return self.config.total_partitions
 
     @staticmethod
@@ -155,5 +158,5 @@ class BenchmarkInstance:
     def cleanup(self):
         # TODO: support deletion from remote object store (e.g. S3) at some point
         StorageManager.delete_files(self.benchmark.get_dataset_folder(self.config.partitioning))
-        self.logger.info(f'Removed parquet files from folder {self.benchmark.get_dataset_folder(self.config.partitioning)}')
-
+        self.logger.info(
+            f'Removed parquet files from folder {self.benchmark.get_dataset_folder(self.config.partitioning)}')

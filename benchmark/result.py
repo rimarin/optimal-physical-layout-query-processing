@@ -1,7 +1,6 @@
 import datetime
 import statistics
 
-from query_parser import QueryParser
 from storage_manager import StorageManager
 
 
@@ -26,8 +25,7 @@ class BenchmarkResult:
 
     def format(self, filetype='csv'):
         self.total_partitions = StorageManager.get_num_files(self.benchmark.get_dataset_folder(self.partitioning))
-        with open('temp/query.sql') as query_file:
-            self.used_columns = QueryParser.extract_columns_from_where(query_file.read())
+        self.used_columns = self.benchmark.get_query_columns(self.query_number)
         return (f'{self.dataset}; {self.partitioning}; q{self.query_number}{self.query_variant}; '
                 f'{self.partitioning_columns}; {self.used_columns}; '
                 f'{self.latencies}; {self.latency_avg}; {self.latency_std}; {self.partition_size}; '
