@@ -51,6 +51,19 @@ class BenchmarkTPCH(Benchmark):
         }
         return query_to_cols.get(query_number, [])
 
+    @staticmethod
+    def get_query_selectivity(query):
+        query_to_selectivity = {
+            "3a": 0.2397,
+            "5a": 0.001,
+            "6a": 0.0002,
+            "10a": 0.7382,
+            "12a": 0.0004,
+            "14a": 0.0002,
+            "19a": 0.0002
+        }
+        return query_to_selectivity.get(query, 0)
+
     def get_schema(self):
         raise NotImplementedError
 

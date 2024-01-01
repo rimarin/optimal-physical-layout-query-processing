@@ -27,7 +27,6 @@ class BenchmarkInstance:
                                f'{self.config.partitioning}',
                                f'{self.config.partition_size}',
                                f'{",".join(self.config.partitioning_columns)}']
-
         try:
             subprocess.run(partitioner_command)
         except subprocess.SubprocessError as e:

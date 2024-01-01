@@ -39,7 +39,11 @@ class Benchmark(abc.ABC):
         raise NotImplementedError
 
     @staticmethod
-    def get_query_columns(queryNumber):
+    def get_query_columns(query_number):
+        raise NotImplementedError
+
+    @staticmethod
+    def get_query_selectivity(query):
         raise NotImplementedError
 
     @abc.abstractmethod

@@ -77,5 +77,6 @@ def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
                             continue
                     benchmark_instance.cleanup()
 
+
 if __name__ == "__main__":
     run_benchmarks(DATASETS, PARTITIONINGS, PARTITION_SIZES)
