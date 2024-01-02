@@ -65,7 +65,7 @@ namespace partitioning {
             std::cout << "[FixedGridPartitioning] Imported " << totalNumRows << " out of " << numRows << " rows" << std::endl;
             batchId += 1;
         }
-        std::cout << "[FixedGridPartitioning] Partitioning of the batches completed" << std::endl;
+        std::cout << "[FixedGridPartitioning] Partitioning of " << batchId << " batches completed" << std::endl;
         ARROW_RETURN_NOT_OK(storage::DataWriter::mergeBatches(folder, uniquePartitionIds));
         return arrow::Status::OK();
     }

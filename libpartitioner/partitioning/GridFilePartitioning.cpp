@@ -159,7 +159,11 @@ namespace partitioning {
                 }
             }
             totalNumRows += recordBatch->num_rows();
+            std::cout << "[GridFilePartitioning] Batch " << batchId << " completed" << std::endl;
+            std::cout << "[GridFilePartitioning] Imported " << totalNumRows << " out of " << numRows << " rows" << std::endl;
+            batchId += 1;
         }
+        std::cout << "[GridFilePartitioning] Partitioning of " << batchId << " batches completed" << std::endl;
         ARROW_RETURN_NOT_OK(storage::DataWriter::mergeBatches(folder, uniquePartitionIds));
         return arrow::Status::OK();
     }
@@ -181,12 +185,15 @@ namespace partitioning {
             }
             uint32_t coord = std::get<1>(queuePop);
             std::vector<std::pair<uint32_t, uint32_t>> scaleRange = std::get<2>(queuePop);
-            auto columnIndex = coord % numColumns;
-            auto min = scaleRange[columnIndex].first;
-            auto max = scaleRange[columnIndex].second;
-            auto newMidValue = (max + min) / 2;
-            linearScales[columnIndex].insert(upper_bound(linearScales[columnIndex].begin(),
-                                                         linearScales[columnIndex].end(), newMidValue), newMidValue);
+            uint32_t columnIndex = coord % numColumns;
+            double min = scaleRange[columnIndex].first;
+            double max = scaleRange[columnIndex].second;
+            double newMidValue = (max + min) / 2;
+            if (std::find(linearScales[columnIndex].begin(), linearScales[columnIndex].end(), newMidValue) == linearScales[columnIndex].end()) {
+                linearScales[columnIndex].insert(upper_bound(linearScales[columnIndex].begin(),
+                                                             linearScales[columnIndex].end(), newMidValue),
+                                                 newMidValue);
+            }
             std::sort(rows.begin(), rows.end(),
                       [&](const std::shared_ptr<common::Point> &a, const std::shared_ptr<common::Point> &b) {
                           return a->at(columnIndex) < b->at(columnIndex);

@@ -41,9 +41,14 @@ namespace storage {
         for (const uint32_t &partitionId: partitionIds){
             std::string root_path;
             std::filesystem::path subPartitionsFolder = basePath / std::to_string(partitionId);
-            ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(subPartitionsFolder, &root_path));
-            std::cout << "[DataWriter] Start merging batches for partition id " << partitionId << std::endl;
-            ARROW_RETURN_NOT_OK(mergeBatchesForPartition(partitionId, fs, root_path));
+            if (std::filesystem::exists(subPartitionsFolder)) {
+                ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(subPartitionsFolder, &root_path));
+                std::cout << "[DataWriter] Start merging batches for partition id " << partitionId << std::endl;
+                ARROW_RETURN_NOT_OK(mergeBatchesForPartition(partitionId, fs, root_path));
+            }
+            else{
+                std::cout << "[DataWriter] Batch folder empty for partition id " << partitionId << std::endl;
+            }
         }
         std::cout << "[DataWriter] Partitioned batches have been merged into partitions" << std::endl;
         for (const auto &partitionId: partitionIds){
