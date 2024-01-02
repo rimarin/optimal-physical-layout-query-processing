@@ -81,6 +81,14 @@ namespace common {
             return convertedData;
         }
 
+        arrow::Result<std::vector<std::shared_ptr<common::Point>>> toInt32(std::vector<std::shared_ptr<arrow::Array>> &columnData){
+            outputType = "int32";
+            for (const auto &data: columnData){
+                ARROW_RETURN_NOT_OK(arrow::VisitArrayInline(*data, this));
+            }
+            return convertedData;
+        }
+
         arrow::Result<std::vector<std::shared_ptr<common::Point>>> toInt64(std::vector<std::shared_ptr<arrow::Array>> &columnData){
             outputType = "int64";
             for (const auto &data: columnData){
@@ -100,7 +108,10 @@ namespace common {
             auto castedArray = std::make_shared<std::vector<double>>();
             for (std::optional<CType> value: array) {
                 if (value.has_value()) {
-                    if (outputType == "int64"){
+                    if (outputType == "int32"){
+                        castedArray->emplace_back(static_cast<int32_t>(value.value()));
+                    }
+                    else if (outputType == "int64"){
                         castedArray->emplace_back(static_cast<int64_t>(value.value()));
                     }
                     else{
@@ -119,7 +130,10 @@ namespace common {
             auto castedArray = std::make_shared<std::vector<double>>();
             for (std::optional<CType> value: array) {
                 if (value.has_value()) {
-                    if (outputType == "int64"){
+                    if (outputType == "int32"){
+                        castedArray->emplace_back(static_cast<int32_t>(value.value()));
+                    }
+                    else if (outputType == "int64"){
                         castedArray->emplace_back(static_cast<int64_t>(value.value()));
                     }
                     else{
@@ -138,7 +152,10 @@ namespace common {
             auto castedArray = std::make_shared<std::vector<double>>();
             for (std::optional<CType> value: array) {
                 if (value.has_value()) {
-                    if (outputType == "int64"){
+                    if (outputType == "int32"){
+                        castedArray->emplace_back(static_cast<int32_t>(value.value()));
+                    }
+                    else if (outputType == "int64"){
                         castedArray->emplace_back(static_cast<int64_t>(value.value()));
                     }
                     else{
