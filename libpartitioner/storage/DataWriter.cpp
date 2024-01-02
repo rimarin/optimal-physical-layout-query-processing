@@ -54,7 +54,7 @@ namespace storage {
         for (const auto &partitionId: partitionIds){
             std::filesystem::path subPartitionsFolder = basePath / std::to_string(partitionId);
             auto numDeleted = std::filesystem::remove_all(subPartitionsFolder);
-            std::cout << "[FixedGridPartitioning] Cleaned up folder with " << numDeleted << " partition fragments" << std::endl;
+            std::cout << "[DataWriter] Cleaned up folder " << subPartitionsFolder << " with " << numDeleted << " partition fragments" << std::endl;
         }
         return arrow::Status::OK();
     }
