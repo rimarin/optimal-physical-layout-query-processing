@@ -60,12 +60,15 @@ namespace partitioning {
         dataReader.getNumRows();
 
         linearScales = {};
+        std::vector<std::pair<uint32_t, uint32_t>> scaleRangeIndexes;
         for (int i = 0; i < numColumns; ++i) {
             std::pair<double_t, double_t> columnStats = dataReader.getColumnStats(partitionColumns[i]).ValueOrDie();
             std::vector<double_t> columnDomain = {columnStats.first, columnStats.second};
             linearScales.emplace_back(columnDomain);
+            scaleRangeIndexes.emplace_back(columnStats.first, columnStats.second);
         }
-        computeLinearScales(rows, coordIdx);
+
+        computeLinearScales(rows, coordIdx, scaleRangeIndexes);
 
         for (const auto &linearScale: linearScales){
             std::string linearScalesStr(linearScale.begin(), linearScale.end());
@@ -162,54 +165,70 @@ namespace partitioning {
     }
 
     void GridFilePartitioning::computeLinearScales(std::vector<std::shared_ptr<common::Point>> &allRows,
-                                                   uint32_t initialCoord) {
-        std::queue<std::pair<std::vector<std::shared_ptr<common::Point>>, uint32_t>> queue;
-        queue.emplace(allRows, initialCoord);
+                                                   uint32_t initialCoord, std::vector<std::pair<uint32_t, uint32_t>> scaleRangeIndexes) {
+        std::queue<std::tuple<std::vector<std::shared_ptr<common::Point>>, uint32_t, std::vector<std::pair<uint32_t, uint32_t>>>> queue;
+        queue.emplace(allRows, initialCoord, scaleRangeIndexes);
         std::cout << "[GridFilePartitioning] Start computing linear scales" << std::endl;
         while(!queue.empty()){
             auto queuePop = queue.front();
-            std::vector<std::shared_ptr<common::Point>> rows = queuePop.first;
-            uint32_t coord = queuePop.second;
+            if (!queue.empty()) {
+                queue.pop();
+            }
+            std::vector<std::shared_ptr<common::Point>> rows = std::get<0>(queuePop);
+            auto currentNumRows = rows.size();
+            if (currentNumRows <= cellCapacity){
+                continue;
+            }
+            uint32_t coord = std::get<1>(queuePop);
+            std::vector<std::pair<uint32_t, uint32_t>> scaleRange = std::get<2>(queuePop);
             auto columnIndex = coord % numColumns;
-            auto columnScaleSize = linearScales[columnIndex].size();
-            for (int i = 0; i < columnScaleSize - 1; ++i) {
-                auto min = linearScales[columnIndex][i];
-                auto max = linearScales[columnIndex][i+1];
-                auto newSplit = (max + min) / 2;
-                linearScales[columnIndex].insert(upper_bound(linearScales[columnIndex].begin(),
-                                                             linearScales[columnIndex].end(), newSplit), newSplit);
+            auto min = scaleRange[columnIndex].first;
+            auto max = scaleRange[columnIndex].second;
+            auto newMidValue = (max + min) / 2;
+            linearScales[columnIndex].insert(upper_bound(linearScales[columnIndex].begin(),
+                                                         linearScales[columnIndex].end(), newMidValue), newMidValue);
+            std::sort(rows.begin(), rows.end(),
+                      [&](const std::shared_ptr<common::Point> &a, const std::shared_ptr<common::Point> &b) {
+                          return a->at(columnIndex) < b->at(columnIndex);
+                      });
+            auto lower = std::make_shared<std::vector<double>>(*rows.at(0));
+            auto mid = std::make_shared<std::vector<double>>(*rows.at(0));
+            auto upper = std::make_shared<std::vector<double>>(*rows.at(0));
+            lower->at(columnIndex) = min;
+            mid->at(columnIndex) = newMidValue;
+            upper->at(columnIndex) = max;
+            auto lowerBound = std::lower_bound(rows.begin(), rows.end(), lower,
+                                       [&](const std::shared_ptr<common::Point> &a,
+                                           const std::shared_ptr<common::Point> &b) {
+                return a->at(columnIndex) < b->at(columnIndex); });
+            auto midBoundStart = std::upper_bound(rows.begin(), rows.end(), mid,
+                                               [&](const std::shared_ptr<common::Point> &a,
+                                                   const std::shared_ptr<common::Point> &b) {
+                                                   return a->at(columnIndex) < b->at(columnIndex); });
+            auto midBoundEnd = std::lower_bound(rows.begin(), rows.end(), mid,
+                                               [&](const std::shared_ptr<common::Point> &a,
+                                                   const std::shared_ptr<common::Point> &b) {
+                                                   return a->at(columnIndex) < b->at(columnIndex); });
+            auto upperBound = std::upper_bound(rows.begin(), rows.end(), upper,
+                                       [&](const std::shared_ptr<common::Point> &a,
+                                           const std::shared_ptr<common::Point> &b) {
+                return a->at(columnIndex) < b->at(columnIndex); });
+            auto firstHalfPoints = std::vector<std::shared_ptr<common::Point>>(lowerBound, midBoundStart);
+            auto secondHalfPoints = std::vector<std::shared_ptr<common::Point>>(midBoundEnd, upperBound);
+            // If more splits are needed, add to the queue for further processing
+            auto numFirstHalfPoints = firstHalfPoints.size();
+            auto numSecondHalfPoints = secondHalfPoints.size();
+            if (numFirstHalfPoints > cellCapacity){
+                // pass also linear scale indexes, e.g. <1, 3, 2> for
+                scaleRange[columnIndex] = std::pair<uint32_t, uint32_t>(min, newMidValue);
+                queue.emplace(firstHalfPoints, coord + 1, scaleRange);
             }
-            // For each slice/interval in the scale for this dimension
-            for (int i = 0; i < linearScales[columnIndex].size() - 1; ++i) {
-                // Retrieve point coordinates matching the interval
-                auto min = linearScales[columnIndex][i];
-                auto max = linearScales[columnIndex][i+1];
-                std::sort(rows.begin(), rows.end(),
-                          [&](const std::shared_ptr<common::Point> &a, const std::shared_ptr<common::Point> &b) {
-                              return a->at(columnIndex) < b->at(columnIndex);
-                          });
-                auto lower = std::make_shared<std::vector<double>>(*rows.at(0));
-                auto upper = std::make_shared<std::vector<double>>(*rows.at(0));
-                lower->at(columnIndex) = min;
-                upper->at(columnIndex) = max;
-                auto lowerBound = std::lower_bound(rows.begin(), rows.end(), lower,
-                                           [&](const std::shared_ptr<common::Point> &a,
-                                               const std::shared_ptr<common::Point> &b) {
-                    return a->at(columnIndex) < b->at(columnIndex); });
-                auto upperBound = std::upper_bound(rows.begin(), rows.end(), upper,
-                                           [&](const std::shared_ptr<common::Point> &a,
-                                               const std::shared_ptr<common::Point> &b) {
-                    return a->at(columnIndex) < b->at(columnIndex); });
-                auto pointsInRange = std::vector<std::shared_ptr<common::Point>>(lowerBound, upperBound);
-                if (!queue.empty()){
-                    queue.pop();
-                }
-                // If more splits are needed, add to the queue for further processing
-                if (pointsInRange.size() > cellCapacity){
-                    queue.emplace(pointsInRange, coord + 1);
-                }
-                // Otherwise, this set of points is a new partition
+            if (numSecondHalfPoints > cellCapacity){
+                // pass also linear scale indexes, e.g. <1, 3, 2> for
+                scaleRange[columnIndex] = std::pair<uint32_t, uint32_t>(newMidValue, max);
+                queue.emplace(secondHalfPoints, coord + 1, scaleRange);
             }
+            // Otherwise, this set of points is a new partition
         }
     }
 
