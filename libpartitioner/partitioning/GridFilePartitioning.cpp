@@ -117,7 +117,7 @@ namespace partitioning {
                 std::vector<uint32_t> partitionIds(recordBatch->num_rows(), partitionId);
                 arrow::UInt32Builder int32Builder;
                 ARROW_RETURN_NOT_OK(int32Builder.AppendValues(partitionIds));
-                std::cout << "[FixedGridPartitioning] Mapped columns to partition ids" << std::endl;
+                std::cout << "[GridFilePartitioning] Mapped columns to partition ids" << std::endl;
                 std::shared_ptr<arrow::Array> partitionIdsArrow;
                 ARROW_ASSIGN_OR_RAISE(partitionIdsArrow, int32Builder.Finish());
                 std::shared_ptr<arrow::RecordBatch> updatedRecordBatch;
