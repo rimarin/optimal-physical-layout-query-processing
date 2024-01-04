@@ -1,43 +1,26 @@
-import pandas
+from dash import Dash, html, dcc
+
+import pandas as pd
 import plotly.express as px
 
+df = pd.read_csv('results/results.csv', sep=';', on_bad_lines='skip')
+df.columns = df.columns.str.strip()
 
-def load_results():
-    df = pandas.read_csv('results/results.csv', delimiter=';', on_bad_lines='skip')
-    df.columns = df.columns.str.strip()
-    return df
+app = Dash(__name__)
 
-
-def generate_plots(df):
-    plot_selectivity(df)
-    plot_filtered_columns(df)
-    plot_number_partitioning_columns(df)
-    plot_partition_size(df)
-    plot_dataset_size(df)
-
-
-def plot_selectivity(df):
-    fig = px.box(df, x="selectivity", y="latency_avg", points="all")
-    fig.show()
-
-
-def plot_filtered_columns(df):
-    pass
+app.layout = html.Div([
+    html.H1(children='Optimal Physical Layout | Multi-dimensional partitioning', style={'textAlign': 'center'}),
+    html.H4(children='Effect of selectivity', style={'textAlign': 'center'}),
+    dcc.Graph(figure=px.box(df, x="selectivity", y="latency_avg", points="all")),
+    html.H4(children='Effect of number of partitioning columns', style={'textAlign': 'center'}),
+    dcc.Graph(figure=px.box(df, x="num_partitioning_columns", y="latency_avg", points="all")),
+    html.H4(children='Effect of filtered columns', style={'textAlign': 'center'}),
+    html.H4(children='Effect of partition size', style={'textAlign': 'center'}),
+    dcc.Graph(figure=px.box(df, x="partition_size", y="latency_avg", points="all")),
+    html.H4(children='Effect of dataset size', style={'textAlign': 'center'}),
+    # dcc.Graph(figure=px.box(df, x="num_rows", y="latency_avg", points="all")),
+], style={'font-family': 'Inter'})
 
 
-def plot_number_partitioning_columns(df):
-    pass
-
-
-def plot_partition_size(df):
-    pass
-
-
-def plot_dataset_size(df):
-    pass
-
-
-if __name__ == "__main__":
-    df = load_results()
-    generate_plots(df)
-
+if __name__ == '__main__':
+    app.run(debug=True)
