@@ -30,7 +30,7 @@ namespace partitioning {
                                 const std::filesystem::path &outputFolder) override;
     private:
         void computeLinearScales(std::vector<std::shared_ptr<common::Point>> &allRows, uint32_t initialCoord,
-                                 std::vector<std::pair<uint32_t, uint32_t>> scaleRangeIndexes);
+                                 std::vector<std::pair<double, double>> scaleRangeIndexes);
         std::vector<std::vector<double>> linearScales;
         size_t cellCapacity;
         std::vector<std::string> columns;

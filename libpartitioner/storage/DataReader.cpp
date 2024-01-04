@@ -143,6 +143,7 @@ namespace storage {
             return arrow::Status::Invalid("Column name <" + columnName + "> not found in schema");
         }
         PARQUET_THROW_NOT_OK(reader->ReadColumn(fieldIndex, &columnArray));
+        std::cout << "[DataReader] Column has type <" << columnArray->type()->ToString() << "> " << std::endl;
         return columnArray;
     }
 
