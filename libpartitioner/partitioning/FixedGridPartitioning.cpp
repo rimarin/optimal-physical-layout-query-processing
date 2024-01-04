@@ -48,6 +48,9 @@ namespace partitioning {
         columnDomainAverage /= numColumns;
         std::cout << "[FixedGridPartitioning] Average of the columns domain is: " << columnDomainAverage << std::endl;
         cellWidth = columnDomainAverage * numRows / cellCapacity / 10;
+        if (cellWidth > columnDomainAverage){
+            cellWidth = columnDomainAverage / 10 / numColumns;
+        }
         std::cout << "[FixedGridPartitioning] Computed cell width is: " << cellWidth << std::endl;
 
         auto batch_reader = dataReader.getTableBatchReader().ValueOrDie();
@@ -110,8 +113,18 @@ namespace partitioning {
 
         std::map<uint32_t, uint32_t> cellIndexToPartition;
         std::sort(std::begin(cellIndexes), std::end(cellIndexes));
+        auto batchCapacity = cellCapacity / expectedNumBatches;
+        if (batchCapacity > 0){
+            std::cout << "[FixedGridPartitioning] In order to fit " << cellCapacity << " elements per cell, "
+                                                  "each batch has a capacity of " << batchCapacity;
+        }
+        else{
+            std::cout << "[FixedGridPartitioning] Impossible to follow the partition size constraint: too many batches "
+                         "for this cell capacity / partition size";
+            batchCapacity = 1000;
+        }
         for (int i = 0; i < idx.size(); ++i) {
-            cellIndexToPartition[idx[i]] = i / (cellCapacity / expectedNumBatches);
+            cellIndexToPartition[idx[i]] = i / batchCapacity;
         }
         cellIndexes.clear();
         for (int i = 0; i < batchNumRows; ++i){
