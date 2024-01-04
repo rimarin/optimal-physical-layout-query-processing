@@ -26,13 +26,11 @@ class BenchmarkTPCH(Benchmark):
             ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey"],
             ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey"],
             ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey"],
-            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_discount"],
-            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_discount", "l_quantity"],
-            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_discount", "l_quantity", "l_commitdate"],
-            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_discount", "l_quantity", "l_commitdate", "l_receiptdate"],
-            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_discount", "l_quantity", "l_commitdate", "l_receiptdate", "l_commitdate"],
-            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_discount", "l_quantity", "l_commitdate", "l_receiptdate", "l_commitdate", "p_size"],
-            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_discount", "l_quantity", "l_commitdate", "l_receiptdate", "l_commitdate", "p_size", "p_partkey"],
+            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate"],
+            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate", "l_receiptdate"],
+            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate", "l_receiptdate", "l_commitdate"],
+            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate", "l_receiptdate", "l_commitdate", "p_size"],
+            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate", "l_receiptdate", "l_commitdate", "p_size", "p_partkey"],
         ]
 
     @staticmethod

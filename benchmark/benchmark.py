@@ -3,13 +3,12 @@ import duckdb
 import os
 
 from settings import DATA_FORMAT, NO_PARTITION
-from path import Path
 
 
 class Benchmark(abc.ABC):
 
-    DATASETS_FOLDER = Path('datasets/')
-    QUERIES_FOLDER = Path('queries/')
+    DATASETS_FOLDER = os.path.abspath('datasets/')
+    QUERIES_FOLDER = os.path.abspath('queries/')
 
     def __init__(self):
         self.total_rows = None
