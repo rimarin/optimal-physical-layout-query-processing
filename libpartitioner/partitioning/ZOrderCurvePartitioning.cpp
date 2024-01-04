@@ -1,5 +1,3 @@
-#include <arrow/testing/gtest_util.h>
-
 #include "partitioning/ZOrderCurvePartitioning.h"
 
 namespace partitioning {
@@ -37,7 +35,7 @@ namespace partitioning {
         uint32_t totalNumRows = 0;
         while (true) {
             std::shared_ptr<arrow::RecordBatch> record_batch;
-            ABORT_NOT_OK(batch_reader->ReadNext(&record_batch));
+            ARROW_RETURN_NOT_OK(batch_reader->ReadNext(&record_batch));
             if (record_batch == nullptr) {
                 break;
             }

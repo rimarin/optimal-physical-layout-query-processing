@@ -1,7 +1,6 @@
 #include <algorithm>
 
 #include "partitioning/GridFilePartitioning.h"
-#include "arrow/testing/gtest_util.h"
 
 namespace partitioning {
 
@@ -106,7 +105,7 @@ namespace partitioning {
         uint32_t totalNumRows = 0;
         while (true) {
             std::shared_ptr<arrow::RecordBatch> recordBatch;
-            ABORT_NOT_OK(batch_reader->ReadNext(&recordBatch));
+            ARROW_RETURN_NOT_OK(batch_reader->ReadNext(&recordBatch));
             if (recordBatch == nullptr) {
                 break;
             }
