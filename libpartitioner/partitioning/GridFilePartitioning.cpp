@@ -128,14 +128,23 @@ namespace partitioning {
                 std::vector<arrow::Expression> filterExpressions;
                 filterExpressions.reserve(partitionColumns.size());
                 for (int i = 0; i < partitionColumns.size(); ++i) {
+                    auto toInt32 = arrow::compute::CastOptions::Safe(arrow::int32());
+                    // TODO: apply cast only when dealing with dates, otherwise it is an unnecessary overhead
                     filterExpressions.emplace_back(arrow::compute::and_(
                                 arrow::compute::greater_equal(
-                                arrow::compute::field_ref(partitionColumns[i]),
-                                arrow::compute::literal(cellsCoordinates[partitionId][i].first)),
+                                    arrow::compute::call("cast",
+                                                         {arrow::compute::field_ref(partitionColumns[i])},
+                                                         toInt32),
+                                    arrow::compute::literal(cellsCoordinates[partitionId][i].first)
+                                ),
                                 // AND
                                 arrow::compute::less_equal(
-                                arrow::compute::field_ref(partitionColumns[i]),
-                                arrow::compute::literal(cellsCoordinates[partitionId][i].second))));
+                                    arrow::compute::call("cast",
+                                                        {arrow::compute::field_ref(partitionColumns[i])},
+                                                        toInt32),
+                                    arrow::compute::literal(cellsCoordinates[partitionId][i].second))
+                                )
+                    );
                 }
                 std::cout << arrow::compute::and_(filterExpressions).ToString();
                 options->filter = arrow::compute::and_(filterExpressions);
