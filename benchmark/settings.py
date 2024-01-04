@@ -4,7 +4,7 @@ TPCH_SF1 = 'tpch-sf1'
 TPCH_SF10 = 'tpch-sf10'
 OSM = 'osm'
 TAXI = 'taxi'
-DATASETS = [TPCH_SF1, OSM, TAXI]
+DATASETS = [TPCH_SF1, TPCH_SF10, TAXI, OSM]
 
 NO_PARTITION = 'no-partition'
 FIXED_GRID = 'fixed-grid'
