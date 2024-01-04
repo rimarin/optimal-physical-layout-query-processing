@@ -44,11 +44,11 @@ namespace partitioning {
             totalNumRows += record_batch->num_rows();
 
             ARROW_RETURN_NOT_OK(partitionBatch(batchId, record_batch, dataReader));
-            std::cout << "[FixedGridPartitioning] Batch " << batchId << " completed" << std::endl;
-            std::cout << "[FixedGridPartitioning] Imported " << totalNumRows << " out of " << numRows << " rows" << std::endl;
+            std::cout << "[HilbertCurvePartitioning] Batch " << batchId << " completed" << std::endl;
+            std::cout << "[HilbertCurvePartitioning] Imported " << totalNumRows << " out of " << numRows << " rows" << std::endl;
             batchId += 1;
         }
-        std::cout << "[FixedGridPartitioning] Partitioning of " << batchId << " batches completed" << std::endl;
+        std::cout << "[HilbertCurvePartitioning] Partitioning of " << batchId << " batches completed" << std::endl;
         ARROW_RETURN_NOT_OK(storage::DataWriter::mergeBatches(folder, uniquePartitionIds));
         return arrow::Status::OK();
     }
