@@ -4,6 +4,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 #include <set>
 
@@ -26,22 +27,26 @@ namespace common {
         std::shared_ptr<KDNode> right;
 
         // Leaf node constructor, has associated points
-        KDNode(std::vector<std::shared_ptr<Point>> &values) : left(nullptr), right(nullptr), splitValue(0), data(values) {};
+        KDNode(std::vector<std::shared_ptr<Point>> values) : left(nullptr), right(nullptr), splitValue(0), data(std::move(values)) {};
         // Empty node constructor, only define a split value
         KDNode(double &splitNum) : left(nullptr), right(nullptr), splitValue(splitNum), data({}) {};
     };
 
     class KDTree {
     public:
-        KDTree(std::vector<std::shared_ptr<Point>> &points, int32_t partitionSize);
-        std::shared_ptr<KDNode> buildTree(std::vector<std::shared_ptr<Point>> points, int depth);
+        KDTree(std::vector<std::shared_ptr<Point>> &rows, size_t partitionSize);
+        std::shared_ptr<KDNode> buildTree(std::vector<std::shared_ptr<Point>>::iterator start,
+                                          std::vector<std::shared_ptr<Point>>::iterator end,
+                                          uint32_t depth);
         virtual ~KDTree() = default;
         std::shared_ptr<KDNode> getRoot();
         std::vector<std::shared_ptr<KDNode>> getLeaves();
     private:
-        int32_t leafSize;
+        uint32_t leafSize;
+        uint32_t pointDimensions;
         std::shared_ptr<KDNode> root;
         std::vector<std::shared_ptr<KDNode>> leaves;
+        std::vector<std::shared_ptr<Point>> points;
     };
 
 }
