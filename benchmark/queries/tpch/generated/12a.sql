@@ -1,6 +1,3 @@
--- using 1698663418 as a seed to the RNG
-
-
 select
 	l_shipmode,
 	sum(case

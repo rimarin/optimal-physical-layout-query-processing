@@ -1,6 +1,3 @@
--- using 1698662792 as a seed to the RNG
-
-
 select
 	l_orderkey,
 	sum(l_extendedprice * (1 - l_discount)) as revenue,

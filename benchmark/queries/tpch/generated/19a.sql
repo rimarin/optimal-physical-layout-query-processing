@@ -1,6 +1,3 @@
--- using 1698663500 as a seed to the RNG
-
-
 select
 	sum(l_extendedprice* (1 - l_discount)) as revenue
 FROM read_parquet('/home/brancaleone/Projects/optimal-physical-layout-query-processing/benchmark/datasets/tpch/lineitem*.parquet') where

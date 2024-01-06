@@ -140,7 +140,7 @@ class BenchmarkInstance:
             except Exception as e:
                 self.logger.error(f"Error while parsing benchmark results: {str(e)}")
         try:
-            num_partitions_filename = os.path.join(self.duckdb_path, 'cmake-build-benchmark', PARTITIONS_LOG_FILE)
+            num_partitions_filename = os.path.join(self.duckdb_path, PARTITIONS_LOG_FILE)
             with open(num_partitions_filename, 'r') as num_partitions_file:
                 used_partitions = int(num_partitions_file.read())
         except Exception as e:
