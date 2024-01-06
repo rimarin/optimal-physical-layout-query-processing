@@ -108,7 +108,7 @@ class BenchmarkInstance:
         generated_query_file = f"{self.benchmark.get_generated_queries_folder()}/{self.config.query_number}{self.config.query_variant}.sql"
         subprocess.check_output(f"cp {generated_query_file} {tmp_folder}", shell=True)
         moved_query_file = os.path.join(tmp_folder, f'{self.config.query_number}{self.config.query_variant}.sql')
-        tmp_query_path = os.path.join(tmp_folder, "query.sql")
+        tmp_query_path = os.path.join(self.duckdb_path, "query.sql")
         subprocess.check_output(f"mv {moved_query_file} {tmp_query_path}", shell=True)
 
         with open(tmp_query_path, 'r') as tmp_query_file:
@@ -118,7 +118,7 @@ class BenchmarkInstance:
         with open(tmp_query_path, 'w') as tmp_query_file:
             tmp_query_file.write(tmp_query)
 
-        verify_query_path = os.path.join(tmp_folder, "verify.sql")
+        verify_query_path = os.path.join(self.duckdb_path, "verify.sql")
         from_clause = f'FROM read_parquet(\'{self.benchmark.get_dataset_folder(NO_PARTITION)}/*{DATA_FORMAT}\')'
         verify_query = re.sub('FROM?(.*?)where', f'{from_clause} where', original_query, flags=re.DOTALL)
         with open(verify_query_path, 'w') as verify_query_file:
@@ -134,7 +134,7 @@ class BenchmarkInstance:
         for row in result_rows[1:]:
             try:
                 str_value = row.split('\t')[-1]
-                if str_value != "":
+                if str_value != "" and "Segmentation" not in str_value:
                     latency = float(str_value)
                     latencies.append(latency)
             except Exception as e:
