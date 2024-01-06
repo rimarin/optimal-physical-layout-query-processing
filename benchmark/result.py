@@ -5,7 +5,7 @@ from storage_manager import StorageManager
 
 
 class BenchmarkResult:
-    def __init__(self, benchmark, benchmark_config, latencies, used_partitions):
+    def __init__(self, benchmark, benchmark_config, latencies, used_partitions, average_partition_size):
         self.benchmark = benchmark
         self.dataset = benchmark_config.dataset
         self.partitioning = benchmark_config.partitioning
@@ -20,6 +20,7 @@ class BenchmarkResult:
         self.used_partitions = used_partitions
         self.total_partitions = benchmark_config.total_partitions
         self.num_rows = self.benchmark.get_total_rows()
+        self.average_partition_size = average_partition_size
 
     def __str__(self):
         return f'{self.dataset} {self.partitioning} q{self.query_number}{self.query_variant}'
@@ -31,10 +32,11 @@ class BenchmarkResult:
                 f'{self.benchmark.get_query_selectivity(str(self.query_number) + self.query_variant)};'
                 f'{self.partitioning_columns};{len(self.partitioning_columns)};{self.used_columns};'
                 f'{self.latencies};{self.latency_avg};{self.latency_std};{self.partition_size};'
-                f'{self.used_partitions};{self.total_partitions};{datetime.datetime.now()}\n')
+                f'{self.average_partition_size};{self.used_partitions};{self.total_partitions};'
+                f'{datetime.datetime.now()}\n')
 
     @staticmethod
     def format_header():
         return ('dataset;num_rows;partitioning;query;selectivity;partitioning_columns;num_partitioning_columns;'
-                'used_columns;latencies;latency_avg;latency_std;partition_size;used_partitions;total_partitions;'
-                'timestamp\n')
+                'used_columns;latencies;latency_avg;latency_std;partition_size;partition_size_mb;used_partitions;'
+                'total_partitions;timestamp\n')

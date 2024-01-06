@@ -146,7 +146,21 @@ class BenchmarkInstance:
         except Exception as e:
             self.logger.error(f"Could not load number of used partitions from the log file - {str(e)}")
             used_partitions = 0
-        self.result = BenchmarkResult(self.benchmark, self.config, latencies, used_partitions)
+        try:
+            average_partition_size = 0
+            partition_files = [os.path.join(self.benchmark.get_dataset_folder(self.config.partitioning), f)
+                               for f in os.listdir(self.benchmark.get_dataset_folder(self.config.partitioning))
+                               if f.endswith(".parquet")]
+            for partition_file in partition_files:
+                average_partition_size += os.path.getsize(partition_file)
+            average_partition_size /= len(partition_files)
+            TO_MB = 1024 * 1024
+            average_partition_size /= TO_MB
+            average_partition_size = round(average_partition_size, 2)
+        except Exception as e:
+            self.logger.warning("Could not compute the average partition size in bytes")
+            average_partition_size = 0
+        self.result = BenchmarkResult(self.benchmark, self.config, latencies, used_partitions, average_partition_size)
         self.logger.info("Collected results from benchmark execution")
 
     def collect_results(self):
