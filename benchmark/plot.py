@@ -9,13 +9,12 @@ RESULTS_FILE = RESULTS_FOLDER + 'results-server.csv'
 
 df = pd.read_csv(RESULTS_FILE, sep=';', on_bad_lines='skip')
 df.columns = df.columns.str.strip()
+
 df['scan_ratio'] = (df['used_partitions'] / df['total_partitions']) * 100
-
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-
-# TODO: compute and add column scan ratio % (used_partitions / num_partitions * 100)
 dfPartitionSize = df.groupby(['partition_size', 'dataset', 'partitioning']).agg({'latency_avg': 'mean'}).reset_index()
 dfSelectivity = df.groupby(['selectivity', 'partitioning']).agg({'latency_avg': 'mean'}).reset_index()
+
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 app.layout = html.Div([
     html.H1(children='Optimal Physical Layout | Multi-dimensional partitioning'),
