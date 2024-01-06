@@ -14,7 +14,7 @@
 TEST_F(TestOptimalLayoutFixture, TestPartitioningQuadTree){
     auto folder = ExperimentsConfig::quadTreeFolder;
     auto dataset = getDatasetPath(ExperimentsConfig::datasetSchool);
-    auto partitionSize = 20;
+    auto partitionSize = 2;
     auto fileExtension = ExperimentsConfig::fileExtension;
     cleanUpFolder(folder);
     arrow::Result<std::shared_ptr<arrow::Table>> table = storage::TableGenerator::GenerateSchoolTable().ValueOrDie();
