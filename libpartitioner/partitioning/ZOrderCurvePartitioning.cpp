@@ -85,8 +85,12 @@ namespace partitioning {
 
         // Iterate over sorted values and group them according to partition size
         std::map<int64_t, uint32_t> zOrderValueToPartitionId;
+        auto batchCapacity = partitionCapacity / expectedNumBatches;
+        if (batchCapacity <= 0){
+            batchCapacity = 1000;
+        }
         for (int i = 0; i < zOrderValues.size(); ++i) {
-            zOrderValueToPartitionId[zOrderValues[i]] = i / partitionCapacity;
+            zOrderValueToPartitionId[zOrderValues[i]] = i / batchCapacity;
         }
 
         // Iterate over rows, get zOrderValue from rowToZValue, use it to get partitionId

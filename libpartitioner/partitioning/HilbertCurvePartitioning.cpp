@@ -92,8 +92,12 @@ namespace partitioning {
 
         // Iterate over sorted values and group them according to partition size
         std::map<int64_t, uint32_t> hilbertValueToPartitionId;
+        auto batchCapacity = partitionCapacity / expectedNumBatches;
+        if (batchCapacity <= 0){
+            batchCapacity = 1000;
+        }
         for (int i = 0; i < hilbertValues.size(); ++i) {
-            hilbertValueToPartitionId[hilbertValues[i]] = i / partitionCapacity;
+            hilbertValueToPartitionId[hilbertValues[i]] = i / batchCapacity;
         }
 
         // Iterate over rows, get HilbertValue from rowToHilbertValue, use it to get partitionId
