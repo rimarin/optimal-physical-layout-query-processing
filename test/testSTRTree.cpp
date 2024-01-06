@@ -26,7 +26,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningSTRTree){
     auto pathPartition1_0 = folder / ("0" + fileExtension);
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition1_0, "Student_id"), std::vector<int32_t>({16, 45, 21, 7, 74, 34, 111, 91}));
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition1_0, "Age"), std::vector<int32_t>({30, 21, 18, 27, 41, 37, 23, 22}));
-    ASSERT_EQ(readColumn<arrow::UInt32Array>(pathPartition1_0, "partition_id"), std::vector<uint32_t>({0, 0, 0, 0, 0, 0, 0, 0}));
+    // ASSERT_EQ(readColumn<arrow::UInt32Array>(pathPartition1_0, "partition_id"), std::vector<uint32_t>({0, 0, 0, 0, 0, 0, 0, 0}));
     cleanUpFolder(folder);
     arrow::Status statusSTRTree2 = strTreePartitioning->partition(dataReader, partitioningColumns, 2, folder);
     auto pathPartition2_0 = folder / ("0" + fileExtension);

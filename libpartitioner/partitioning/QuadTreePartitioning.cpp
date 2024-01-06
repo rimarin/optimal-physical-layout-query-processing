@@ -10,6 +10,18 @@ namespace partitioning {
         std::string displayColumns;
         for (const auto &column : partitionColumns) displayColumns + " " += column;
         std::cout << "[QuadTreePartitioning] Partition has to be done on columns: " << displayColumns << std::endl;
+
+        auto numRows = dataReader.getNumRows();
+
+        if (partitionSize >= numRows) {
+            std::cout << "[QuadTreePartitioning] Partition size greater than the available rows" << std::endl;
+            std::cout << "[QuadTreePartitioning] Therefore put all data in one partition" << std::endl;
+            std::filesystem::path source = dataReader.getReaderPath();
+            std::filesystem::path destination = outputFolder / "0.parquet";
+            std::filesystem::copy(source, destination, std::filesystem::copy_options::overwrite_existing);
+            return arrow::Status::OK();
+        }
+
         auto table = dataReader.readTable().ValueOrDie();
         auto columnArrowArrays = storage::DataReader::getColumnsOld(table, partitionColumns).ValueOrDie();
         auto converter = common::ColumnDataConverter();
@@ -19,8 +31,8 @@ namespace partitioning {
         std::vector<common::Point> partitioningColumnValues = {};
         for(const auto & column : columnData){
             common::Point columnValues;
-            for (int64_t i = 0; i < column->size(); ++i) {
-                columnValues.push_back(column->at(i));
+            for (double i : *column) {
+                columnValues.push_back(i);
             }
             partitioningColumnValues.emplace_back(columnValues);
         }

@@ -10,6 +10,18 @@ namespace partitioning {
         std::string displayColumns;
         for (const auto &column : partitionColumns) displayColumns + " " += column;
         std::cout << "[KDTreePartitioning] Partition has to be done on columns: " << displayColumns << std::endl;
+
+        auto numRows = dataReader.getNumRows();
+
+        if (partitionSize >= numRows) {
+            std::cout << "[KDTreePartitioning] Partition size greater than the available rows" << std::endl;
+            std::cout << "[KDTreePartitioning] Therefore put all data in one partition" << std::endl;
+            std::filesystem::path source = dataReader.getReaderPath();
+            std::filesystem::path destination = outputFolder / "0.parquet";
+            std::filesystem::copy(source, destination, std::filesystem::copy_options::overwrite_existing);
+            return arrow::Status::OK();
+        }
+
         auto table = dataReader.readTable().ValueOrDie();
         auto columnArrowArrays = storage::DataReader::getColumnsOld(table, partitionColumns).ValueOrDie();
         auto converter = common::ColumnDataConverter();
