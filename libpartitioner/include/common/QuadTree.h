@@ -5,6 +5,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 #include <set>
 
@@ -37,14 +38,16 @@ namespace common {
 
     class QuadTree {
     public:
-        QuadTree(std::vector<std::shared_ptr<Point>> &points);
-        std::shared_ptr<QuadNode> buildTree(std::vector<std::shared_ptr<Point>> points, int depth);
+        QuadTree(std::vector<std::shared_ptr<Point>> &rows, size_t partitionSize);
+        std::shared_ptr<QuadNode> buildTree(std::vector<std::shared_ptr<Point>> &points, uint32_t depth);
         virtual ~QuadTree() = default;
         std::shared_ptr<QuadNode> getRoot();
         std::vector<std::shared_ptr<QuadNode>> getLeaves();
     private:
         std::shared_ptr<QuadNode> root;
         std::vector<std::shared_ptr<QuadNode>> leaves;
+        uint32_t leafSize;
+        std::vector<std::shared_ptr<Point>> points;
     };
 
 }

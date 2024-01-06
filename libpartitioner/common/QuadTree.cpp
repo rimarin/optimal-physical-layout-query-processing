@@ -2,20 +2,22 @@
 
 namespace common {
 
-    QuadTree::QuadTree(std::vector<std::shared_ptr<Point>> &points) {
+    QuadTree::QuadTree(std::vector<std::shared_ptr<Point>> &rows, size_t partitionSize) {
         // Construct the tree from the given points and store the root
+        leafSize = partitionSize;
+        std::cout << "[QuadTree] Start building a Quad Tree for " << rows.size() << " points and partition size " << partitionSize << std::endl;
+        points = rows;
         root = buildTree(points, 0);
     }
 
-    std::shared_ptr<QuadNode> QuadTree::buildTree(std::vector<std::shared_ptr<Point>> points, int depth){
+    std::shared_ptr<QuadNode> QuadTree::buildTree(std::vector<std::shared_ptr<Point>> &points, uint32_t depth){
         // Recursive implementation of QuadTree construction from a set of multidimensional points
         if (points.empty()) {
             return nullptr;
         }
         // When we reach the desired leaf size (which is the number of rows per parquet partition)
         // We should store the node and exit the recursion
-        // TODO: parametrize according to rows per partition or partition size
-        if (points.size() <= 2){
+        if (points.size() <= leafSize){
             auto node = std::make_shared<QuadNode>(points);
             leaves.emplace_back(node);
             return node;
