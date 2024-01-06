@@ -5,10 +5,11 @@ import pandas as pd
 import plotly.express as px
 
 RESULTS_FOLDER = 'results/'
-RESULTS_FILE = RESULTS_FOLDER + 'results-tpch-sf1.csv'
+RESULTS_FILE = RESULTS_FOLDER + 'results-server.csv'
 
 df = pd.read_csv(RESULTS_FILE, sep=';', on_bad_lines='skip')
 df.columns = df.columns.str.strip()
+df['scan_ratio'] = (df['used_partitions'] / df['total_partitions']) * 100
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -25,13 +26,12 @@ app.layout = html.Div([
                                     title='Impact of selectivity on query latency')),
         ], width=6),
         dbc.Col([
-            dcc.Graph(figure=px.box(df, x="selectivity", y="used_partitions", points="all", color="dataset",
+            dcc.Graph(figure=px.box(df, x="selectivity", y="scan_ratio", points="all", color="dataset",
                                     title='Impact of selectivity on fetched partitions')),
         ], width=6), ]),
     dcc.Graph(figure=px.line(dfSelectivity, x="selectivity", y="latency_avg", color="partitioning",
                              title='Impact of selectivity on the partitioning schemes')),
     html.H4(children='Effect of number of partitioning columns'),
-    # TODO: split by partitioning technique
     dcc.Graph(figure=px.box(df[df['partitioning'] == 'fixed-grid'], x="num_partitioning_columns", y="latency_avg",
                             points="all", color="dataset",
                             title='[Fixed Grid] Impact of the number of partitioning columns on the query latency')),
