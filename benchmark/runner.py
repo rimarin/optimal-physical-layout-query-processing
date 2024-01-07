@@ -51,30 +51,27 @@ def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
         for partitioning in partitionings:
             for partition_size in partition_sizes:
                 for partitioning_columns in partitioning_columns_groups:
+                    benchmark_instance = BenchmarkInstance(BenchmarkConfig(
+                        dataset=dataset,
+                        partitioning=partitioning,
+                        partition_size=partition_size,
+                        partitioning_columns=partitioning_columns,
+                        results_file=RESULTS_FILE
+                    ), logger)
+                    benchmark_instance.generate_partitions()
                     for i, query_file in enumerate(query_files):
-                        num_query, query_variant = BenchmarkInstance.get_query_num_and_variant(query_file)
+                        query_number, query_variant = BenchmarkInstance.get_query(query_file)
                         try:
-                            benchmark_instance = BenchmarkInstance(BenchmarkConfig(
-                                dataset=dataset,
-                                partitioning=partitioning,
-                                partition_size=partition_size,
-                                query_number=num_query,
-                                query_variant=query_variant,
-                                partitioning_columns=partitioning_columns,
-                                results_file=RESULTS_FILE
-                            ), logger)
+                            benchmark_instance.set_query(query_number, query_variant)
                             benchmark_instance.prepare_dataset()
                             benchmark_instance.prepare_queries()
-                            if i == 0:
-                                benchmark_instance.generate_partitions()
                             benchmark_instance.runner_prepare()
                             benchmark_instance.runner_launch()
                             benchmark_instance.collect_results()
                         except Exception as e:
                             logger.error(f"Error while running benchmark instance with settings: "
-                                         f"{dataset}-{partitioning}-{partition_size}-{num_query}-{query_variant}-"
+                                         f"{dataset}-{partitioning}-{partition_size}-{query_number}-{query_variant}-"
                                          f"{partitioning_columns} - " + str(e))
-                            continue
                     benchmark_instance.cleanup()
 
 

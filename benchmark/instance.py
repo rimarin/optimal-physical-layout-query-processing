@@ -18,7 +18,13 @@ class BenchmarkInstance:
         self.duckdb_path = None
         self.config = config
         self.benchmark = self.get_benchmark(self.config.dataset)
+        self.query_number = None
+        self.query_variant = None
         self.logger = logger
+
+    def set_query(self, query_number, query_variant):
+        self.query_number = query_number
+        self.query_variant = query_variant
 
     def generate_partitions(self):
         partitioner_command = [f'../cmake-build-release/partitioner/partitioner',
@@ -62,11 +68,11 @@ class BenchmarkInstance:
         return [f for f in os.listdir(benchmark.get_generated_queries_folder()) if f.endswith(".sql")]
 
     @staticmethod
-    def get_query_num_and_variant(query_file_name):
+    def get_query(query_file_name):
         query_file_name = query_file_name.split('.sql')[0]
-        num_query = int(''.join(filter(str.isdigit, query_file_name)))
+        query_number = int(''.join(filter(str.isdigit, query_file_name)))
         query_variant = ''.join(filter(str.isalpha, query_file_name))
-        return num_query, query_variant
+        return query_number, query_variant
 
     def prepare_dataset(self):
         """
@@ -105,9 +111,9 @@ class BenchmarkInstance:
         tmp_folder = os.path.join(os.path.abspath(os.getcwd()), 'temp')
         if not os.path.exists(tmp_folder):
             os.makedirs(tmp_folder)
-        generated_query_file = f"{self.benchmark.get_generated_queries_folder()}/{self.config.query_number}{self.config.query_variant}.sql"
+        generated_query_file = f"{self.benchmark.get_generated_queries_folder()}/{self.query_number}{self.config.query_variant}.sql"
         subprocess.check_output(f"cp {generated_query_file} {tmp_folder}", shell=True)
-        moved_query_file = os.path.join(tmp_folder, f'{self.config.query_number}{self.config.query_variant}.sql')
+        moved_query_file = os.path.join(tmp_folder, f'{self.query_number}{self.query_variant}.sql')
         tmp_query_path = os.path.join(self.duckdb_path, "query.sql")
         subprocess.check_output(f"mv {moved_query_file} {tmp_query_path}", shell=True)
 
@@ -125,9 +131,21 @@ class BenchmarkInstance:
             verify_query_file.write(verify_query)
 
     def runner_launch(self):
-        result_rows = str(subprocess.check_output(
-            [f'{self.duckdb_path}/build/release/benchmark/benchmark_runner PartitioningBenchmark'],
-            shell=True, universal_newlines=True, stderr=subprocess.STDOUT)).split('\n')
+        retries = 3
+        for i in range(retries):
+            try:
+                process_output = subprocess.check_output(
+                    [f'{self.duckdb_path}/build/release/benchmark/benchmark_runner PartitioningBenchmark'],
+                    shell=True, universal_newlines=True, stderr=subprocess.STDOUT)
+            except subprocess.CalledProcessError as grepexc:
+                self.logger.error("Error while calling benchmark runner, code" + str(grepexc.returncode) + str(grepexc.output))
+                if i < retries - 1:  # i is zero indexed
+                    self.logger.warning("Retrying...")
+                    continue
+                else:
+                    raise Exception(str(grepexc.output))
+            break
+        result_rows = str(process_output).split('\n')
         latencies = []
         if "ValueOrDie called on an error:" in result_rows or "Aborted" in result_rows:
             self.logger.error(f"Error while running benchmarks: {result_rows}")
@@ -148,9 +166,12 @@ class BenchmarkInstance:
             used_partitions = 0
         try:
             average_partition_size = 0
-            partition_files = [os.path.join(self.benchmark.get_dataset_folder(self.config.partitioning), f)
-                               for f in os.listdir(self.benchmark.get_dataset_folder(self.config.partitioning))
-                               if f.endswith(".parquet")]
+            partitions_folder = self.benchmark.get_dataset_folder(self.config.partitioning)
+            partition_files = [os.path.join(partitions_folder, f)
+                               for f in os.listdir(partitions_folder) if f.endswith(".parquet")]
+            if len(partition_files) == 0:
+                self.logger.error(f"No partitions in the folder {partitions_folder}")
+                raise Exception
             for partition_file in partition_files:
                 average_partition_size += os.path.getsize(partition_file)
             average_partition_size /= len(partition_files)
