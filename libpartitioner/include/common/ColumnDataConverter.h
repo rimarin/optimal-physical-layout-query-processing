@@ -14,7 +14,6 @@
 #include <arrow/result.h>
 #include <arrow/status.h>
 #include <arrow/table.h>
-#include <arrow/table.h>
 
 #include "Point.h"
 
