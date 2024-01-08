@@ -41,10 +41,10 @@ namespace partitioning {
         std::vector<std::shared_ptr<common::Point>> points = common::ColumnDataConverter::toRows(columnData);
 
         // Build a kd-tree on the vector of points
-        std::shared_ptr<common::KDTree> kdTree = std::make_shared<common::KDTree>(points, partitionSize);
+        std::shared_ptr<structures::KDTree> kdTree = std::make_shared<structures::KDTree>(points, partitionSize);
 
         // Retrieve the leaves, where the points have partitioned and stored
-        std::vector<std::shared_ptr<common::KDNode>> leaves = kdTree->getLeaves();
+        std::vector<std::shared_ptr<structures::KDNode>> leaves = kdTree->getLeaves();
 
         // Build a hashmap to link each point to the partition induced by the kd-tree
         std::map<std::shared_ptr<common::Point>, uint32_t> pointToPartitionId;

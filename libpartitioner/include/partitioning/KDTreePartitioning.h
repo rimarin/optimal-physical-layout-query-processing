@@ -17,7 +17,7 @@
 #include <arrow/table.h>
 
 #include "common/ColumnDataConverter.h"
-#include "common/KDTree.h"
+#include "structures/KDTree.h"
 #include "partitioning/Partitioning.h"
 #include "storage/DataWriter.h"
 #include "storage/DataReader.h"

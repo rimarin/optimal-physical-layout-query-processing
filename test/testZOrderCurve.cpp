@@ -16,7 +16,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningZOrderCurve){
     auto dataset = getDatasetPath(ExperimentsConfig::datasetSchool);
     auto partitionSize = 2;
     auto fileExtension = ExperimentsConfig::fileExtension;
-    auto zOrderCurve = common::ZOrderCurve();
+    auto zOrderCurve = structures::ZOrderCurve();
     uint64_t arr1[2] = {18, 21};
     uint64_t arr2[2] = {21, 45};
     uint64_t arr3[2] = {22, 91};

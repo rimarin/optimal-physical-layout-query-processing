@@ -17,7 +17,7 @@
 #include <arrow/table.h>
 
 #include "common/ColumnDataConverter.h"
-#include "common/QuadTree.h"
+#include "structures/QuadTree.h"
 #include "storage/DataReader.h"
 #include "storage/DataWriter.h"
 #include "partitioning/Partitioning.h"

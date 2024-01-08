@@ -1,8 +1,8 @@
-#include "common/KDTree.h"
+#include "structures/KDTree.h"
 
-namespace common {
+namespace structures {
 
-    KDTree::KDTree(std::vector<std::shared_ptr<Point>> &rows, size_t partitionSize) {
+    KDTree::KDTree(std::vector<std::shared_ptr<common::Point>> &rows, size_t partitionSize) {
         // Construct the tree from the given points and store the root
         leafSize = partitionSize;
         std::cout << "[KDTree] Start building a kd-tree for " << rows.size() << " points and partition size " << partitionSize << std::endl;
@@ -11,8 +11,8 @@ namespace common {
         root = buildTree(points.begin(), points.end(), 0);
     }
 
-    std::shared_ptr<KDNode> KDTree::buildTree(std::vector<std::shared_ptr<Point>>::iterator start,
-                                              std::vector<std::shared_ptr<Point>>::iterator end,
+    std::shared_ptr<KDNode> KDTree::buildTree(std::vector<std::shared_ptr<common::Point>>::iterator start,
+                                              std::vector<std::shared_ptr<common::Point>>::iterator end,
                                               uint32_t depth){
         uint32_t pointsSize = std::distance(start, end);
         std::cout << "[KDTree] Reached depth " << depth << " with " << pointsSize << " elements" << std::endl;
@@ -31,7 +31,7 @@ namespace common {
         uint32_t dimension = depth % pointDimensions;
         // Sort the points by the dimension
         std::sort(start, end,
-                  [&](const std::shared_ptr<Point> &a, const std::shared_ptr<Point> & b) {
+                  [&](const std::shared_ptr<common::Point> &a, const std::shared_ptr<common::Point> & b) {
                       return a->at(dimension) < b->at(dimension);
                   });
         // Pick the median point for the split

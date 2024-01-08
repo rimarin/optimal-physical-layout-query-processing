@@ -46,15 +46,12 @@ target_include_directories(
 
 include_directories(common/)
 include_directories(include/)
+include_directories(external/)
 include_directories(partitioning/)
 include_directories(storage/)
+include_directories(structures/)
 
 set(LIBPARTITIONER_SOURCES
-        common/KDTree.cpp
-        common/QuadTree.cpp
-        storage/DataWriter.cpp
-        storage/DataReader.cpp
-        storage/TableGenerator.cpp
         partitioning/NoPartitioning.cpp
         partitioning/FixedGridPartitioning.cpp
         partitioning/GridFilePartitioning.cpp
@@ -62,7 +59,12 @@ set(LIBPARTITIONER_SOURCES
         partitioning/KDTreePartitioning.cpp
         partitioning/QuadTreePartitioning.cpp
         partitioning/STRTreePartitioning.cpp
-        partitioning/ZOrderCurvePartitioning.cpp)
+        partitioning/ZOrderCurvePartitioning.cpp
+        storage/DataWriter.cpp
+        storage/DataReader.cpp
+        storage/TableGenerator.cpp
+        structures/KDTree.cpp
+        structures/QuadTree.cpp)
 
 # Declare the library
 add_library(libpartitioner STATIC ${LIBPARTITIONER_SOURCES})

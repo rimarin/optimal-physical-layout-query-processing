@@ -63,7 +63,7 @@ namespace partitioning {
         auto columnData = converter.toInt64(batchColumns).ValueOrDie();
         std::shared_ptr<arrow::Array> partitionIdsArrow;
         arrow::UInt32Builder int32Builder;
-        auto hilbertCurve = common::HilbertCurve();
+        auto hilbertCurve = structures::HilbertCurve();
         int numBits = 8;
         int numDims = columnData.size();
         int columnSize = columnData[0]->size();

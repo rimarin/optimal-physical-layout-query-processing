@@ -71,7 +71,7 @@ namespace partitioning {
         std::vector<std::shared_ptr<common::Point>> rows = common::ColumnDataConverter::toRows(columnData);
         std::map<std::shared_ptr<common::Point>, int64_t> rowToZValue;
         std::vector<int64_t> zOrderValues = {};
-        auto zOrderCurve = common::ZOrderCurve();
+        auto zOrderCurve = structures::ZOrderCurve();
         for (auto &row: rows){
             double pointArr[numDims];
             std::copy(row->begin(), row->end(), pointArr);

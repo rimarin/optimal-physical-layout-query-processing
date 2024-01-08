@@ -16,7 +16,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurve){
     auto dataset = getDatasetPath(ExperimentsConfig::datasetSchool);
     auto partitionSize = 5;
     auto fileExtension = ExperimentsConfig::fileExtension;
-    auto hilbertCurve = common::HilbertCurve();
+    auto hilbertCurve = structures::HilbertCurve();
     int64_t X1[3] = {5, 10, 20};
     int64_t X2[3] = {1, 1, 1};
     int64_t X3[2] = {1, 1};

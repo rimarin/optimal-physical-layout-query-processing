@@ -4,11 +4,11 @@
 #include <cstdio>
 #include <vector>
 
-#include "morton-nd/mortonND_LUT.h"
-#include "morton-nd/util.cpp"
+#include "structures/morton-nd/mortonND_LUT.h"
+#include "structures/morton-nd/util.cpp"
 
+namespace structures {
 
-namespace common {
     class ZOrderCurve {
         // N-dimensional Morton number is computed from https://github.com/morton-nd/morton-nd
         // https://github.com/ClickHouse/ClickHouse/blob/662c653eec9cf6bd157b116d651d8be7e565ce4a/src/Functions/mortonEncode.cpp

@@ -3,7 +3,7 @@
 
 #include <cstdio>
 
-namespace common
+namespace structures
 {
     class HilbertCurve {
         //+++++++++++++++++++++++++++ PUBLIC-DOMAIN SOFTWARE ++++++++++++++++++++++++++

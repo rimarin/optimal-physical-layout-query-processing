@@ -41,10 +41,10 @@ namespace partitioning {
         std::vector<std::shared_ptr<common::Point>> points = common::ColumnDataConverter::toRows(columnData);
 
         // Build a QuadTree on the vector of points
-        std::shared_ptr<common::QuadTree> quadTree = std::make_shared<common::QuadTree>(points, partitionSize);
+        std::shared_ptr<structures::QuadTree> quadTree = std::make_shared<structures::QuadTree>(points, partitionSize);
 
         // Retrieve the leaves, where the points have partitioned and stored
-        std::vector<std::shared_ptr<common::QuadNode>> leaves = quadTree->getLeaves();
+        std::vector<std::shared_ptr<structures::QuadNode>> leaves = quadTree->getLeaves();
 
         // Build a hashmap to link each point to the partition induced by the QuadTree
         std::map<std::shared_ptr<common::Point>, int64_t> pointToPartitionId;

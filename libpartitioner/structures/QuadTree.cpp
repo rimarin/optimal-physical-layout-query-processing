@@ -1,8 +1,8 @@
-#include "common/QuadTree.h"
+#include "structures/QuadTree.h"
 
-namespace common {
+namespace structures {
 
-    QuadTree::QuadTree(std::vector<std::shared_ptr<Point>> &rows, size_t partitionSize) {
+    QuadTree::QuadTree(std::vector<std::shared_ptr<common::Point>> &rows, size_t partitionSize) {
         // Construct the tree from the given points and store the root
         leafSize = partitionSize;
         std::cout << "[QuadTree] Start building a Quad Tree for " << rows.size() << " points and partition size " << partitionSize << std::endl;
@@ -10,7 +10,7 @@ namespace common {
         root = buildTree(points, 0);
     }
 
-    std::shared_ptr<QuadNode> QuadTree::buildTree(std::vector<std::shared_ptr<Point>> &points, uint32_t depth){
+    std::shared_ptr<QuadNode> QuadTree::buildTree(std::vector<std::shared_ptr<common::Point>> &points, uint32_t depth){
         // Recursive implementation of QuadTree construction from a set of multidimensional points
         if (points.empty()) {
             return nullptr;
@@ -38,10 +38,10 @@ namespace common {
         // Create a split node (no data is passed, only the split value)
         auto node = std::make_shared<QuadNode>(meanDims);
         // Assign the values bigger and smaller than the median point to the respective arrays
-        std::vector<std::shared_ptr<Point>> northWestPoints;
-        std::vector<std::shared_ptr<Point>> northEastPoints;
-        std::vector<std::shared_ptr<Point>> southWestPoints;
-        std::vector<std::shared_ptr<Point>> southEastPoints;
+        std::vector<std::shared_ptr<common::Point>> northWestPoints;
+        std::vector<std::shared_ptr<common::Point>> northEastPoints;
+        std::vector<std::shared_ptr<common::Point>> southWestPoints;
+        std::vector<std::shared_ptr<common::Point>> southEastPoints;
         for (auto &point: points){
             auto x = point->at(0);
             auto y = point->at(1);
