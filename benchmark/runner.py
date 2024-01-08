@@ -60,7 +60,11 @@ def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
                     ), logger)
                     benchmark_instance.generate_partitions()
                     for i, query_file in enumerate(query_files):
-                        query_number, query_variant = BenchmarkInstance.get_query(query_file)
+                        try:
+                            query_number, query_variant = BenchmarkInstance.get_query(query_file)
+                        except Exception as e:
+                            logger.error(f"Cannot parse query number and variant from file name: {str(e)}")
+                            continue
                         try:
                             benchmark_instance.set_query(query_number, query_variant)
                             benchmark_instance.prepare_dataset()

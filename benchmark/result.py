@@ -13,8 +13,12 @@ class BenchmarkResult:
         self.total_partitions = self.config.total_partitions
         self.num_rows = self.benchmark.get_total_rows()
         self.latencies = latencies
-        self.latency_avg = statistics.mean(latencies)
-        self.latency_std = statistics.stdev(latencies)
+        if len(latencies) > 0:
+            self.latency_avg = statistics.mean(latencies) if len(latencies) > 1 else latencies[0]
+            self.latency_std = statistics.stdev(latencies) if len(latencies) > 1 else latencies[0]
+        else:
+            self.latency_avg = 0
+            self.latency_std = 0
         self.used_partitions = used_partitions
         self.average_partition_size = average_partition_size
 
