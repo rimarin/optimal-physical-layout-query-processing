@@ -4,6 +4,7 @@ import re
 import subprocess
 
 from config import BenchmarkConfig
+from exceptions import BenchmarkRunnerException
 from result import BenchmarkResult
 from benchmarks.osm import BenchmarkOSM
 from benchmarks.taxi import BenchmarkTaxi
@@ -111,7 +112,7 @@ class BenchmarkInstance:
         tmp_folder = os.path.join(os.path.abspath(os.getcwd()), 'temp')
         if not os.path.exists(tmp_folder):
             os.makedirs(tmp_folder)
-        generated_query_file = f"{self.benchmark.get_generated_queries_folder()}/{self.query_number}{self.config.query_variant}.sql"
+        generated_query_file = f"{self.benchmark.get_generated_queries_folder()}/{self.query_number}{self.query_variant}.sql"
         subprocess.check_output(f"cp {generated_query_file} {tmp_folder}", shell=True)
         moved_query_file = os.path.join(tmp_folder, f'{self.query_number}{self.query_variant}.sql')
         tmp_query_path = os.path.join(self.duckdb_path, "query.sql")
@@ -131,24 +132,28 @@ class BenchmarkInstance:
             verify_query_file.write(verify_query)
 
     def runner_launch(self):
-        retries = 3
+        retries = 5
         for i in range(retries):
             try:
-                process_output = subprocess.check_output(
-                    [f'{self.duckdb_path}/build/release/benchmark/benchmark_runner PartitioningBenchmark'],
-                    shell=True, universal_newlines=True, stderr=subprocess.STDOUT)
-            except subprocess.CalledProcessError as grepexc:
-                self.logger.error("Error while calling benchmark runner, code" + str(grepexc.returncode) + str(grepexc.output))
+                cmd = [f'{self.duckdb_path}/build/release/benchmark/benchmark_runner', 'PartitioningBenchmark']
+                process = subprocess.run(cmd, capture_output=True, text=True)
+                if process.returncode != 0:
+                    self.logger.error(f"Received return code {process.returncode} - {process.stderr}")
+                    raise AssertionError(f'{process.returncode} - {process.stderr}')
+                process_output = process.stderr
+                result_rows = str(process_output).split('\n')
+                latencies = []
+                if "ValueOrDie called on an error:" in result_rows or "Aborted" in result_rows:
+                    self.logger.error(f"Error while running benchmarks: {result_rows}")
+            except Exception as e:
+                self.logger.error(f"Error while calling benchmark runner, {str(e)}")
                 if i < retries - 1:  # i is zero indexed
                     self.logger.warning("Retrying...")
                     continue
                 else:
-                    raise Exception(str(grepexc.output))
+                    self.logger.error(f'Even after {retries} could not make it work {str(e)} :(')
+                    raise BenchmarkRunnerException(f'Failed after {retries}')
             break
-        result_rows = str(process_output).split('\n')
-        latencies = []
-        if "ValueOrDie called on an error:" in result_rows or "Aborted" in result_rows:
-            self.logger.error(f"Error while running benchmarks: {result_rows}")
         for row in result_rows[1:]:
             try:
                 str_value = row.split('\t')[-1]
@@ -181,7 +186,7 @@ class BenchmarkInstance:
         except Exception as e:
             self.logger.warning("Could not compute the average partition size in bytes")
             average_partition_size = 0
-        self.result = BenchmarkResult(self.benchmark, self.config, latencies, used_partitions, average_partition_size)
+        self.result = BenchmarkResult(self, latencies, used_partitions, average_partition_size)
         self.logger.info("Collected results from benchmark execution")
 
     def collect_results(self):

@@ -1,0 +1,2 @@
+class BenchmarkRunnerException(Exception):
+    pass

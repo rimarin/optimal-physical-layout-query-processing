@@ -5,33 +5,30 @@ from storage_manager import StorageManager
 
 
 class BenchmarkResult:
-    def __init__(self, benchmark, benchmark_config, latencies, used_partitions, average_partition_size):
-        self.benchmark = benchmark
-        self.dataset = benchmark_config.dataset
-        self.partitioning = benchmark_config.partitioning
-        self.partition_size = benchmark_config.partition_size
-        self.query_number = benchmark_config.query_number
-        self.query_variant = benchmark_config.query_variant
-        self.partitioning_columns = benchmark_config.partitioning_columns
-        self.used_columns = benchmark_config.partitioning_columns
+    def __init__(self, benchmark_instance, latencies, used_partitions, average_partition_size):
+        self.instance = benchmark_instance
+        self.benchmark = benchmark_instance.benchmark
+        self.config = benchmark_instance.config
+        self.used_columns = self.config.partitioning_columns
+        self.total_partitions = self.config.total_partitions
+        self.num_rows = self.benchmark.get_total_rows()
         self.latencies = latencies
         self.latency_avg = statistics.mean(latencies)
         self.latency_std = statistics.stdev(latencies)
         self.used_partitions = used_partitions
-        self.total_partitions = benchmark_config.total_partitions
-        self.num_rows = self.benchmark.get_total_rows()
         self.average_partition_size = average_partition_size
 
     def __str__(self):
-        return f'{self.dataset} {self.partitioning} q{self.query_number}{self.query_variant}'
+        return (f'{self.config.dataset} {self.config.partitioning} '
+                f'q{self.instance.query_number}{self.instance.query_variant}')
 
     def format(self, filetype='csv'):
-        self.total_partitions = StorageManager.get_num_files(self.benchmark.get_dataset_folder(self.partitioning))
-        self.used_columns = self.benchmark.get_query_columns(self.query_number)
-        return (f'{self.dataset};{self.num_rows};{self.partitioning};q{self.query_number}{self.query_variant};'
-                f'{self.benchmark.get_query_selectivity(str(self.query_number) + self.query_variant)};'
-                f'{self.partitioning_columns};{len(self.partitioning_columns)};{self.used_columns};'
-                f'{self.latencies};{self.latency_avg};{self.latency_std};{self.partition_size};'
+        self.total_partitions = StorageManager.get_num_files(self.benchmark.get_dataset_folder(self.config.partitioning))
+        self.used_columns = self.benchmark.get_query_columns(self.instance.query_number)
+        return (f'{self.config.dataset};{self.num_rows};{self.config.partitioning};q{self.instance.query_number}{self.instance.query_variant};'
+                f'{self.benchmark.get_query_selectivity(str(self.instance.query_number) + self.instance.query_variant)};'
+                f'{self.config.partitioning_columns};{len(self.config.partitioning_columns)};{self.used_columns};'
+                f'{self.latencies};{self.latency_avg};{self.latency_std};{self.config.partition_size};'
                 f'{self.average_partition_size};{self.used_partitions};{self.total_partitions};'
                 f'{datetime.datetime.now()}\n')
 
