@@ -25,7 +25,7 @@ namespace partitioning{
         Z_ORDER_CURVE = 8
     };
 
-    const std::map<std::string, PartitioningScheme> mapNameToScheme = {
+    std::map<std::string, PartitioningScheme> mapNameToScheme = {
             {"no-partition", NO_PARTITION},
             {"fixed-grid", FIXED_GRID},
             {"grid-file", GRID_FILE},

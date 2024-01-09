@@ -68,8 +68,7 @@ int main(int argc, char **argv) {
     std::ignore = dataReader->load(datasetFilePath);
 
     // Load partitioning scheme
-    auto partitioningScheme = partitioning::PartitioningFactory::create(scheme, dataReader, partitioningColumns, partitionSize,
-                                                                outputPath);
+    auto partitioningScheme = partitioning::PartitioningFactory::create(scheme, dataReader, partitioningColumns, partitionSize, outputPath);
 
     // Apply the partitioning
     arrow::Status status = partitioningScheme->partition();
