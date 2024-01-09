@@ -101,7 +101,14 @@ namespace external {
                         auto numRows = readerSlice->num_rows();
                         auto type = std::make_shared<arrow::DoubleType>();
                         auto readerValue = readerSlice->column(sortingColumnIndex);
-                        auto valueDouble = std::dynamic_pointer_cast<arrow::DoubleArray>(readerValue);
+                        auto arrayData = readerValue->data();
+                        auto new_data = readerValue->data()->Copy();
+                        new_data->type = arrow::float64();
+                        arrow::DoubleArray double_arr(new_data);
+                        auto arrow_int32_array = std::static_pointer_cast<arrow::Int32Array>(readerValue);
+                        auto value = arrow_int32_array->Value(0);
+                        auto valueDouble = std::static_pointer_cast<arrow::DoubleArray>(readerValue);
+                        auto d = double_arr.Value(0);
                         auto c = valueDouble->Value(0);
                         // Push the value and the index of the reader to the heap
                         int a = 5;

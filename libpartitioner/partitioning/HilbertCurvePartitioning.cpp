@@ -60,65 +60,27 @@ namespace partitioning {
             hilbertCurve.axesToTranspose(coordinates, numBits, numDims);
             unsigned int hilbertValue = hilbertCurve.interleaveBits(coordinates, numBits, numDims);
             hilbertValues.emplace_back(hilbertValue);
-            rowToHilbertValue[rowVector] = hilbertValue;
         }
 
-        // Sort hilbert curve values
-        std::sort(std::begin(hilbertValues), std::end(hilbertValues));
-
-        // Iterate over sorted values and group them according to partition size
-        auto batchCapacity = partitionSize / expectedNumBatches;
-        if (batchCapacity <= 0){
-            batchCapacity = 1000;
-        }
-        std::map<int64_t, uint32_t> hilbertValueToPartitionId;
-        for (int i = 0; i < hilbertValues.size(); ++i) {
-            hilbertValueToPartitionId[hilbertValues[i]] = i / batchCapacity;
-        }
-
-        // Iterate over rows, get HilbertValue from rowToHilbertValue, use it to get partitionId
-        // from hilbertValueToPartitionId. Append the obtained partitionId to the result values
-        std::vector<uint32_t> partitionIdsRaw = {};
-        for (auto &row : rows) {
-            auto hilbertValueForRow = rowToHilbertValue[row];
-            auto partitionId = hilbertValueToPartitionId[hilbertValueForRow];
-            partitionIdsRaw.emplace_back(partitionId);
-        }
-        ARROW_RETURN_NOT_OK(int32Builder.AppendValues(partitionIdsRaw));
-        std::cout << "[HilbertCurvePartitioning] Mapped columns to partition ids" << std::endl;
-        ARROW_ASSIGN_OR_RAISE(partitionIdsArrow, int32Builder.Finish());
+        arrow::UInt64Builder uint64Builder;
+        ARROW_RETURN_NOT_OK(uint64Builder.AppendValues(hilbertValues));
+        std::shared_ptr<arrow::Array> hilbertValuesArrow;
+        ARROW_ASSIGN_OR_RAISE(hilbertValuesArrow, uint64Builder.Finish());
         std::shared_ptr<arrow::RecordBatch> updatedRecordBatch;
-        ARROW_ASSIGN_OR_RAISE(updatedRecordBatch, recordBatch->AddColumn(0, "partition_id", partitionIdsArrow));
-        uniquePartitionIds.merge(std::set(partitionIdsRaw.begin(), partitionIdsRaw.end()));
-        auto numPartitions = uniquePartitionIds.size();
-        std::cout << "[HilbertCurvePartitioning] Computed " << numPartitions << " unique partition ids" << std::endl;
-        uint64_t partitionedTablesNumRows = 0;
-        uint32_t completedPartitions = 0;
-        for (const auto &partitionId: uniquePartitionIds){
-            auto writeTable = arrow::Table::FromRecordBatches({updatedRecordBatch}).ValueOrDie();
-            std::shared_ptr<arrow::dataset::Dataset> dataset = std::make_shared<arrow::dataset::InMemoryDataset>(writeTable);
-            auto options = std::make_shared<arrow::dataset::ScanOptions>();
-            options->filter = arrow::compute::equal(
-                    arrow::compute::field_ref("partition_id"),
-                    arrow::compute::literal(partitionId));
-            auto builder = arrow::dataset::ScannerBuilder(dataset, options);
-            auto scanner = builder.Finish();
-            std::shared_ptr<arrow::Table> partitionedTable = scanner.ValueOrDie()->ToTable().ValueOrDie();
-            partitionedTablesNumRows += partitionedTable->num_rows();
-            std::filesystem::path subPartitionsFolder = folder / std::to_string(partitionId);
-            if (!std::filesystem::exists(subPartitionsFolder)) {
-                std::filesystem::create_directory(subPartitionsFolder);
-            }
-            if (!addColumnPartitionId){
-                ARROW_ASSIGN_OR_RAISE(partitionedTable, partitionedTable->RemoveColumn(0));
-            }
-            std::filesystem::path outfile = subPartitionsFolder / ("b" + std::to_string(batchId) + ".parquet");
-            ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTableToDisk(partitionedTable, outfile));
-            completedPartitions += 1;
-            std::cout << "[HilbertCurvePartitioning] Generate partitioned table with " << partitionedTable->num_rows() << " rows" << std::endl;
-            int progress = (int) (float(completedPartitions) / float(numPartitions) * 100);
-            std::cout << "[HilbertCurvePartitioning] Progress: " << progress << " %" << std::endl;
-        }
+        ARROW_ASSIGN_OR_RAISE(updatedRecordBatch, recordBatch->AddColumn(0, "hilbert_curve", hilbertValuesArrow));
+        std::cout << "[HilbertCurvePartitioning] Added column with hilbert curve values " << std::endl;
+
+        std::filesystem::path sortedBatchPath = folder / ("s" + std::to_string(batchId) + ".parquet");
+        ARROW_RETURN_NOT_OK(external::ExternalSort::writeSorted(updatedRecordBatch->Slice(2, 2), "hilbert_curve", sortedBatchPath));
+        std::filesystem::path sortedBatchPath2 = folder / ("s" + std::to_string(batchId+1) + ".parquet");
+        ARROW_RETURN_NOT_OK(external::ExternalSort::writeSorted(updatedRecordBatch->Slice(4, 2), "hilbert_curve", sortedBatchPath2));
+        std::filesystem::path sortedBatchPath3 = folder / ("s" + std::to_string(batchId+2) + ".parquet");
+        ARROW_RETURN_NOT_OK(external::ExternalSort::writeSorted(updatedRecordBatch->Slice(0, 2), "hilbert_curve", sortedBatchPath3));
+        std::filesystem::path sortedBatchPath4 = folder / ("s" + std::to_string(batchId+3) + ".parquet");
+        ARROW_RETURN_NOT_OK(external::ExternalSort::writeSorted(updatedRecordBatch->Slice(6, 2), "hilbert_curve", sortedBatchPath4));
+
+        ARROW_RETURN_NOT_OK(external::ExternalMerge::mergeFiles(folder, "hilbert_curve"));
+
         return arrow::Status::OK();
     }
 
