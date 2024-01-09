@@ -30,7 +30,7 @@ class DataReader {
         uint32_t getExpectedNumBatches();
         static arrow::Result<std::shared_ptr<arrow::Table>> getTable(std::filesystem::path &inputFile);
         static std::filesystem::path getDatasetPath(const std::filesystem::path &folder, const std::string &datasetName,
-                                                    const std::string &partitioningTechnique);
+                                                    const std::string &partitioningScheme);
         arrow::Result<int> getColumnIndex(const std::string &columnName);
     private:
         std::filesystem::path path;

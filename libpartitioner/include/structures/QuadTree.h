@@ -1,5 +1,5 @@
-#ifndef COMMON_QUAD_TREE_H
-#define COMMON_QUAD_TREE_H
+#ifndef STRUCTURES_QUAD_TREE_H
+#define STRUCTURES_QUAD_TREE_H
 
 #include <algorithm>
 #include <iostream>
@@ -52,4 +52,4 @@ namespace structures {
 
 }
 
-#endif //COMMON_QUAD_TREE_H
+#endif //STRUCTURES_QUAD_TREE_H

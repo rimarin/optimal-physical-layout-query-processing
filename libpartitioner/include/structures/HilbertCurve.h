@@ -1,5 +1,5 @@
-#ifndef COMMON_HILBERT_CURVE_H
-#define COMMON_HILBERT_CURVE_H
+#ifndef STRUCTURES_HILBERT_CURVE_H
+#define STRUCTURES_HILBERT_CURVE_H
 
 #include <cstdio>
 
@@ -123,4 +123,4 @@ namespace structures
     };
 }
 
-#endif //COMMON_HILBERT_CURVE_H
+#endif //STRUCTURES_HILBERT_CURVE_H

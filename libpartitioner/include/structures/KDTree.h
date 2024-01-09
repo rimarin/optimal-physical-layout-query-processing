@@ -1,5 +1,5 @@
-#ifndef COMMON_KD_TREE_H
-#define COMMON_KD_TREE_H
+#ifndef STRUCTURES_KD_TREE_H
+#define STRUCTURES_KD_TREE_H
 
 #include <iostream>
 #include <map>
@@ -51,4 +51,4 @@ namespace structures {
 
 }
 
-#endif //COMMON_KD_TREE_H
+#endif //STRUCTURES_KD_TREE_H

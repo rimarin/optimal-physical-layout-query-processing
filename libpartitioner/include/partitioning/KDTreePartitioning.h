@@ -19,6 +19,7 @@
 #include "common/ColumnDataConverter.h"
 #include "structures/KDTree.h"
 #include "partitioning/Partitioning.h"
+#include "partitioning/PartitioningType.h"
 #include "storage/DataWriter.h"
 #include "storage/DataReader.h"
 
@@ -26,10 +27,15 @@ namespace partitioning {
 
     class KDTreePartitioning : public MultiDimensionalPartitioning {
     public:
-        arrow::Status partition(storage::DataReader &dataReader,
-                                const std::vector<std::string> &partitionColumns,
-                                const size_t partitionSize,
-                                const std::filesystem::path &outputFolder) override;
+        KDTreePartitioning(const std::shared_ptr<storage::DataReader> &reader,
+                           const std::vector<std::string> &partitionColumns,
+                           const size_t rowsPerPartition,
+                           const std::filesystem::path &outputFolder) :
+                MultiDimensionalPartitioning(reader, partitionColumns, rowsPerPartition, outputFolder) {
+        };
+        arrow::Status partition() override;
+    private:
+        partitioning::PartitioningType type = TREE;
     };
 }
 

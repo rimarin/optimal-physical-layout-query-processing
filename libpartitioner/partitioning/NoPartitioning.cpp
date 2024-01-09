@@ -2,9 +2,8 @@
 
 namespace partitioning {
 
-    arrow::Status NoPartitioning::partition(storage::DataReader &dataReader,
-                                            const std::vector<std::string> &partitionColumns,
-                                            const size_t partitionSize, const std::filesystem::path &outputFolder) {
+    arrow::Status NoPartitioning::partition() {
+        // Dummy class that does not make any change
         return arrow::Status::OK();
     }
 

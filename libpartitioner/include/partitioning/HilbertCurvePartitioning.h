@@ -16,10 +16,12 @@
 #include <arrow/table.h>
 
 #include "common/ColumnDataConverter.h"
-#include "structures/HilbertCurve.h"
+#include "external/ExternalSort.h"
 #include "partitioning/Partitioning.h"
+#include "partitioning/PartitioningType.h"
 #include "storage/DataReader.h"
 #include "storage/DataWriter.h"
+#include "structures/HilbertCurve.h"
 
 
 namespace partitioning {
@@ -28,23 +30,24 @@ namespace partitioning {
 
     class HilbertCurvePartitioning : public MultiDimensionalPartitioning {
     public:
-        arrow::Status partition(storage::DataReader &dataReader,
-                                const std::vector<std::string> &partitionColumns,
-                                const size_t partitionSize,
-                                const std::filesystem::path &outputFolder) override;
+        HilbertCurvePartitioning(const std::shared_ptr<storage::DataReader> &reader,
+                                 const std::vector<std::string> &partitionColumns,
+                                 const size_t rowsPerPartition,
+                                 const std::filesystem::path &outputFolder) :
+                MultiDimensionalPartitioning(reader, partitionColumns, rowsPerPartition, outputFolder) {
+            columnToDomain = {};
+            partitionIds = {};
+            uniquePartitionIds = {};
+        };
+        arrow::Status partition() override;
         arrow::Status partitionBatch(const uint32_t &batchId,
                                      std::shared_ptr<arrow::RecordBatch> &recordBatch,
-                                     storage::DataReader &dataReader);
+                                     std::shared_ptr<storage::DataReader> &dataReader);
     private:
-        std::vector<std::string> columns;
-        size_t numColumns;
-        size_t partitionCapacity;
-        std::filesystem::path folder;
+        partitioning::PartitioningType type = SPACE_FILLING_CURVE;
         std::unordered_map<uint8_t, uint64_t> columnToDomain;
         std::vector<uint32_t> partitionIds;
         std::set<uint32_t> uniquePartitionIds;
-        bool addColumnPartitionId = true;
-        uint32_t expectedNumBatches;
     };
 }
 

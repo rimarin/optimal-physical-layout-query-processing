@@ -17,6 +17,7 @@
 
 #include "common/ColumnDataConverter.h"
 #include "partitioning/Partitioning.h"
+#include "partitioning/PartitioningType.h"
 #include "storage/DataWriter.h"
 #include "storage/DataReader.h"
 
@@ -24,20 +25,23 @@ namespace partitioning {
 
     class GridFilePartitioning : public MultiDimensionalPartitioning {
     public:
-        arrow::Status partition(storage::DataReader &dataReader,
-                                const std::vector<std::string> &partitionColumns,
-                                const size_t partitionSize,
-                                const std::filesystem::path &outputFolder) override;
+        GridFilePartitioning(const std::shared_ptr<storage::DataReader> &reader,
+                             const std::vector<std::string> &partitionColumns,
+                             const size_t rowsPerPartition,
+                             const std::filesystem::path &outputFolder) :
+                MultiDimensionalPartitioning(reader, partitionColumns, rowsPerPartition, outputFolder) {
+            linearScales = {};
+            cellCapacity = partitionSize;
+            rowIndexToPartitionId = {};
+        };
+        arrow::Status partition() override;
     private:
+        partitioning::PartitioningType type = GRID;
         void computeLinearScales(std::vector<std::shared_ptr<common::Point>> &allRows, uint32_t initialCoord,
                                  std::vector<std::pair<double, double>> scaleRangeIndexes);
         std::vector<std::vector<double>> linearScales;
         size_t cellCapacity;
-        std::vector<std::string> columns;
-        size_t numColumns;
-        std::filesystem::path folder;
         std::vector<std::pair<uint32_t, uint32_t>> rowIndexToPartitionId;
-        bool addColumnPartitionId = true;
     };
 }
 

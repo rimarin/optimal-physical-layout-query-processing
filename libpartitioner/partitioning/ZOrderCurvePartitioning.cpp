@@ -2,38 +2,14 @@
 
 namespace partitioning {
 
-    arrow::Status ZOrderCurvePartitioning::partition(storage::DataReader &dataReader,
-                                                     const std::vector<std::string> &partitionColumns,
-                                                     const size_t partitionSize,
-                                                     const std::filesystem::path &outputFolder){
-        columns = partitionColumns;
-        folder = outputFolder;
-        numColumns = columns.size();
-        partitionIds = {};
-        uniquePartitionIds = {};
-        expectedNumBatches = dataReader.getExpectedNumBatches();
-        partitionCapacity = partitionSize;
+    arrow::Status ZOrderCurvePartitioning::partition(){
 
-        std::cout << "[ZOrderCurvePartitioning] Initializing partitioning technique" << std::endl;
-        std::string displayColumns;
-        for (const auto &column : partitionColumns) displayColumns + " " += column;
-        std::cout << "[ZOrderCurvePartitioning] Partition has to be done on columns: " << displayColumns << std::endl;
-
-        auto numRows = dataReader.getNumRows();
-
-        if (partitionSize >= numRows) {
-            std::cout << "[ZOrderCurvePartitioning] Partition size greater than the available rows" << std::endl;
-            std::cout << "[ZOrderCurvePartitioning] Therefore put all data in one partition" << std::endl;
-            std::filesystem::path source = dataReader.getReaderPath();
-            std::filesystem::path destination = outputFolder / "0.parquet";
-            std::filesystem::copy(source, destination, std::filesystem::copy_options::overwrite_existing);
-            return arrow::Status::OK();
-        }
-
-        auto batch_reader = dataReader.getTableBatchReader().ValueOrDie();
+        // Read the table in batches
+        auto batch_reader = dataReader->getTableBatchReader().ValueOrDie();
         uint32_t batchId = 0;
         uint32_t totalNumRows = 0;
         while (true) {
+            // Try to read a
             std::shared_ptr<arrow::RecordBatch> record_batch;
             ARROW_RETURN_NOT_OK(batch_reader->ReadNext(&record_batch));
             if (record_batch == nullptr) {
@@ -53,11 +29,11 @@ namespace partitioning {
 
     arrow::Status ZOrderCurvePartitioning::partitionBatch(const uint32_t &batchId,
                                                            std::shared_ptr<arrow::RecordBatch> &recordBatch,
-                                                           storage::DataReader &dataReader) {
+                                                           std::shared_ptr<storage::DataReader> &dataReader) {
         std::vector<std::shared_ptr<arrow::Array>> batchColumns;
         batchColumns.reserve(columns.size());
         for (const auto &columnName: columns){
-            batchColumns.emplace_back(recordBatch->column(dataReader.getColumnIndex(columnName).ValueOrDie()));
+            batchColumns.emplace_back(recordBatch->column(dataReader->getColumnIndex(columnName).ValueOrDie()));
         }
         auto converter = common::ColumnDataConverter();
         auto columnData = converter.toInt64(batchColumns).ValueOrDie();

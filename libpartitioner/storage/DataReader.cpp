@@ -89,8 +89,8 @@ namespace storage {
     }
 
     std::filesystem::path DataReader::getDatasetPath(const std::filesystem::path &folder, const std::string &datasetName,
-                                         const std::string &partitioningTechnique){
-        return folder / datasetName / partitioningTechnique / (datasetName + ".parquet");
+                                         const std::string &partitioningScheme){
+        return folder / datasetName / partitioningScheme / (datasetName + ".parquet");
     }
 
     // TODO: reduce memory usage, see:

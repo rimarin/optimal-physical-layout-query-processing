@@ -9,6 +9,7 @@
 
 namespace storage {
 
+    // Write to disk a table, given its pointer and the output path
     arrow::Status DataWriter::WriteTable(std::shared_ptr<arrow::Table>& table,
                                          std::filesystem::path &outputPath) {
         auto outfile = arrow::io::FileOutputStream::Open(outputPath);
@@ -21,26 +22,39 @@ namespace storage {
         return arrow::Status::OK();
     }
 
+    // Define common writer properties within the project
     std::shared_ptr<parquet::WriterProperties> DataWriter::getWriterProperties(){
         std::shared_ptr<parquet::WriterProperties> props = parquet::WriterProperties::Builder()
+                // Optimal row group length is around 120000 according to several sources
                 .max_row_group_length(100000)
                 ->created_by("Optimal Layout Partitioner")
                 ->version(parquet::ParquetVersion::PARQUET_2_6)
                 ->data_page_version(parquet::ParquetDataPageVersion::V2)
+                // Worse compression ratio than zstd but faster reads
                 ->compression(arrow::Compression::SNAPPY)
                 ->build();
         return props;
     }
 
+    // Define common arrow writer properties
     std::shared_ptr<parquet::ArrowWriterProperties> DataWriter::getArrowWriterProperties(){
         return parquet::ArrowWriterProperties::Builder().store_schema()->build();
     }
 
+    // Given a path with several sub folders with parts of batches, merge the parts together into partitions
+    // Then remove
     arrow::Status DataWriter::mergeBatches(const std::filesystem::path &basePath, const std::set<uint32_t> &partitionIds){
         std::cout << "[DataWriter] Start merging batches" << std::endl;
+        // We expect to have a folder for each partition id. Inside the folder, the parquet files from each batch
+        // are to be found. For example, assuming partition 1 from 3 batches, the content will be:
+        //  --/1/
+        //    -- b0.parquet
+        //    -- b1.parquet
+        //    -- b2.parquet
         for (const uint32_t &partitionId: partitionIds){
             std::string root_path;
             std::filesystem::path subPartitionsFolder = basePath / std::to_string(partitionId);
+            // Merge batches for a batch folder
             if (std::filesystem::exists(subPartitionsFolder)) {
                 ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(subPartitionsFolder, &root_path));
                 std::cout << "[DataWriter] Start merging batches for partition id " << partitionId << std::endl;
@@ -51,10 +65,11 @@ namespace storage {
             }
         }
         std::cout << "[DataWriter] Partitioned batches have been merged into partitions" << std::endl;
+        // Delete all the folders and their content once the merged tables are ready
         for (const auto &partitionId: partitionIds){
             std::filesystem::path subPartitionsFolder = basePath / std::to_string(partitionId);
             auto numDeleted = std::filesystem::remove_all(subPartitionsFolder);
-            std::cout << "[DataWriter] Cleaned up folder " << subPartitionsFolder << " with " << numDeleted << " partition fragments" << std::endl;
+            std::cout   << "[DataWriter] Cleaned up folder " << subPartitionsFolder << " with " << numDeleted << " partition fragments" << std::endl;
         }
         return arrow::Status::OK();
     }
@@ -88,6 +103,7 @@ namespace storage {
         return arrow::Status::OK();
     }
 
+    // Restore a clean state by removing all Parquet files from a specified folder
     void DataWriter::cleanUpFolder(const std::filesystem::path &folder){
         if (std::filesystem::is_directory(folder)){
             for (const auto &folderIter : std::filesystem::directory_iterator(folder))

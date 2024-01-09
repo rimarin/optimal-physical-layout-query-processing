@@ -5,54 +5,24 @@
 
 namespace partitioning {
 
-    arrow::Status FixedGridPartitioning::partition(storage::DataReader &dataReader,
-                                                      const std::vector<std::string> &partitionColumns,
-                                                      const size_t partitionSize,
-                                                      const std::filesystem::path &outputFolder) {
-        columns = partitionColumns;
-        cellCapacity = partitionSize;
-        folder = outputFolder;
-        numColumns = columns.size();
-        cellWidth = 1;
-        columnToDomain = {};
-        partitionIds = {};
-        uniquePartitionIds = {};
-        expectedNumBatches = dataReader.getExpectedNumBatches();
-        std::cout << "[FixedGridPartitioning] Initializing partitioning technique" << std::endl;
-        std::string displayColumns = std::accumulate(partitionColumns.begin(), partitionColumns.end(),
-                                                     std::string(" "));
-        std::cout << "[FixedGridPartitioning] Partition has to be done on columns: " << displayColumns << std::endl;
-
-        auto numRows = dataReader.getNumRows();
-
-        if (partitionSize >= numRows) {
-            std::cout << "[FixedGridPartitioning] Partition size greater than the available rows" << std::endl;
-            std::cout << "[FixedGridPartitioning] Therefore put all data in one partition" << std::endl;
-            std::filesystem::path source = dataReader.getReaderPath();
-            std::filesystem::path destination = outputFolder / "0.parquet";
-            std::filesystem::copy(source, destination, std::filesystem::copy_options::overwrite_existing);
-            return arrow::Status::OK();
-        }
+    arrow::Status FixedGridPartitioning::partition() {
 
         // Number of cells is = (domain(x) / cellSize) * (domain(y) / cellSize) ... * (domain(n) / cellSize)
         // e.g. 20x20 grid, 100x100 coordinates -> (100 / 20) * (100 / 20) = 5 * 5 = 25 squares
         std::cout << "[FixedGridPartitioning] Analyzing span of column values to determine cell width" << std::endl;
         uint32_t columnDomainAverage = 0;
         for (int j = 0; j < numColumns; ++j) {
-            std::pair<double_t, double_t> columnStats = dataReader.getColumnStats(partitionColumns[j]).ValueOrDie();
+            std::pair<double_t, double_t> columnStats = dataReader->getColumnStats(columns[j]).ValueOrDie();
             auto columnDomain = (columnStats.second - columnStats.first) * 1.1;
             columnToDomain[j] = columnDomain;
             columnDomainAverage += columnDomain;
         }
         columnDomainAverage /= numColumns;
         std::cout << "[FixedGridPartitioning] Average of the columns domain is: " << columnDomainAverage << std::endl;
-        cellWidth = columnDomainAverage * numRows / cellCapacity / 10;
-        if (cellWidth > columnDomainAverage){
-            cellWidth = columnDomainAverage / 10 / numColumns;
-        }
+        cellWidth = columnDomainAverage / 10;
         std::cout << "[FixedGridPartitioning] Computed cell width is: " << cellWidth << std::endl;
 
-        auto batch_reader = dataReader.getTableBatchReader().ValueOrDie();
+        auto batch_reader = dataReader->getTableBatchReader().ValueOrDie();
         uint32_t batchId = 0;
         uint32_t totalNumRows = 0;
         while (true) {
@@ -74,12 +44,12 @@ namespace partitioning {
 
     arrow::Status FixedGridPartitioning::partitionBatch(const uint32_t &batchId,
                                                         std::shared_ptr<arrow::RecordBatch> &recordBatch,
-                                                        storage::DataReader &dataReader) {
+                                                        std::shared_ptr<storage::DataReader> &dataReader) {
         partitionIds = {};
         std::vector<std::shared_ptr<arrow::Array>> batchColumns;
         batchColumns.reserve(columns.size());
         for (const auto &columnName: columns){
-            batchColumns.emplace_back(recordBatch->column(dataReader.getColumnIndex(columnName).ValueOrDie()));
+            batchColumns.emplace_back(recordBatch->column(dataReader->getColumnIndex(columnName).ValueOrDie()));
         }
 
         size_t batchNumRows = batchColumns[0]->length();

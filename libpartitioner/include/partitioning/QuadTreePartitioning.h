@@ -17,20 +17,26 @@
 #include <arrow/table.h>
 
 #include "common/ColumnDataConverter.h"
+#include "partitioning/Partitioning.h"
+#include "partitioning/PartitioningType.h"
 #include "structures/QuadTree.h"
 #include "storage/DataReader.h"
 #include "storage/DataWriter.h"
-#include "partitioning/Partitioning.h"
 
 
 namespace partitioning {
 
     class QuadTreePartitioning : public MultiDimensionalPartitioning {
     public:
-        arrow::Status partition(storage::DataReader &dataReader,
-                                const std::vector<std::string> &partitionColumns,
-                                const size_t partitionSize,
-                                const std::filesystem::path &outputFolder) override;
+        QuadTreePartitioning(const std::shared_ptr<storage::DataReader> &reader,
+                             const std::vector<std::string> &partitionColumns,
+                             const size_t rowsPerPartition,
+                             const std::filesystem::path &outputFolder) :
+                MultiDimensionalPartitioning(reader, partitionColumns, rowsPerPartition, outputFolder) {
+        };
+        arrow::Status partition() override;
+    private:
+        partitioning::PartitioningType type = TREE;
     };
 }
 

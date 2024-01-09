@@ -22,6 +22,8 @@ namespace common {
     class ColumnDataConverter {
     public:
 
+        // Columnar to row layout (given the chunked arrays of the columns)
+        // Optionally add a field with the row index
         std::vector<std::shared_ptr<Point>> toRows(std::vector<std::shared_ptr<arrow::ChunkedArray>> &columnsData,
                                                    bool addIndex = false) {
             std::vector<std::shared_ptr<arrow::Array>> columnsArrays = {};
@@ -42,7 +44,7 @@ namespace common {
             return toRows(columnDataDouble);
         }
 
-        // Columnar to row layout: vector of columns is transformed into a vector of points (rows)
+        // Columnar to row layout (given a columnar vectors of points)
         static std::vector<std::shared_ptr<Point>> toRows(std::vector<std::shared_ptr<common::Point>> &columnData) {
             std::vector<std::shared_ptr<Point>> points;
             auto numColumns = columnData.size();
@@ -146,6 +148,7 @@ namespace common {
             return arrow::Status::OK();
         }
 
+        // From decimal conversion
         template<typename ArrayType, typename DataType = typename ArrayType::TypeClass, typename CType = typename DataType::c_type>
         arrow::enable_if_decimal<DataType, arrow::Status> Visit(const ArrayType &array) {
             auto castedArray = std::make_shared<std::vector<double>>();
@@ -168,6 +171,7 @@ namespace common {
             return arrow::Status::OK();
         }
 
+        // From fixed size binary conversion
         template<typename ArrayType, typename DataType = typename ArrayType::TypeClass, typename CType = typename DataType::c_type>
         arrow::enable_if_fixed_size_binary<DataType, arrow::Status> Visit(const ArrayType &array) {
             auto castedArray = std::make_shared<std::vector<double>>();

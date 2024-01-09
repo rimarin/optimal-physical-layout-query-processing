@@ -26,7 +26,7 @@ public:
     static inline const std::string datasetTPCH10 = "tpch-sf10";
     static inline const std::set<std::string> realDatasets = {datasetOSM, datasetTaxi, datasetTPCH1, datasetTPCH10};
 
-    // Partitioning techniques names
+    // Partitioning schemes names
     static inline const std::string noPartition = "no-partition";
     static inline const std::string fixedGrid = "fixed-grid";
     static inline const std::string gridFile = "grid-file";
@@ -50,24 +50,11 @@ public:
     static inline const std::filesystem::path datasetsFolder = benchmarkFolder / "datasets";
 
     // Partitioning config
-    // -- Effect of partition size (= number of records per partition)
-    const std::vector<int32_t> partitionSizes = {1000, 10000, 50000, 100000, 250000, 500000};
-    // -- Effect of dataset size
+    // Effect of partition size (= number of records per partition)
+    const std::vector<int32_t> partitionSizes = {1000, 10000, 50000, 100000, 250000, 500000, 1000000};
+    // Effect of dataset size
     const std::vector<int32_t> tpchScaleFactors = {1, 10, 50, 60, 70, 80, 90, 100};
     static inline const std::string parquetFileExtension = ".parquet";
     static inline const std::string fileExtension = parquetFileExtension;
-
-    // Partitioning techniques
-    static inline const std::map<std::string, std::shared_ptr<partitioning::MultiDimensionalPartitioning>>
-    nameToPartitioningTechnique = {
-            {noPartition, std::make_shared<partitioning::NoPartitioning>()},
-            {fixedGrid, std::make_shared<partitioning::FixedGridPartitioning>()},
-            {gridFile, std::make_shared<partitioning::GridFilePartitioning>()},
-            {kdTree, std::make_shared<partitioning::KDTreePartitioning>()},
-            {strTree, std::make_shared<partitioning::STRTreePartitioning>()},
-            {quadTree, std::make_shared<partitioning::QuadTreePartitioning>()},
-            {hilbertCurve, std::make_shared<partitioning::HilbertCurvePartitioning>()},
-            {zOrderCurve, std::make_shared<partitioning::ZOrderCurvePartitioning>()},
-    };
 
 };

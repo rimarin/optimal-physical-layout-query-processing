@@ -2,28 +2,11 @@
 
 namespace partitioning {
 
-    arrow::Status KDTreePartitioning::partition(storage::DataReader &dataReader,
-                                                const std::vector<std::string> &partitionColumns,
-                                                const size_t partitionSize,
-                                                const std::filesystem::path &outputFolder){
-        std::cout << "[KDTreePartitioning] Initializing partitioning technique" << std::endl;
-        std::string displayColumns;
-        for (const auto &column : partitionColumns) displayColumns + " " += column;
-        std::cout << "[KDTreePartitioning] Partition has to be done on columns: " << displayColumns << std::endl;
+    arrow::Status KDTreePartitioning::partition(){
 
-        auto numRows = dataReader.getNumRows();
-
-        if (partitionSize >= numRows) {
-            std::cout << "[KDTreePartitioning] Partition size greater than the available rows" << std::endl;
-            std::cout << "[KDTreePartitioning] Therefore put all data in one partition" << std::endl;
-            std::filesystem::path source = dataReader.getReaderPath();
-            std::filesystem::path destination = outputFolder / "0.parquet";
-            std::filesystem::copy(source, destination, std::filesystem::copy_options::overwrite_existing);
-            return arrow::Status::OK();
-        }
-
-        auto table = dataReader.readTable().ValueOrDie();
-        auto columnArrowArrays = storage::DataReader::getColumnsOld(table, partitionColumns).ValueOrDie();
+        // Convert columns to rows
+        auto table = dataReader->readTable().ValueOrDie();
+        auto columnArrowArrays = storage::DataReader::getColumnsOld(table, columns).ValueOrDie();
         auto converter = common::ColumnDataConverter();
         auto columnData = converter.toDouble(columnArrowArrays).ValueOrDie();
 
@@ -69,7 +52,7 @@ namespace partitioning {
         ARROW_RETURN_NOT_OK(int32Builder.AppendValues(values));
         std::cout << "[KDTreePartitioning] Mapped columns to partition ids" << std::endl;
         ARROW_ASSIGN_OR_RAISE(partitionIds, int32Builder.Finish());
-        return partitioning::MultiDimensionalPartitioning::writeOutPartitions(table, partitionIds, outputFolder);
+        return partitioning::MultiDimensionalPartitioning::writeOutPartitions(table, partitionIds, folder);
     }
 
 }

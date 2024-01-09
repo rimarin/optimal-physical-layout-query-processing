@@ -4,10 +4,7 @@
 
 namespace partitioning {
 
-    arrow::Status GridFilePartitioning::partition(storage::DataReader &dataReader,
-                                                  const std::vector<std::string> &partitionColumns,
-                                                  const size_t partitionSize,
-                                                  const std::filesystem::path &outputFolder){
+    arrow::Status GridFilePartitioning::partition(){
         /*
          * In the literature there are different implementations of adaptive grid.
          * Here we use a bulk-load implementation of the original paper:
@@ -29,53 +26,35 @@ namespace partitioning {
          *  5. Export the batch into different partition files
          *  6. Merge the batches into partition files
         */
-        std::cout << "[GridFilePartitioning] Initializing partitioning technique" << std::endl;
-        std::string displayColumns;
-        for (const auto &column : partitionColumns) displayColumns + " " += column;
-        std::cout << "[GridFilePartitioning] Partition has to be done on columns: " << displayColumns << std::endl;
 
-        cellCapacity = partitionSize;
-        columns = partitionColumns;
-        folder = outputFolder;
-        numColumns = columns.size();
-
-        auto numRows = dataReader.getNumRows();
-
-        if (partitionSize >= numRows) {
-            std::cout << "[GridFilePartitioning] Partition size greater than the available rows" << std::endl;
-            std::cout << "[GridFilePartitioning] Therefore put all data in one partition" << std::endl;
-            std::filesystem::path source = dataReader.getReaderPath();
-            std::filesystem::path destination = outputFolder / "0.parquet";
-            std::filesystem::copy(source, destination, std::filesystem::copy_options::overwrite_existing);
-            return arrow::Status::OK();
-        }
-
-        std::vector<std::shared_ptr<arrow::ChunkedArray>> columnsData = dataReader.getColumns(partitionColumns).ValueOrDie();
+        // Convert columns to rows
+        std::vector<std::shared_ptr<arrow::ChunkedArray>> columnsData = dataReader->getColumns(columns).ValueOrDie();
         auto converter = common::ColumnDataConverter();
         auto rows = converter.toRows(columnsData);
         columnsData.clear();
 
-        uint32_t coordIdx = 0;
-        dataReader.getNumRows();
-
+        // Initialize linear scales with the domain range values for each dimension
+        // Each linear scale will have only 2 elements, min and max
         linearScales = {};
         std::vector<std::pair<double, double>> scaleRangeIndexes;
         for (int i = 0; i < numColumns; ++i) {
-            std::pair<double_t, double_t> columnStats = dataReader.getColumnStats(partitionColumns[i]).ValueOrDie();
+            std::pair<double_t, double_t> columnStats = dataReader->getColumnStats(columns[i]).ValueOrDie();
             std::vector<double_t> columnDomain = {columnStats.first, columnStats.second};
             linearScales.emplace_back(columnDomain);
             scaleRangeIndexes.emplace_back(columnStats.first, columnStats.second);
         }
 
-        computeLinearScales(rows, coordIdx, scaleRangeIndexes);
+        // Compute linear scales
+        computeLinearScales(rows, 0, scaleRangeIndexes);
 
+        // Display generated linear scales
         for (const auto &linearScale: linearScales){
             std::string linearScalesStr(linearScale.begin(), linearScale.end());
             std::cout << "[GridFilePartitioning] Generated linear scale " << linearScalesStr << " rows" << std::endl;
         }
 
+        // Determine the cell coordinates, which are the combinatorial combination of the obtained linear scales
         std::vector<std::vector<std::pair<double, double>>> cellsCoordinates;
-
         for (const auto& dimensionScale : linearScales) {
             std::vector<std::vector<std::pair<double, double>>> tempCoordinates;
             for (int i = 0; i < dimensionScale.size() - 1; ++i) {
@@ -94,24 +73,27 @@ namespace partitioning {
             cellsCoordinates = tempCoordinates;
         }
 
+        // Determine partition ids, assuming that each obtained cell is a partition
         std::set<uint32_t> uniquePartitionIds;
         for (int i = 0; i < cellsCoordinates.size(); ++i) {
             uniquePartitionIds.emplace(i);
         }
         auto numPartitions = uniquePartitionIds.size();
 
-        auto batch_reader = dataReader.getTableBatchReader().ValueOrDie();
+        // Read the table in batches
+        auto batch_reader = dataReader->getTableBatchReader().ValueOrDie();
         uint32_t batchId = 0;
         uint32_t totalNumRows = 0;
         while (true) {
+            // Try to load a new batch, when possible
             std::shared_ptr<arrow::RecordBatch> recordBatch;
             ARROW_RETURN_NOT_OK(batch_reader->ReadNext(&recordBatch));
             if (recordBatch == nullptr) {
                 break;
             }
 
+            // For each partition id,
             uint32_t completedPartitions = 0;
-
             for (const auto &partitionId: uniquePartitionIds){
                 std::vector<uint32_t> partitionIds(recordBatch->num_rows(), partitionId);
                 arrow::UInt32Builder int32Builder;
@@ -125,27 +107,26 @@ namespace partitioning {
                 std::shared_ptr<arrow::dataset::Dataset> dataset = std::make_shared<arrow::dataset::InMemoryDataset>(writeTable);
                 auto options = std::make_shared<arrow::dataset::ScanOptions>();
                 std::vector<arrow::Expression> filterExpressions;
-                filterExpressions.reserve(partitionColumns.size());
-                for (int i = 0; i < partitionColumns.size(); ++i) {
+                filterExpressions.reserve(columns.size());
+                for (int i = 0; i < columns.size(); ++i) {
                     auto toInt32 = arrow::compute::CastOptions::Safe(arrow::int32());
                     // TODO: apply cast only when dealing with dates, otherwise it is an unnecessary overhead
                     filterExpressions.emplace_back(arrow::compute::and_(
                                 arrow::compute::greater_equal(
                                     arrow::compute::call("cast",
-                                                         {arrow::compute::field_ref(partitionColumns[i])},
+                                                         {arrow::compute::field_ref(columns[i])},
                                                          toInt32),
                                     arrow::compute::literal(cellsCoordinates[partitionId][i].first)
                                 ),
                                 // AND
                                 arrow::compute::less_equal(
                                     arrow::compute::call("cast",
-                                                        {arrow::compute::field_ref(partitionColumns[i])},
+                                                        {arrow::compute::field_ref(columns[i])},
                                                         toInt32),
                                     arrow::compute::literal(cellsCoordinates[partitionId][i].second))
                                 )
                     );
                 }
-                // std::cout << arrow::compute::and_(filterExpressions).ToString();
                 options->filter = arrow::compute::and_(filterExpressions);
                 auto builder = arrow::dataset::ScannerBuilder(dataset, options);
                 auto scanner = builder.Finish();
@@ -172,6 +153,7 @@ namespace partitioning {
             batchId += 1;
         }
         std::cout << "[GridFilePartitioning] Partitioning of " << batchId << " batches completed" << std::endl;
+        // Merge together the partitioned parts from different batches
         ARROW_RETURN_NOT_OK(storage::DataWriter::mergeBatches(folder, uniquePartitionIds));
         return arrow::Status::OK();
     }

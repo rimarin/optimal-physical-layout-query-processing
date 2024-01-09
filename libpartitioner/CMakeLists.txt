@@ -52,11 +52,12 @@ include_directories(storage/)
 include_directories(structures/)
 
 set(LIBPARTITIONER_SOURCES
-        partitioning/NoPartitioning.cpp
         partitioning/FixedGridPartitioning.cpp
         partitioning/GridFilePartitioning.cpp
         partitioning/HilbertCurvePartitioning.cpp
         partitioning/KDTreePartitioning.cpp
+        partitioning/NoPartitioning.cpp
+        partitioning/Partitioning.cpp
         partitioning/QuadTreePartitioning.cpp
         partitioning/STRTreePartitioning.cpp
         partitioning/ZOrderCurvePartitioning.cpp

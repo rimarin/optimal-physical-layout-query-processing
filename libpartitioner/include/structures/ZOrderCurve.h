@@ -1,5 +1,5 @@
-#ifndef COMMON_Z_ORDER_CURVE_H
-#define COMMON_Z_ORDER_CURVE_H
+#ifndef STRUCTURES_Z_ORDER_CURVE_H
+#define STRUCTURES_Z_ORDER_CURVE_H
 
 #include <cstdio>
 #include <vector>
@@ -71,4 +71,4 @@ namespace structures {
     };
 }
 
-#endif //COMMON_Z_ORDER_CURVE_H
+#endif //STRUCTURES_Z_ORDER_CURVE_H

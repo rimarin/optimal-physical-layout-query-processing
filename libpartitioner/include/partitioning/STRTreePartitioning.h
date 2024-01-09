@@ -25,11 +25,16 @@ namespace partitioning {
 
     class STRTreePartitioning : public MultiDimensionalPartitioning {
     public:
-        arrow::Status partition(storage::DataReader &dataReader,
-                                const std::vector<std::string> &partitionColumns,
-                                const size_t partitionSize,
-                                const std::filesystem::path &outputFolder) override;
+        STRTreePartitioning(const std::shared_ptr<storage::DataReader> &reader,
+                            const std::vector<std::string> &partitionColumns,
+                            const size_t rowsPerPartition,
+                            const std::filesystem::path &outputFolder) :
+                MultiDimensionalPartitioning(reader, partitionColumns, rowsPerPartition, outputFolder) {
+            slices = {};
+        };
+        arrow::Status partition() override;
     private:
+        PartitioningType type = TREE;
         void sortTileRecursive(std::vector<std::shared_ptr<common::Point>> points, int coord);
         std::vector<std::vector<std::shared_ptr<common::Point>>> slices = {};
         size_t k;

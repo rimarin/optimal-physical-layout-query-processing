@@ -2,10 +2,7 @@
 
 namespace partitioning {
 
-    arrow::Status STRTreePartitioning::partition(storage::DataReader &dataReader,
-                                                 const std::vector<std::string> &partitionColumns,
-                                                 const size_t partitionSize,
-                                                 const std::filesystem::path &outputFolder) {
+    arrow::Status STRTreePartitioning::partition() {
         /* Implementation based on:
          * STR: A Simple and Efficient Algorithm for R-Tree Packing, https://dl.acm.org/doi/10.5555/870314
          * An R-tree is a hierarchical data structure derived from the B-tree, which stores a collection of
@@ -25,24 +22,10 @@ namespace partitioning {
          * by y-coordinate and pack them into nodes by grouping them into runs of length n (the first n
          * rectangles into the first node, the next n into the second node, and so on).
         */
-        std::cout << "[STRTreePartitioning] Initializing partitioning technique" << std::endl;
-        std::string displayColumns;
-        for (const auto &column: partitionColumns) displayColumns + " " += column;
-        std::cout << "[STRTreePartitioning] Partition has to be done on columns: " << displayColumns << std::endl;
 
-        auto numRows = dataReader.getNumRows();
-
-        if (partitionSize >= numRows) {
-            std::cout << "[STRTreePartitioning] Partition size greater than the available rows" << std::endl;
-            std::cout << "[STRTreePartitioning] Therefore put all data in one partition" << std::endl;
-            std::filesystem::path source = dataReader.getReaderPath();
-            std::filesystem::path destination = outputFolder / "0.parquet";
-            std::filesystem::copy(source, destination, std::filesystem::copy_options::overwrite_existing);
-            return arrow::Status::OK();
-        }
-
-        auto table = dataReader.readTable().ValueOrDie();
-        auto columnArrowArrays = storage::DataReader::getColumnsOld(table, partitionColumns).ValueOrDie();
+        // Convert columns to rows
+        auto table = dataReader->readTable().ValueOrDie();
+        auto columnArrowArrays = storage::DataReader::getColumnsOld(table, columns).ValueOrDie();
         auto converter = common::ColumnDataConverter();
         auto columnData = converter.toDouble(columnArrowArrays).ValueOrDie();
         std::vector<std::shared_ptr<common::Point>> points = common::ColumnDataConverter::toRows(columnData);
@@ -72,7 +55,7 @@ namespace partitioning {
         std::cout << "[STRTreePartitioning] Mapped columns to partition ids" << std::endl;
         std::shared_ptr<arrow::Array> partitionIds;
         ARROW_ASSIGN_OR_RAISE(partitionIds, int32Builder.Finish());
-        return partitioning::MultiDimensionalPartitioning::writeOutPartitions(table, partitionIds, outputFolder);
+        return partitioning::MultiDimensionalPartitioning::writeOutPartitions(table, partitionIds, folder);
     }
 
     void STRTreePartitioning::sortTileRecursive(std::vector<std::shared_ptr<common::Point>> points, int coord) {

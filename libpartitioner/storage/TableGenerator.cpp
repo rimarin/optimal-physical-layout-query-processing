@@ -9,6 +9,7 @@
 
 namespace storage {
 
+    // Generate example table weather
     arrow::Result<std::shared_ptr<arrow::Table>> TableGenerator::GenerateWeatherTable() {
         arrow::Int32Builder int32builder;
         int32_t days_raw[5] = {1, 12, 17, 23, 28};
@@ -56,6 +57,7 @@ namespace storage {
         return table;
     }
 
+    // Generate example table school, from the thesis proposal
     arrow::Result<std::shared_ptr<arrow::Table>> TableGenerator::GenerateSchoolTable() {
         arrow::Int32Builder int32Builder;
         int32_t student_id_raw[8] = {16, 45, 21, 7, 74, 34, 111, 91};
@@ -84,6 +86,8 @@ namespace storage {
         return table;
     }
 
+    // Generate example cities, from example in Section 1.1, Figure 1.6,
+    // "Foundations of Multidimensional and Metric Data Structures"
     arrow::Result <std::shared_ptr<arrow::Table>> TableGenerator::GenerateCitiesTable() {
         arrow::StringBuilder stringBuilder;
         std::vector <std::string> city_name = {"Toronto", "Buffalo", "Denver", "Chicago", "Omaha", "Mobile", "Atlanta",
