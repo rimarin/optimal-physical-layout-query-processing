@@ -142,8 +142,8 @@ class BenchmarkInstance:
                     cmd = [f'{self.duckdb_path}/build/release/benchmark/benchmark_runner', 'PartitioningBenchmark']
                     process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     if process.returncode != 0:
-                        self.logger.error(f"Received return code {process.returncode}")
-                    process_output = process.stderr
+                        self.logger.error(f"Received return code {str(process.returncode)}")
+                    process_output = str(process.stderr)
                 except Exception as e:
                     self.logger.error(f"Error while calling benchmark runner, {str(e)}")
                     if i < max_retries - 1:  # i is zero indexed
