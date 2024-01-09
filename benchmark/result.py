@@ -21,7 +21,7 @@ class BenchmarkResult:
             self.latency_std = 0
         self.used_partitions = used_partitions
         self.average_partition_size = average_partition_size
-        self.query_str = f'q{str(self.instance.query_number)}{self.instance.query_variant}'
+        self.query_str = f'{str(self.instance.query_number)}{self.instance.query_variant}'
 
     def __str__(self):
         return f'{self.config.dataset} {self.config.partitioning} {self.query_str}'
@@ -29,7 +29,7 @@ class BenchmarkResult:
     def format(self, filetype='csv'):
         self.total_partitions = StorageManager.get_num_files(self.benchmark.get_dataset_folder(self.config.partitioning))
         self.used_columns = self.benchmark.get_query_columns(self.instance.query_number)
-        return (f'{self.config.dataset};{self.num_rows};{self.config.partitioning};{self.query_str};'
+        return (f'{self.config.dataset};{self.num_rows};{self.config.partitioning};q{self.query_str};'
                 f'{self.benchmark.get_query_selectivity(self.query_str)};'
                 f'{self.config.partitioning_columns};{len(self.config.partitioning_columns)};{self.used_columns};'
                 f'{self.latencies};{self.latency_avg};{self.latency_std};{self.config.partition_size};'
