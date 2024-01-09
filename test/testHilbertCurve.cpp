@@ -10,7 +10,6 @@
 #include "storage/TableGenerator.h"
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurve){
-    GTEST_SKIP();
     auto folder = ExperimentsConfig::hilbertCurveFolder;
     auto dataset = getDatasetPath(ExperimentsConfig::datasetSchool);
     auto partitionSize = 5;

@@ -31,7 +31,6 @@ namespace partitioning {
                                 const size_t rowsPerPartition,
                                 const std::filesystem::path &outputFolder) :
                 MultiDimensionalPartitioning(reader, partitionColumns, rowsPerPartition, outputFolder) {
-            partitionCapacity = partitionSize;
             columnToDomain = {};
             partitionIds = {};
             uniquePartitionIds = {};
@@ -42,7 +41,6 @@ namespace partitioning {
                                      std::shared_ptr<storage::DataReader> &dataReader);
     private:
         partitioning::PartitioningType type = SPACE_FILLING_CURVE;
-        size_t partitionCapacity;
         std::unordered_map<uint8_t, uint64_t> columnToDomain;
         std::vector<uint32_t> partitionIds;
         std::set<uint32_t> uniquePartitionIds;
