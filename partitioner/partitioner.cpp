@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
 
     // Validate the partitioning scheme
     std::string argPartitioningScheme = argv[3];
-    partitioning::PartitioningScheme scheme = partitioning::mapNameToScheme[argPartitioningScheme];
+    partitioning::PartitioningScheme scheme = partitioning::mapNameToScheme.at(argPartitioningScheme);
     if (partitioning::mapNameToScheme.find(argPartitioningScheme) == partitioning::mapNameToScheme.end()){
         std::cout << "Partitioning scheme not available/recognized" << std::endl;
         exit(1);
