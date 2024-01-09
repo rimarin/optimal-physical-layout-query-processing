@@ -3,13 +3,12 @@
 
 #include <arrow/io/api.h>
 
-#include "include/partitioning/NoPartitioning.h"
-#include "include/storage/DataWriter.h"
-#include "include/storage/DataReader.h"
-#include "include/storage/TableGenerator.h"
 #include "fixture.cpp"
-
 #include "gtest/gtest.h"
+#include "partitioning/PartitioningFactory.h"
+#include "storage/DataWriter.h"
+#include "storage/DataReader.h"
+#include "storage/TableGenerator.h"
 
 
 TEST_F(TestOptimalLayoutFixture, TestGenerateParquetExamples){
@@ -25,17 +24,17 @@ TEST_F(TestOptimalLayoutFixture, TestGenerateParquetExamples){
     ASSERT_EQ(storage::DataWriter::WriteTable(*weatherTable, dataset1), arrow::Status::OK());
     ASSERT_EQ(storage::DataWriter::WriteTable(*schoolTable, dataset2), arrow::Status::OK());
     ASSERT_EQ(storage::DataWriter::WriteTable(*citiesTable, dataset3), arrow::Status::OK());
-    std::shared_ptr<partitioning::MultiDimensionalPartitioning> noPartitioning = std::make_shared<partitioning::NoPartitioning>();
-    auto dataReader = storage::DataReader();
+    auto dataReader = std::make_shared<storage::DataReader>();
     auto datasetWeather = getDatasetPath(ExperimentsConfig::datasetWeather);
-    ASSERT_EQ(dataReader.load(datasetWeather), arrow::Status::OK());
-    arrow::Status statusWeather = noPartitioning->partition(dataReader, {std::string("")}, partitionSize, folder);
-    auto dataseSchool = getDatasetPath(ExperimentsConfig::datasetWeather);
-    ASSERT_EQ(dataReader.load(dataseSchool), arrow::Status::OK());
-    arrow::Status statusSchool = noPartitioning->partition(dataReader, {std::string("")}, partitionSize, folder);
+    ASSERT_EQ(dataReader->load(datasetWeather), arrow::Status::OK());
+    auto partitioning = partitioning::PartitioningFactory::create(partitioning::NO_PARTITION, dataReader, {}, partitionSize, folder);
+    ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
+    auto datasetSchool = getDatasetPath(ExperimentsConfig::datasetWeather);
+    ASSERT_EQ(dataReader->load(datasetSchool), arrow::Status::OK());
+    ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
     auto datasetCities = getDatasetPath(ExperimentsConfig::datasetWeather);
-    ASSERT_EQ(dataReader.load(datasetCities), arrow::Status::OK());
-    arrow::Status statusCities = noPartitioning->partition(dataReader, {std::string("")}, partitionSize, folder);
+    ASSERT_EQ(dataReader->load(datasetCities), arrow::Status::OK());
+    ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
     ASSERT_EQ(std::filesystem::exists( folder / (dataset1)), true);
     ASSERT_EQ(std::filesystem::exists( folder / (dataset2)), true);
     ASSERT_EQ(std::filesystem::exists( folder / (dataset3)), true);
