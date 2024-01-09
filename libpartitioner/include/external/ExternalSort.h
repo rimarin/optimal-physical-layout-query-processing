@@ -25,6 +25,9 @@ namespace external {
         static arrow::Status writeSorted(const std::shared_ptr<arrow::RecordBatch> &recordBatch,
                                          const std::string &sortColumn,
                                          const std::filesystem::path &outputPath){
+            /*
+             * Helper method to sort a RecordBatch by a certain column and export it to a Parquet file
+             */
             // Sort by the provided column name
             ARROW_ASSIGN_OR_RAISE(auto sort_indices,
                                  arrow::compute::SortIndices(recordBatch->GetColumnByName(sortColumn),

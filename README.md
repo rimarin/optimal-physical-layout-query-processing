@@ -13,7 +13,7 @@ layout highly affects the performance of the query. For example, ordering on one
 unordered columns. Data structures such as R-tree are limited by the curse of dimensionality and show degraded performance as the number
 of dimensions increases. By measuring these conditions, it is possible to move towards an approach that efficiently performs range
 selection of data, while maintaining stable performance for varying queries.
-The goal of this project is to quantify how these multidimensional partitioning techniques perform along different datasets,
+The goal of this project is to quantify how these multidimensional partitioning schemes perform along different datasets,
 partition size and workloads.
 
 ### Project
