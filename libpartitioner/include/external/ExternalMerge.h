@@ -64,23 +64,14 @@ namespace external {
                 uint32_t partSize = batchSize / numReaders;
 
                 // Prepare an array containing the columns of merge sorted batch
-                std::vector<std::shared_ptr<arrow::Array>> newBatchColumns;
                 std::shared_ptr<arrow::RecordBatchReader> firstReader;
                 ARROW_RETURN_NOT_OK(readers.at(0).first->GetRecordBatchReader(&firstReader));
                 auto schema = firstReader->schema();
-                auto fields = schema->fields();
-                newBatchColumns.reserve(fields.size());
+                // Prepare mergedTable
+                auto mergedTable = arrow::Table::MakeEmpty(schema, arrow::default_memory_pool()).ValueOrDie();
 
                 // Determine the index of the ordering column
                 auto sortingColumnIndex = schema->GetFieldIndex(columnName);
-
-                /*
-                struct LowestBatchIndexAtTop {
-                    bool operator()(const std::pair<arrow::Scalar, uint32_t>& left, const std::pair<arrow::Scalar, uint32_t>& right) const {
-                        return left.first.get().CastTo(arrow::Int64Type) > right.first.CastTo(arrow::Int32Type);
-                    }
-                };
-                */
 
                 uint32_t usedBatchRows = 0;
                 // Use slice to select parts of each batch
@@ -89,63 +80,62 @@ namespace external {
                     // The index is needed to identity the source batch and reconstruct the row order later
                     std::priority_queue<std::pair<double, uint32_t>,
                                         std::vector<std::pair<double, uint32_t>>,
-                                        std::greater<std::pair<double, uint32_t>>> q;
+                                        std::greater<>> q;
                     for (int i = 0; i < readers.size(); ++i) {
                         std::shared_ptr<arrow::RecordBatchReader> batchReader;
                         ARROW_RETURN_NOT_OK(readers.at(i).first->GetRecordBatchReader(&batchReader));
                         // auto batchReader = readers.at(i).first->GetRecordBatchReader();
                         uint32_t batchReaderIndex = readers.at(i).second;
                         // Load column values from each reader
-                        auto readerSlice = batchReader->ToRecordBatches()->at(0)->Slice(batchReaderIndex, partSize);
+                        auto batchPart = batchReader->ToRecordBatches()->at(0)->Slice(batchReaderIndex, partSize);
                         // TODO: keep track of readerSlice to know when to terminate (=sum of readerslices size = total rows read)
-                        auto numRows = readerSlice->num_rows();
-                        auto type = std::make_shared<arrow::DoubleType>();
-                        auto readerValue = readerSlice->column(sortingColumnIndex);
-                        auto arrayData = readerValue->data();
-                        auto new_data = readerValue->data()->Copy();
-                        new_data->type = arrow::float64();
-                        arrow::DoubleArray double_arr(new_data);
-                        auto arrow_int32_array = std::static_pointer_cast<arrow::Int32Array>(readerValue);
-                        auto value = arrow_int32_array->Value(0);
-                        auto valueDouble = std::static_pointer_cast<arrow::DoubleArray>(readerValue);
-                        auto d = double_arr.Value(0);
-                        auto c = valueDouble->Value(0);
-                        // Push the value and the index of the reader to the heap
-                        int a = 5;
-                        // std::pair<double, uint32_t> pair = std::make_pair(valueDouble, batchReaderIndex);
-                        // q.push(pair);
+                        auto numRows = batchPart->num_rows();
+                        // Retrieve only the sorted column from the batch part
+                        std::vector<std::shared_ptr<arrow::Array>> arrowArray = {batchPart->column(sortingColumnIndex)};
+                        // Convert the value to double
+                        auto converter = common::ColumnDataConverter();
+                        std::vector<std::shared_ptr<std::vector<double>>> castedArray = converter.toDouble({arrowArray}).ValueOrDie();
+                        std::shared_ptr<std::vector<double>> castedColumn = castedArray.at(0);
+                        for (const auto &columnValue: *castedColumn){
+                            // Push the value and the index of the reader to the heap
+                            std::pair<double, uint32_t> pair = std::make_pair(columnValue, batchReaderIndex);
+                            q.push(pair);
+                        }
                     }
 
+                    // Popping from the min heap guarantees that the values are ordered
                     while(!q.empty()){
+                        // Pop from the min heap, this will return the minimum
                         auto min = q.top();
                         q.pop();
                         auto readerIndex = min.second;
                         auto readerAndPointer = readers.at(readerIndex);
+                        // Information about the batch source
                         auto reader = readerAndPointer.first;
+                        // Information about the scanning position within the batch source
                         auto pointer = readerAndPointer.second;
-                        // Extract the rows (by reading the column values at index)
-                        for (int i = 0; i <schema->num_fields(); ++i) {
-                            // For each column, add the value of each field to the array newBatchColumns
-                            // Slice for reader from pointers
-                            // Add results to newBatchRow
-                        }
-                        // Append the newBatchRow to the newBatchColumns
+
+                        // Extract matching rows by
+                        std::shared_ptr<arrow::RecordBatchReader> sourceBatchReader;
+                        ARROW_RETURN_NOT_OK(reader->GetRecordBatchReader(&sourceBatchReader));
+                        auto batchPart = sourceBatchReader->ToRecordBatches()->at(0)->Slice(pointer, 1);
+                        std::shared_ptr<arrow::Table> rowTable = arrow::Table::FromRecordBatches(schema, {batchPart}).ValueOrDie();
+                        // Append the row to the mergedTable
+                        mergedTable = arrow::ConcatenateTables({mergedTable, rowTable}).ValueOrDie();
                         // In the end should be partSize * readers.size()
                         usedBatchRows += 1;
                     }
                 }
-                // Load newBatchColumn into a batch
-                auto newRecordBatch = arrow::RecordBatch::Make(schema,
-                                                               newBatchColumns.at(0)->length(),
-                                                               newBatchColumns);
+                // Result<std::shared_ptr<Table>> arrow::ConcatenateTables(const std::vector<std::shared_ptr<Table>> &tables, ConcatenateTablesOptions options = ConcatenateTablesOptions::Defaults(), MemoryPool *memory_pool = default_memory_pool())
+
                 // Export the batch to disk
                 std::shared_ptr<arrow::io::FileOutputStream> outfile;
                 ARROW_ASSIGN_OR_RAISE(outfile, arrow::io::FileOutputStream::Open(folder.string()));
                 // Prepare the Parquet writer
                 std::unique_ptr<parquet::arrow::FileWriter> writer;
-                ARROW_ASSIGN_OR_RAISE(writer, parquet::arrow::FileWriter::Open(*newRecordBatch->schema(), arrow::default_memory_pool(), outfile));
+                ARROW_ASSIGN_OR_RAISE(writer, parquet::arrow::FileWriter::Open(*mergedTable->schema(), arrow::default_memory_pool(), outfile));
                 // Write the batch and close the file
-                ARROW_RETURN_NOT_OK(writer->WriteRecordBatch(*newRecordBatch));
+                ARROW_RETURN_NOT_OK(writer->WriteTable(*mergedTable));
                 ARROW_RETURN_NOT_OK(writer->Close());
 
             }
