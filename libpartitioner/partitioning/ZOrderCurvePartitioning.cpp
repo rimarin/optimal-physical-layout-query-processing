@@ -9,7 +9,7 @@ namespace partitioning {
         uint32_t batchId = 0;
         uint32_t totalNumRows = 0;
         while (true) {
-            // Try to read a
+            // Try to read a record batch
             std::shared_ptr<arrow::RecordBatch> record_batch;
             ARROW_RETURN_NOT_OK(batch_reader->ReadNext(&record_batch));
             if (record_batch == nullptr) {

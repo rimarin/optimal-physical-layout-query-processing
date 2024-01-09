@@ -18,6 +18,8 @@
 #include <arrow/table.h>
 #include <parquet/arrow/writer.h>
 
+#include "storage/DataWriter.h"
+
 namespace external {
 
     class ExternalSort {
@@ -38,7 +40,11 @@ namespace external {
             ARROW_ASSIGN_OR_RAISE(outfile, arrow::io::FileOutputStream::Open(outputPath.string()));
             // Prepare the Parquet writer
             std::unique_ptr<parquet::arrow::FileWriter> writer;
-            ARROW_ASSIGN_OR_RAISE(writer, parquet::arrow::FileWriter::Open(*recordBatch->schema(), arrow::default_memory_pool(), outfile));
+            ARROW_ASSIGN_OR_RAISE(writer, parquet::arrow::FileWriter::Open(*recordBatch->schema(),
+                                                                           arrow::default_memory_pool(),
+                                                                           outfile,
+                                                                           storage::DataWriter::getWriterProperties(),
+                                                                           storage::DataWriter::getArrowWriterProperties()));
             // Write the batch and close the file
             ARROW_RETURN_NOT_OK(writer->WriteRecordBatch(*sorted.record_batch()));
             ARROW_RETURN_NOT_OK(writer->Close());
