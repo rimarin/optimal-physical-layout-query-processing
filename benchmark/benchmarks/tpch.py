@@ -64,9 +64,6 @@ class BenchmarkTPCH(Benchmark):
     def get_schema(self):
         raise NotImplementedError
 
-    def get_table_name(self):
-        return self.get_name()
-
     def generate_dataset(self, **params):
         """
         Generate the TPC-H benchmark database from DuckDB
@@ -140,7 +137,7 @@ class BenchmarkTPCH(Benchmark):
         return os.path.abspath(os.path.join(self.QUERIES_FOLDER, self.get_name().split('-sf')[0]))
 
     def is_dataset_generated(self) -> bool:
-        return os.path.exists(os.path.join(self.get_dataset_folder(), self.get_table_name() + '.parquet'))
+        return os.path.exists(os.path.join(self.get_dataset_folder(), self.get_name() + '.parquet'))
 
     def is_query_workload_generated(self) -> bool:
         # TODO: implement
