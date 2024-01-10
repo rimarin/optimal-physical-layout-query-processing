@@ -20,6 +20,7 @@ PARTITION_SIZES = [1000, 10000, 50000, 100000, 250000, 500000, 1000000]
 DATA_FORMAT = '.parquet'
 RESULTS_FOLDER = 'results'
 RESULTS_FILE = os.path.join(RESULTS_FOLDER, 'results.csv')
+RESULTS_LOG_FILE = 'results.log'
 PARTITIONS_LOG_FILE = 'partitions.log'
 
 LOG_TO_CONSOLE = True
