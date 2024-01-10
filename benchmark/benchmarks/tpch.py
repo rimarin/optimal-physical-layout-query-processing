@@ -28,9 +28,8 @@ class BenchmarkTPCH(Benchmark):
             ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey"],
             ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate"],
             ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate", "l_receiptdate"],
-            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate", "l_receiptdate", "l_commitdate"],
-            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate", "l_receiptdate", "l_commitdate", "p_size"],
-            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate", "l_receiptdate", "l_commitdate", "p_size", "p_partkey"],
+            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate", "l_receiptdate", "p_size"],
+            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate", "l_receiptdate", "p_size", "p_partkey"]
         ]
 
     @staticmethod

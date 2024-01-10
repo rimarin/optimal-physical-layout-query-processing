@@ -35,9 +35,11 @@ class BenchmarkInstance:
                                f'{self.config.partition_size}',
                                f'{",".join(self.config.partitioning_columns)}']
         try:
-            subprocess.run(partitioner_command)
-        except subprocess.SubprocessError as e:
-            self.logger.warning(f'Partitioning failed: {str(e)}')
+            process = subprocess.run(partitioner_command)
+            if process.returncode != 0:
+                self.logger.error(f'Received return code {str(process.returncode)}')
+        except Exception as e:
+            self.logger.error(f'Partitioning failed: {str(e)}')
 
         self.config.total_partitions = self.benchmark.get_num_total_partitions(self.config.partitioning)
         if self.config.total_partitions == 0:
@@ -145,7 +147,7 @@ class BenchmarkInstance:
                         self.logger.error(f"Received return code {str(process.returncode)}")
                     process_output = process.stderr.decode("utf-8")
                     if len(str(process_output).split('\n')) < 2:
-                        raise Exception
+                        raise Exception("Process output is too short")
                 except Exception as e:
                     self.logger.error(f"Error while calling benchmark runner, {str(e)}")
                     if i < max_retries - 1:  # i is zero indexed
