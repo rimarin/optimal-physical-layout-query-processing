@@ -141,6 +141,7 @@ class BenchmarkInstance:
             process_output = None
             for i in range(max_retries):
                 try:
+                    self.logger.info("Launching benchmarks...")
                     cmd = [f'{self.duckdb_path}/build/release/benchmark/benchmark_runner', 'PartitioningBenchmark']
                     process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     if process.returncode != 0:
