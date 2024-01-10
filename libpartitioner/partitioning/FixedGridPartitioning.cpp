@@ -82,16 +82,10 @@ namespace partitioning {
 
         std::map<uint32_t, uint32_t> cellIndexToPartition;
         std::sort(std::begin(cellIndexes), std::end(cellIndexes));
-        auto batchCapacity = cellCapacity / expectedNumBatches;
-        if (batchCapacity > 0){
-            std::cout << "[FixedGridPartitioning] In order to fit " << cellCapacity << " elements per cell, "
-                                                  "each batch has a capacity of " << batchCapacity;
-        }
-        else{
-            std::cout << "[FixedGridPartitioning] Impossible to follow the partition size constraint: too many batches "
-                         "for this cell capacity / partition size";
-            batchCapacity = 1000;
-        }
+        uint32_t minBatchCapacity = 1000;
+        uint32_t batchCapacity = std::max( (uint32_t) cellCapacity / expectedNumBatches, minBatchCapacity);
+        std::cout << "[FixedGridPartitioning] In order to fit " << cellCapacity << " elements per cell, "
+                      "each batch has a capacity of " << batchCapacity << std::endl;
         for (int i = 0; i < idx.size(); ++i) {
             cellIndexToPartition[idx[i]] = i / batchCapacity;
         }
