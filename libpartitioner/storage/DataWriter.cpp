@@ -58,7 +58,10 @@ namespace storage {
             if (std::filesystem::exists(subPartitionsFolder)) {
                 ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(subPartitionsFolder, &root_path));
                 std::cout << "[DataWriter] Start merging batches for partition id " << partitionId << std::endl;
-                ARROW_RETURN_NOT_OK(mergeBatchesForPartition(partitionId, fs, root_path));
+                auto statusPartitionMerge = mergeBatchesForPartition(partitionId, fs, root_path);
+                if (statusPartitionMerge != arrow::Status::OK()){
+                    std::cout << "[DataWriter] Failed partition merge :" << statusPartitionMerge.ToString() << std::endl;
+                }
             }
             else{
                 std::cout << "[DataWriter] Batch folder empty for partition id " << partitionId << std::endl;
@@ -90,16 +93,20 @@ namespace storage {
         ARROW_ASSIGN_OR_RAISE(auto dataset, factory->Finish());
         ARROW_ASSIGN_OR_RAISE(auto fragments, dataset->GetFragments())
         for (const auto& fragment : fragments) {
-            std::cout << "[FixedGridPartitioning] Found partition fragment: " << (*fragment)->ToString() << std::endl;
+            std::cout << "[DataWriter] Found partition fragment: " << (*fragment)->ToString() << std::endl;
         }
         ARROW_ASSIGN_OR_RAISE(auto scan_builder, dataset->NewScan());
         ARROW_ASSIGN_OR_RAISE(auto scanner, scan_builder->Finish());
         auto mergedTable = scanner->ToTable();
-        std::filesystem::path mergedFragmentsFilePath = base_dir + ".parquet";
-        std::cout << "[FixedGridPartitioning] Exporting merged batches from folder " << base_dir << std::endl;
-        std::cout << "[FixedGridPartitioning] Merged table has " << mergedTable.ValueOrDie()->num_rows() << " rows" << std::endl;
-        ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTable(*mergedTable, mergedFragmentsFilePath));
-        mergedTable->reset();
+        if (mergedTable.status() == arrow::Status::OK()){
+            std::filesystem::path mergedFragmentsFilePath = base_dir + ".parquet";
+            std::cout << "[DataWriter] Exporting merged batches from folder " << base_dir << std::endl;
+            std::cout << "[DataWriter] Merged table has " << mergedTable.ValueOrDie()->num_rows() << " rows" << std::endl;
+            ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTable(*mergedTable, mergedFragmentsFilePath));
+            mergedTable->reset();
+        } else{
+            std::cout << "[DataWriter] Error while scanning merged table " << mergedTable.status().ToString() << std::endl;
+        }
         return arrow::Status::OK();
     }
 
