@@ -3,13 +3,13 @@ import os
 import re
 import subprocess
 
-from config import BenchmarkConfig
-from exceptions import BenchmarkRunnerException
-from result import BenchmarkResult
 from benchmarks.osm import BenchmarkOSM
 from benchmarks.taxi import BenchmarkTaxi
 from benchmarks.tpch import BenchmarkTPCH
-from settings import DATA_FORMAT, PARTITIONS_LOG_FILE, NO_PARTITION
+from config import BenchmarkConfig
+from exceptions import BenchmarkRunnerException
+from result import BenchmarkResult
+from settings import DATA_FORMAT, PARTITIONS_LOG_FILE, RESULTS_LOG_FILE
 from storage_manager import StorageManager
 
 
@@ -142,17 +142,15 @@ class BenchmarkInstance:
             for i in range(max_retries):
                 try:
                     self.logger.info("Launching benchmarks...")
-                    cmd = [f'{self.duckdb_path}/build/release/benchmark/benchmark_runner', 'PartitioningBenchmark']
-                    process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    cmd = [f'{self.duckdb_path}/build/release/benchmark/benchmark_runner', 'PartitioningBenchmark',
+                           f'--out={RESULTS_LOG_FILE}']
+                    process = subprocess.run(cmd)
                     if process.returncode != 0:
                         self.logger.error(f"Received return code {str(process.returncode)}")
                         raise Exception("Benchmark did not succeed")
-                    process_output = process.stderr.decode("utf-8")
-                    if len(str(process_output).split('\n')) < 3:
-                        raise Exception("Process output is too short")
                 except Exception as e:
                     self.logger.error(f"Error while calling benchmark runner, {str(e)}")
-                    if i < max_retries - 1:  # i is zero indexed
+                    if i < max_retries - 1:
                         self.logger.warning("Retrying...")
                         continue
                     else:
@@ -161,19 +159,22 @@ class BenchmarkInstance:
                 break
             return process_output
 
-        def parse_benchmark_results(output_results):
-            if "ValueOrDie called on an error:" in output_results or "Aborted" in output_results:
-                self.logger.error(f"Error while running benchmarks: {output_results}")
-            result_rows = str(output_results).split('\n')
+        def parse_benchmark_results():
             parsed_latencies = []
-            for row in result_rows[1:]:
-                try:
-                    str_value = row.split('\t')[-1]
-                    if str_value != "" and "Segmentation" not in str_value:
-                        latency = float(str_value)
-                        parsed_latencies.append(latency)
-                except Exception as e:
-                    self.logger.error(f"Error while parsing benchmark results: {str(e)}")
+            results_file_path = os.path.join(self.duckdb_path, RESULTS_LOG_FILE)
+            if os.path.isfile(results_file_path):
+                results_file = open(results_file_path, 'r')
+                results_lines = results_file.readlines()
+                for line in results_lines:
+                    try:
+                        line = line.strip()
+                        if line != "" and "Segmentation" not in line:
+                            latency = float(line)
+                            parsed_latencies.append(latency)
+                    except Exception as e:
+                        self.logger.error(f"Error while parsing benchmark results: {str(e)}")
+            else:
+                self.logger.error(f"Results log file does not exist: {results_file_path}")
             return parsed_latencies
 
         def parse_num_used_partitions():
@@ -205,8 +206,8 @@ class BenchmarkInstance:
                 self.logger.warning("Could not compute the average partition size in bytes")
             return avg_partition_size
 
-        benchmark_str_results = launch_duckdb_benchmark()
-        latencies = parse_benchmark_results(benchmark_str_results)
+        launch_duckdb_benchmark()
+        latencies = parse_benchmark_results()
         used_partitions = parse_num_used_partitions()
         average_partition_size = get_partition_size()
         self.result = BenchmarkResult(self, latencies, used_partitions, average_partition_size)
