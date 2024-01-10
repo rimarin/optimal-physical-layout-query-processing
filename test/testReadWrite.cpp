@@ -21,9 +21,9 @@ TEST_F(TestOptimalLayoutFixture, TestGenerateParquetExamples){
     arrow::Result<std::shared_ptr<arrow::Table>> weatherTable = storage::TableGenerator::GenerateWeatherTable().ValueOrDie();
     arrow::Result<std::shared_ptr<arrow::Table>> schoolTable = storage::TableGenerator::GenerateSchoolTable().ValueOrDie();
     arrow::Result<std::shared_ptr<arrow::Table>> citiesTable = storage::TableGenerator::GenerateCitiesTable().ValueOrDie();
-    ASSERT_EQ(storage::DataWriter::WriteTable(*weatherTable, dataset1), arrow::Status::OK());
-    ASSERT_EQ(storage::DataWriter::WriteTable(*schoolTable, dataset2), arrow::Status::OK());
-    ASSERT_EQ(storage::DataWriter::WriteTable(*citiesTable, dataset3), arrow::Status::OK());
+    ASSERT_EQ(storage::DataWriter::WriteTableToDisk(*weatherTable, dataset1), arrow::Status::OK());
+    ASSERT_EQ(storage::DataWriter::WriteTableToDisk(*schoolTable, dataset2), arrow::Status::OK());
+    ASSERT_EQ(storage::DataWriter::WriteTableToDisk(*citiesTable, dataset3), arrow::Status::OK());
     auto dataReader = std::make_shared<storage::DataReader>();
     auto datasetWeather = getDatasetPath(ExperimentsConfig::datasetWeather);
     ASSERT_EQ(dataReader->load(datasetWeather), arrow::Status::OK());

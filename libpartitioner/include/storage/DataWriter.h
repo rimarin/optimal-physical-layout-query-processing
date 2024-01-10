@@ -20,8 +20,8 @@ class DataWriter {
     public:
         DataWriter() = default;
         virtual ~DataWriter() = default;
-        static arrow::Status WriteTable(std::shared_ptr<arrow::Table>& table,
-                                        std::filesystem::path &outputPath);
+        static arrow::Status WriteTableToDisk(std::shared_ptr<arrow::Table>& table,
+                                              std::filesystem::path &outputPath);
         static std::shared_ptr<parquet::WriterProperties> getWriterProperties();
         static std::shared_ptr<parquet::ArrowWriterProperties> getArrowWriterProperties();
         static arrow::Status mergeBatches(const std::filesystem::path &basePath, const std::set<uint32_t> &partitionIds);

@@ -107,7 +107,7 @@ namespace partitioning {
                 ARROW_ASSIGN_OR_RAISE(partitionedTable, partitionedTable->RemoveColumn(0));
             }
             std::filesystem::path outfile = subPartitionsFolder / ("b" + std::to_string(batchId) + ".parquet");
-            ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTable(partitionedTable, outfile));
+            ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTableToDisk(partitionedTable, outfile));
             completedPartitions += 1;
             std::cout << "[ZOrderCurvePartitioning] Generate partitioned table with " << partitionedTable->num_rows() << " rows" << std::endl;
             int progress = (int) (float(completedPartitions) / float(numPartitions) * 100);
