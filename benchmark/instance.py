@@ -146,8 +146,9 @@ class BenchmarkInstance:
                     process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     if process.returncode != 0:
                         self.logger.error(f"Received return code {str(process.returncode)}")
+                        raise Exception("Benchmark did not succeed")
                     process_output = process.stderr.decode("utf-8")
-                    if len(str(process_output).split('\n')) < 2:
+                    if len(str(process_output).split('\n')) < 3:
                         raise Exception("Process output is too short")
                 except Exception as e:
                     self.logger.error(f"Error while calling benchmark runner, {str(e)}")
