@@ -19,7 +19,6 @@ class BenchmarkTPCH(Benchmark):
     @staticmethod
     def get_partitioning_columns():
         return [
-            ["c_custkey"],
             ["c_custkey", "o_orderkey"],
             ["c_custkey", "o_orderkey", "o_orderdate"],
             ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate"],

@@ -20,7 +20,6 @@ class BenchmarkOSM(Benchmark):
     @staticmethod
     def get_partitioning_columns():
         return [
-            ["min_lon"],
             ["min_lon", "max_lon"],
             ["min_lon", "max_lon", "min_lat"],
             ["min_lon", "max_lon", "min_lat", "max_lat"],

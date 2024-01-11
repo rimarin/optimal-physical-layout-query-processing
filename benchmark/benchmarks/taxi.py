@@ -23,7 +23,6 @@ class BenchmarkTaxi(Benchmark):
     @staticmethod
     def get_partitioning_columns():
         return [
-            ["PULocationID"],
             ["PULocationID", "DOLocationID"],
             ["PULocationID", "DOLocationID", "tpep_pickup_datetime"],
             ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime"],
