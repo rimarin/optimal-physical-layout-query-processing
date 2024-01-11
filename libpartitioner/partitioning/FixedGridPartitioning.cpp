@@ -6,7 +6,7 @@
 namespace partitioning {
 
     arrow::Status FixedGridPartitioning::partition() {
-
+        // We are linearizing the obtained cells
         // Number of cells is = (domain(x) / cellSize) * (domain(y) / cellSize) ... * (domain(n) / cellSize)
         // e.g. 20x20 grid, 100x100 coordinates -> (100 / 20) * (100 / 20) = 5 * 5 = 25 squares
         std::cout << "[FixedGridPartitioning] Analyzing span of column values to determine cell width" << std::endl;

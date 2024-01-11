@@ -38,7 +38,7 @@ namespace structures {
 
     class QuadTree {
     public:
-        QuadTree(std::vector<std::shared_ptr<common::Point>> &rows, size_t partitionSize);
+        QuadTree(std::vector<std::shared_ptr<common::Point>> &rows, size_t partitionSize, size_t numColumns);
         std::shared_ptr<QuadNode> buildTree(std::vector<std::shared_ptr<common::Point>> &points, uint32_t depth);
         virtual ~QuadTree() = default;
         std::shared_ptr<QuadNode> getRoot();
@@ -48,6 +48,7 @@ namespace structures {
         std::vector<std::shared_ptr<QuadNode>> leaves;
         uint32_t leafSize;
         std::vector<std::shared_ptr<common::Point>> points;
+        size_t numDims;
     };
 
 }

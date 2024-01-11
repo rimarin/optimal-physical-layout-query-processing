@@ -2,9 +2,10 @@
 
 namespace structures {
 
-    QuadTree::QuadTree(std::vector<std::shared_ptr<common::Point>> &rows, size_t partitionSize) {
+    QuadTree::QuadTree(std::vector<std::shared_ptr<common::Point>> &rows, size_t partitionSize, size_t numColumns) {
         // Construct the tree from the given points and store the root
         leafSize = partitionSize;
+        numDims = numColumns;
         std::cout << "[QuadTree] Start building a Quad Tree for " << rows.size() << " points and partition size " << partitionSize << std::endl;
         points = rows;
         root = buildTree(points, 0);
@@ -25,9 +26,12 @@ namespace structures {
         // Compute range x, y for the set of points
         std::vector<double> pointsX;
         std::vector<double> pointsY;
+        assert(numDims >= 2);
+        uint32_t columnIndexX = depth % numDims;
+        uint32_t columnIndexY = (depth + 1) % numDims;
         for (auto &point: points){
-            pointsX.emplace_back(point->at(0));
-            pointsY.emplace_back(point->at(1));
+            pointsX.emplace_back(point->at(columnIndexX));
+            pointsY.emplace_back(point->at(columnIndexY));
         }
         // Compute the mean point of both dimensions for the split
         auto minmaxX = std::minmax_element(pointsX.begin(), pointsX.end());
