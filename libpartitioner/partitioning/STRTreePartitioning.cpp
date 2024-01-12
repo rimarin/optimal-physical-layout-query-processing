@@ -30,22 +30,18 @@ namespace partitioning {
         auto columnData = converter.toDouble(columnArrowArrays).ValueOrDie();
         std::vector<std::shared_ptr<common::Point>> points = common::ColumnDataConverter::toRows(columnData);
 
-        k = columnData.size();
-        r = points.size();
-        n = partitionSize;
-        P = r / n;
-        S = ceil(sqrt(P));
-        slices = {};
-
+        // Recursively pack points into the R-tree
         int coord = 0;
         sortTileRecursive(points, coord);
 
+        // Each obtained slice has to be mapped to a partition id
         std::map<std::shared_ptr<common::Point>, int64_t> pointToPartitionId;
         for (int i = 0; i < slices.size(); ++i) {
             for (const auto &point: slices[i]){
                 pointToPartitionId[point] = i;
             }
         }
+        // Accumulate partition ids values in the same order of the rows
         std::vector<uint32_t> values = {};
         for (const auto &point: points){
             values.emplace_back(pointToPartitionId[point]);
@@ -59,18 +55,23 @@ namespace partitioning {
     }
 
     void STRTreePartitioning::sortTileRecursive(std::vector<std::shared_ptr<common::Point>> points, int coord) {
+        // Base case: reached desired partition size
         if (points.size() <= n){
             slices.emplace_back(points);
             return;
         }
-        int coordToUse = coord % k;
+        // Pick current dimension to use
+        size_t coordToUse = coord % k;
+        // Sort on that dimension
         std::sort(points.begin(), points.end(),
                   [&coordToUse](const std::shared_ptr<std::vector<double>>& a, const std::shared_ptr<std::vector<double>>& b) {
                       return a->at(coordToUse) < b->at(coordToUse);
                   });
+        // For each slice, define the further splits
         for (int i = 0; i < S; ++i) {
-            auto begin = points.begin() + (i * (points.size() / S) );
-            auto end = points.begin() + ((i + 1) * (points.size() / S) );
+            auto pointsPerSlice = std::max((size_t) 1, points.size() / S);
+            auto begin = points.begin() + (i * pointsPerSlice );
+            auto end = points.begin() + ((i + 1) * pointsPerSlice );
             if (end >= points.end()){
                 end = points.end();
             }

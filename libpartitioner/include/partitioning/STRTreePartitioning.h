@@ -30,13 +30,24 @@ namespace partitioning {
                             const size_t rowsPerPartition,
                             const std::filesystem::path &outputFolder) :
                 MultiDimensionalPartitioning(reader, partitionColumns, rowsPerPartition, outputFolder) {
+            // Vertical slices of the R-Tree
             slices = {};
+            // k: number of dimensions
+            k = numColumns;
+            // r: number of points
+            r = numRows;
+            // n: number of points in a node (partition)
+            n = partitionSize;
+            // P: number of leaf-level pages
+            P = std::max(r / n, (size_t) 1);
+            // S: number of vertical slices
+            S = ceil(sqrt(P));
         };
         arrow::Status partition() override;
     private:
         PartitioningType type = TREE;
         void sortTileRecursive(std::vector<std::shared_ptr<common::Point>> points, int coord);
-        std::vector<std::vector<std::shared_ptr<common::Point>>> slices = {};
+        std::vector<std::vector<std::shared_ptr<common::Point>>> slices;
         size_t k;
         size_t n;
         size_t r;
