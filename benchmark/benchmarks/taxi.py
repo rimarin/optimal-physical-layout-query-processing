@@ -26,9 +26,9 @@ class BenchmarkTaxi(Benchmark):
             ["PULocationID", "DOLocationID"],
             ["PULocationID", "DOLocationID", "tpep_pickup_datetime"],
             ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime"],
-            ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime", "passenger_count"],
-            ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime", "passenger_count", "fare_amount"],
-            ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime", "passenger_count", "fare_amount", "trip_distance"]
+        #   ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime", "passenger_count"],
+        #   ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime", "passenger_count", "fare_amount"],
+        #   ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime", "passenger_count", "fare_amount", "trip_distance"]
         ]
 
     @staticmethod

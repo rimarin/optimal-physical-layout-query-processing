@@ -23,9 +23,9 @@ class BenchmarkOSM(Benchmark):
             ["min_lon", "max_lon"],
             ["min_lon", "max_lon", "min_lat"],
             ["min_lon", "max_lon", "min_lat", "max_lat"],
-            ["min_lon", "max_lon", "min_lat", "max_lat", "created_at"],
-            ["min_lon", "max_lon", "min_lat", "max_lat", "created_at", "version"],
-            ["min_lon", "max_lon", "min_lat", "max_lat", "created_at", "version", "id"]
+        #   ["min_lon", "max_lon", "min_lat", "max_lat", "created_at"],
+        #   ["min_lon", "max_lon", "min_lat", "max_lat", "created_at", "version"],
+        #   ["min_lon", "max_lon", "min_lat", "max_lat", "created_at", "version", "id"]
         ]
 
     @staticmethod
