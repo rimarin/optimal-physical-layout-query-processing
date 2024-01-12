@@ -8,4 +8,4 @@ class BenchmarkConfig:
         self.results_file = results_file
 
     def __str__(self):
-        return f'{self.dataset} {self.partitioning} {self.partition_size}'
+        return f'{self.dataset} {self.partitioning} {self.partition_size} {self.partitioning_columns}'

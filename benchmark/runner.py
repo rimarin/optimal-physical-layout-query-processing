@@ -5,7 +5,8 @@ import sys
 from config import BenchmarkConfig
 from instance import BenchmarkInstance
 from result import BenchmarkResult
-from settings import RESULTS_FILE, PARTITIONINGS, PARTITION_SIZES, DATASETS, LOG_TO_CONSOLE, LOG_TO_FILE, RESULTS_FOLDER
+from settings import RESULTS_FILE, PARTITIONINGS, PARTITION_SIZES, DATASETS, LOG_TO_CONSOLE, LOG_TO_FILE, \
+    RESULTS_FOLDER, NUM_QUERIES
 
 
 def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
@@ -38,8 +39,29 @@ def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
             with open(RESULTS_FILE, 'w+') as result_file:
                 result_file.write(BenchmarkResult.format_header())
 
+    def initialize_debug_info():
+        logger.info("== Data layout partitioning benchmark ==")
+        total_layouts = 0
+        total_queries = 0
+        avg_query_latency = 2
+        avg_partitioning_time = 60 * 30
+        for _dataset in datasets:
+            _benchmark = BenchmarkInstance.get_benchmark(_dataset)
+            dataset_layouts = len(partitionings) * len(partition_sizes) * len(_benchmark.get_partitioning_columns())
+            total_layouts += dataset_layouts
+            total_queries += NUM_QUERIES.get(_dataset, 0) * dataset_layouts
+        total_time = total_layouts * avg_partitioning_time + total_queries * avg_query_latency
+        total_time_hours = int(total_time / 3600)
+        total_time_days = int(total_time / 86400)
+        logger.info(f"Expecting {total_layouts} layouts to be generated")
+        logger.info(f"Expecting {total_queries} queries to be run")
+        logger.info(f"Expected time {total_time_hours} hours / {total_time_days} days")
+        return total_layouts
+
     logger = initialize_logger()
     initialize_results_file()
+    num_total_layouts = initialize_debug_info()
+    generated_layouts = 0
     for dataset in datasets:
         try:
             benchmark = BenchmarkInstance.get_benchmark(dataset)
@@ -59,6 +81,8 @@ def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
                         results_file=RESULTS_FILE
                     ), logger)
                     benchmark_instance.generate_partitions()
+                    generated_layouts += 1
+                    logger.info(f"Generated layout #{generated_layouts} (out of {num_total_layouts})")
                     for i, query_file in enumerate(query_files):
                         try:
                             query_number, query_variant = BenchmarkInstance.get_query(query_file)
