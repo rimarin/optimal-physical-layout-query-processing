@@ -86,7 +86,7 @@ def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
                     ), logger)
                     benchmark_instance.generate_partitions()
                     generated_layouts += 1
-                    logger.info(f"Generated layout #{generated_layouts} (out of {num_total_layouts})")
+                    logger.info(f"Generated layout {generated_layouts}/{num_total_layouts})")
                     for i, query_file in enumerate(query_files):
                         try:
                             query_number, query_variant = BenchmarkInstance.get_query(query_file)
@@ -105,7 +105,8 @@ def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
                                          f"{dataset}-{partitioning}-{partition_size}-{query_number}-{query_variant}-"
                                          f"{partitioning_columns} - " + str(e))
                         completed_queries += 1
-                        logger.info(f"Completed query #{completed_queries} (out of {num_total_queries})")
+                        logger.info(f"Progress: {int((completed_queries / num_total_queries) * 100)} "
+                                    f"- Completed query {completed_queries}/{num_total_queries})")
                     benchmark_instance.cleanup()
 
 
