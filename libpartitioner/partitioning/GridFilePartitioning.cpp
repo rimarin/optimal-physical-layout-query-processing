@@ -178,12 +178,12 @@ namespace partitioning {
             uint32_t columnIndex = coord % numColumns;
             double min = scaleRange[columnIndex].first;
             double max = scaleRange[columnIndex].second;
-            bool minMaxMatch = max == min | (max - min) < 0.01;
+            bool minMaxMatch = max == min | (max - min) < 0.001;
             if (minMaxMatch){
                 continue;
             }
             double newMidValue = (max + min) / 2;
-            bool notSignificantNewMid = (newMidValue - min) < 0.01 || (max - newMidValue) < 0.01;
+            bool notSignificantNewMid = (newMidValue - min) < 0.001 || (max - newMidValue) < 0.001;
             if (notSignificantNewMid){
                 continue;
             }

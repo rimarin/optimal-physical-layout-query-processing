@@ -27,8 +27,15 @@ namespace structures {
         std::vector<double> pointsX;
         std::vector<double> pointsY;
         assert(numDims >= 2);
-        uint32_t columnIndexX = depth % numDims;
-        uint32_t columnIndexY = (depth + 1) % numDims;
+        uint32_t columnIndexX;
+        uint32_t columnIndexY;
+        if (numDims == 2){
+            columnIndexX = 0;
+            columnIndexY = 1;
+        } else{
+            columnIndexX = depth % numDims;
+            columnIndexY = (depth + 1) % numDims;
+        }
         for (auto &point: points){
             pointsX.emplace_back(point->at(columnIndexX));
             pointsY.emplace_back(point->at(columnIndexY));
@@ -47,18 +54,18 @@ namespace structures {
         std::vector<std::shared_ptr<common::Point>> southWestPoints;
         std::vector<std::shared_ptr<common::Point>> southEastPoints;
         for (auto &point: points){
-            auto x = point->at(0);
-            auto y = point->at(1);
-            if (x < meanDimX && y > meanDimY){
+            auto x = point->at(columnIndexX);
+            auto y = point->at(columnIndexY);
+            if (x <= meanDimX && y >= meanDimY){
                 northWestPoints.emplace_back(point);
             }
-            else if (x > meanDimX && y > meanDimY){
+            else if (x >= meanDimX && y >= meanDimY){
                 northEastPoints.emplace_back(point);
             }
-            else if (x < meanDimX && y < meanDimY){
+            else if (x <= meanDimX && y <= meanDimY){
                 southWestPoints.emplace_back(point);
             }
-            else if (x > meanDimX && y < meanDimY){
+            else if (x >= meanDimX && y <= meanDimY){
                 southEastPoints.emplace_back(point);
             }
         }
