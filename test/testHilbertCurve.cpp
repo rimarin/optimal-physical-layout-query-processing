@@ -26,7 +26,7 @@ TEST_F(TestOptimalLayoutFixture, TestHilbertCurve) {
     ASSERT_EQ(2, hilbertCurve.interleaveBits(X5, 5, 3));
 }
 
-TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurve){
+TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurveSchool){
     auto folder = ExperimentsConfig::hilbertCurveFolder;
     auto dataset = getDatasetPath(ExperimentsConfig::datasetSchool);
     auto partitionSize = 5;
@@ -44,4 +44,25 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurve){
     auto pathPartition1 = folder / ("1" + fileExtension);
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition1, "Student_id"), std::vector<int32_t>({74, 111, 91}));
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition1, "Age"), std::vector<int32_t>({41, 23, 22}));
+}
+
+TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurveCities){
+    auto folder = ExperimentsConfig::hilbertCurveFolder;
+    auto fileExtension = ExperimentsConfig::fileExtension;
+    auto dataset = getDatasetPath(ExperimentsConfig::datasetCities);
+    cleanUpFolder(folder);
+    auto dataReader = std::make_shared<storage::DataReader>();
+    std::vector<std::string> partitioningColumns = {"x", "y", "year"};
+    auto partitionSize = 2;
+    ASSERT_EQ(dataReader->load(dataset), arrow::Status::OK());
+    auto partitioning = partitioning::PartitioningFactory::create(partitioning::HILBERT_CURVE, dataReader, partitioningColumns, partitionSize, folder);
+    ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
+    auto pathPartition0 = folder / ("0" + fileExtension);
+    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition0, "city"), std::vector<std::string>({"Dublin", "Moscow"}));
+    auto pathPartition1 = folder / ("1" + fileExtension);
+    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition1, "city"), std::vector<std::string>({"Copenhagen", "Oslo"}));
+    auto pathPartition2 = folder / ("2" + fileExtension);
+    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition2, "city"), std::vector<std::string>({"Amsterdam", "Madrid"}));
+    auto pathPartition3 = folder / ("3" + fileExtension);
+    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition3, "city"), std::vector<std::string>({"Tallinn", "Berlin"}));
 }

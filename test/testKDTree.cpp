@@ -11,7 +11,7 @@
 #include "storage/TableGenerator.h"
 
 
-TEST_F(TestOptimalLayoutFixture, TestPartitioningKDTree) {
+TEST_F(TestOptimalLayoutFixture, TestPartitioningKDTreeSchool) {
     auto folder = ExperimentsConfig::kdTreeFolder;
     auto dataset = getDatasetPath(ExperimentsConfig::datasetSchool);
     auto partitionSize = 2;
@@ -35,4 +35,25 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningKDTree) {
     auto pathPartition3 = folder / ("3" + fileExtension);
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition3, "Student_id"), std::vector<int32_t>({74, 34}));
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition3, "Age"), std::vector<int32_t>({41, 37}));
+}
+
+TEST_F(TestOptimalLayoutFixture, TestPartitioningKDTreeCities){
+    auto folder = ExperimentsConfig::kdTreeFolder;
+    auto fileExtension = ExperimentsConfig::fileExtension;
+    auto dataset = getDatasetPath(ExperimentsConfig::datasetCities);
+    cleanUpFolder(folder);
+    auto dataReader = std::make_shared<storage::DataReader>();
+    std::vector<std::string> partitioningColumns = {"x", "y", "year"};
+    auto partitionSize = 2;
+    ASSERT_EQ(dataReader->load(dataset), arrow::Status::OK());
+    auto partitioning = partitioning::PartitioningFactory::create(partitioning::KD_TREE, dataReader, partitioningColumns, partitionSize, folder);
+    ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
+    auto pathPartition0 = folder / ("0" + fileExtension);
+    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition0, "city"), std::vector<std::string>({"Oslo", "Moscow"}));
+    auto pathPartition1 = folder / ("1" + fileExtension);
+    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition1, "city"), std::vector<std::string>({"Dublin", "Copenhagen"}));
+    auto pathPartition2 = folder / ("2" + fileExtension);
+    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition2, "city"), std::vector<std::string>({"Amsterdam", "Madrid"}));
+    auto pathPartition3 = folder / ("3" + fileExtension);
+    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition3, "city"), std::vector<std::string>({"Tallinn", "Berlin"}));
 }

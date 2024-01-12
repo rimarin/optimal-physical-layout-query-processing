@@ -9,7 +9,7 @@
 #include "storage/DataReader.h"
 #include "storage/TableGenerator.h"
 
-TEST_F(TestOptimalLayoutFixture, TestPartitioningQuadTree){
+TEST_F(TestOptimalLayoutFixture, TestPartitioningQuadTreeSchool){
     auto folder = ExperimentsConfig::quadTreeFolder;
     auto dataset = getDatasetPath(ExperimentsConfig::datasetSchool);
     auto partitionSize = 2;
@@ -45,4 +45,29 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningQuadTree){
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition5, "Student_id"), std::vector<int32_t>({16, 34}));
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition5, "Age"), std::vector<int32_t>({30, 37}));
     ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition5, "partition_id"), std::vector<int32_t>({5, 5}));
+}
+
+TEST_F(TestOptimalLayoutFixture, TestPartitioningQuadTreeCities){
+    auto folder = ExperimentsConfig::quadTreeFolder;
+    auto fileExtension = ExperimentsConfig::fileExtension;
+    auto dataset = getDatasetPath(ExperimentsConfig::datasetCities);
+    cleanUpFolder(folder);
+    auto dataReader = std::make_shared<storage::DataReader>();
+    std::vector<std::string> partitioningColumns = {"x", "y"};
+    auto partitionSize = 2;
+    ASSERT_EQ(dataReader->load(dataset), arrow::Status::OK());
+    auto partitioning = partitioning::PartitioningFactory::create(partitioning::QUAD_TREE, dataReader, partitioningColumns, partitionSize, folder);
+    ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
+    auto pathPartition0 = folder / ("0" + fileExtension);
+    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition0, "city"), std::vector<std::string>({"Dublin", "Copenhagen"}));
+    auto pathPartition1 = folder / ("1" + fileExtension);
+    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition1, "city"), std::vector<std::string>({"Tallinn", "Berlin"}));
+    auto pathPartition2 = folder / ("2" + fileExtension);
+    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition2, "city"), std::vector<std::string>({"Oslo"}));
+    auto pathPartition3 = folder / ("3" + fileExtension);
+    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition3, "city"), std::vector<std::string>({"Moscow"}));
+    auto pathPartition4 = folder / ("4" + fileExtension);
+    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition4, "city"), std::vector<std::string>({"Amsterdam"}));
+    auto pathPartition5 = folder / ("5" + fileExtension);
+    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition5, "city"), std::vector<std::string>({"Madrid"}));
 }
