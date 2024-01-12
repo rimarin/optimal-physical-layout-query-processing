@@ -47,9 +47,12 @@ def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
         avg_partitioning_time = 60 * 30
         for _dataset in datasets:
             _benchmark = BenchmarkInstance.get_benchmark(_dataset)
-            dataset_layouts = len(partitionings) * len(partition_sizes) * len(_benchmark.get_partitioning_columns())
-            total_layouts += dataset_layouts
-            total_queries += NUM_QUERIES.get(_dataset, 0) * dataset_layouts
+            num_partitionings = len(partitionings)
+            num_partition_sizes = len(partition_sizes)
+            num_partitioning_columns = len(_benchmark.get_partitioning_columns())
+            num_dataset_layouts = num_partitionings * num_partition_sizes * num_partitioning_columns
+            total_layouts += num_dataset_layouts
+            total_queries += NUM_QUERIES.get(_dataset, 0) * num_dataset_layouts
         total_time = total_layouts * avg_partitioning_time + total_queries * avg_query_latency
         total_time_hours = int(total_time / 3600)
         total_time_days = int(total_time / 86400)
