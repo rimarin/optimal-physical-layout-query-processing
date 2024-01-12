@@ -1,7 +1,5 @@
-#include <iostream>
-#include <filesystem>
-
 #include <arrow/io/api.h>
+#include <filesystem>
 
 #include "fixture.cpp"
 #include "gtest/gtest.h"
@@ -15,8 +13,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningFixedGridTPCH){
     std::vector<std::string> partitioningColumns = {"c_custkey", "l_orderkey"};
     auto dataReader = std::make_shared<storage::DataReader>();
     ASSERT_EQ(dataReader->load(dataset), arrow::Status::OK());
-    auto totalNumRows = 239917;
-    ASSERT_EQ(dataReader->getNumRows(), totalNumRows);
+    ASSERT_EQ(dataReader->getNumRows(), 239917);
     auto partitioning = partitioning::PartitioningFactory::create(partitioning::FIXED_GRID, dataReader, partitioningColumns, partitionSize, folder);
     ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
     std::filesystem::path partition0 = folder / "0.parquet";

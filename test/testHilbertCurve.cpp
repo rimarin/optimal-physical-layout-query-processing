@@ -1,19 +1,13 @@
-#include <iostream>
-#include <filesystem>
-
 #include <arrow/io/api.h>
+#include <filesystem>
 
 #include "fixture.cpp"
 #include "gtest/gtest.h"
 #include "partitioning/PartitioningFactory.h"
-#include "storage/DataReader.h"
 #include "storage/TableGenerator.h"
 
-TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurve){
-    auto folder = ExperimentsConfig::hilbertCurveFolder;
-    auto dataset = getDatasetPath(ExperimentsConfig::datasetSchool);
-    auto partitionSize = 5;
-    auto fileExtension = ExperimentsConfig::fileExtension;
+
+TEST_F(TestOptimalLayoutFixture, TestHilbertCurve) {
     auto hilbertCurve = structures::HilbertCurve();
     int64_t X1[3] = {5, 10, 20};
     int64_t X2[3] = {1, 1, 1};
@@ -30,6 +24,13 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurve){
     ASSERT_EQ(2, hilbertCurve.interleaveBits(X3, 5, 2));
     ASSERT_EQ(0, hilbertCurve.interleaveBits(X4, 5, 2));
     ASSERT_EQ(2, hilbertCurve.interleaveBits(X5, 5, 3));
+}
+
+TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurve){
+    auto folder = ExperimentsConfig::hilbertCurveFolder;
+    auto dataset = getDatasetPath(ExperimentsConfig::datasetSchool);
+    auto partitionSize = 5;
+    auto fileExtension = ExperimentsConfig::fileExtension;
     cleanUpFolder(folder);
     arrow::Result<std::shared_ptr<arrow::Table>> table = storage::TableGenerator::GenerateSchoolTable().ValueOrDie();
     std::vector<std::string> partitioningColumns = {"Age", "Student_id"};
