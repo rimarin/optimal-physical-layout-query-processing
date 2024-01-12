@@ -6,26 +6,35 @@
 namespace partitioning {
 
     arrow::Status FixedGridPartitioning::partition() {
-        // We are linearizing the obtained cells
+        // The data space is superimposed with an n-dimension grid with fixed cell size.
+        // This way, all the points falling into one cell of the uniform grid are mapped to the correspondent cell id.
+        // In order to force the partition size constraint, we are linearizing the obtained cells.
         // Number of cells is = (domain(x) / cellSize) * (domain(y) / cellSize) ... * (domain(n) / cellSize)
         // e.g. 20x20 grid, 100x100 coordinates -> (100 / 20) * (100 / 20) = 5 * 5 = 25 squares
         std::cout << "[FixedGridPartitioning] Analyzing span of column values to determine cell width" << std::endl;
-        uint32_t columnDomainAverage = 0;
+        double_t maxColumnDomain = 0;
+        double_t minColumnDomain = std::numeric_limits<double>::max();
         for (int j = 0; j < numColumns; ++j) {
             std::pair<double_t, double_t> columnStats = dataReader->getColumnStats(columns[j]).ValueOrDie();
-            auto columnDomain = (columnStats.second - columnStats.first) * 1.1;
+            double_t domainStats = columnStats.second - columnStats.first;
+            double_t columnDomain = domainStats * 1.1;
             columnToDomain[j] = columnDomain;
-            columnDomainAverage += columnDomain;
+            maxColumnDomain = std::max(maxColumnDomain, columnDomain);
+            minColumnDomain = std::min(minColumnDomain, columnDomain);
         }
-        columnDomainAverage /= numColumns;
-        std::cout << "[FixedGridPartitioning] Average of the columns domain is: " << columnDomainAverage << std::endl;
-        cellWidth = columnDomainAverage / 10;
+        std::cout << "[FixedGridPartitioning] Widest column domain is: " << maxColumnDomain << std::endl;
+        // Cell width is 1/10 of the biggest domain.
+        // Make sure to cover all dimensions, by setting minColumnDomain as lower bound
+        // cellWidth = std::max(maxColumnDomain / 10, minColumnDomain);
+        cellWidth = maxColumnDomain / 10;
         std::cout << "[FixedGridPartitioning] Computed cell width is: " << cellWidth << std::endl;
 
+        // Read the table in batches
         auto batch_reader = dataReader->getTableBatchReader().ValueOrDie();
         uint32_t batchId = 0;
         uint32_t totalNumRows = 0;
         while (true) {
+            // Try to load a new batch, when possible
             std::shared_ptr<arrow::RecordBatch> record_batch;
             ARROW_RETURN_NOT_OK(batch_reader->ReadNext(&record_batch));
             if (record_batch == nullptr) {
@@ -33,11 +42,14 @@ namespace partitioning {
             }
             totalNumRows += record_batch->num_rows();
             ARROW_RETURN_NOT_OK(partitionBatch(batchId, record_batch, dataReader));
-            std::cout << "[FixedGridPartitioning] Batch " << batchId << " completed" << std::endl;
+            std::cout << "[FixedGridPartitioning] Batch " << batchId << " out of " << expectedNumBatches << " completed" << std::endl;
             std::cout << "[FixedGridPartitioning] Imported " << totalNumRows << " out of " << numRows << " rows" << std::endl;
             batchId += 1;
         }
-        std::cout << "[FixedGridPartitioning] Partitioning of " << batchId << " batches completed" << std::endl;
+        // The sum of rows from the batches should match the number of rows expected from parquet metadata
+        assert(totalNumRows == numRows);
+        std::cout << "[FixedGridPartitioning] Partitioning of " << expectedNumBatches << " batches completed" << std::endl;
+        // Merge the batches together
         ARROW_RETURN_NOT_OK(storage::DataWriter::mergeBatches(folder, uniquePartitionIds));
         return arrow::Status::OK();
     }
@@ -45,23 +57,25 @@ namespace partitioning {
     arrow::Status FixedGridPartitioning::partitionBatch(const uint32_t &batchId,
                                                         std::shared_ptr<arrow::RecordBatch> &recordBatch,
                                                         std::shared_ptr<storage::DataReader> &dataReader) {
+        auto converter = common::ColumnDataConverter();
         partitionIds = {};
         std::vector<std::shared_ptr<arrow::Array>> batchColumns;
         batchColumns.reserve(columns.size());
         for (const auto &columnName: columns){
             batchColumns.emplace_back(recordBatch->column(dataReader->getColumnIndex(columnName).ValueOrDie()));
         }
-
-        size_t batchNumRows = batchColumns[0]->length();
+        auto columnData = converter.toDouble(batchColumns).ValueOrDie();
+        size_t batchNumRows = columnData[0]->size();
+        batchColumns.clear();
 
         std::vector<uint32_t> cellIndexes = {};
         for (int i = 0; i < batchNumRows; ++i){
             uint32_t cellIndex = 0;
             for (int j = 0; j < numColumns; ++j){
-                auto dimensionNumCells = (uint32_t) std::floor(columnToDomain[j] / cellWidth);
-                auto arrow_int32_array = std::static_pointer_cast<arrow::Int32Array>(batchColumns[j]);
-                auto value = arrow_int32_array->Value(i);
-                auto cellDimensionIndex = (uint32_t) std::floor(value / cellWidth);
+                auto dimensionNumCells = (uint32_t) std::ceil(columnToDomain[j] / cellWidth);
+                auto column = columnData[j];
+                double_t columnValue = column->at(i);
+                auto cellDimensionIndex = (uint32_t) std::floor(columnValue / cellWidth);
                 if (j > 0){
                     cellIndex += cellDimensionIndex * dimensionNumCells;
                 }
@@ -72,8 +86,6 @@ namespace partitioning {
             cellIndexes.emplace_back(cellIndex);
         }
 
-        batchColumns.clear();
-
         std::vector<size_t> idx(cellIndexes.size());
         iota(idx.begin(), idx.end(), 0);
 
@@ -82,7 +94,7 @@ namespace partitioning {
 
         std::map<uint32_t, uint32_t> cellIndexToPartition;
         std::sort(std::begin(cellIndexes), std::end(cellIndexes));
-        uint32_t minBatchCapacity = 1000;
+        uint32_t minBatchCapacity = (numRows > 1000) ? 1000 : 1;
         uint32_t batchCapacity = std::max( (uint32_t) cellCapacity / expectedNumBatches, minBatchCapacity);
         std::cout << "[FixedGridPartitioning] In order to fit " << cellCapacity << " elements per cell, "
                       "each batch has a capacity of " << batchCapacity << std::endl;

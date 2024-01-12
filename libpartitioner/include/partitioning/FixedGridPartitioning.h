@@ -41,8 +41,8 @@ namespace partitioning {
     private:
         partitioning::PartitioningType type = GRID;
         size_t cellCapacity;
-        uint64_t cellWidth;
-        std::unordered_map<uint8_t, uint64_t> columnToDomain;
+        double_t cellWidth;
+        std::unordered_map<uint32_t, double_t> columnToDomain;
         std::vector<uint32_t> partitionIds;
         std::set<uint32_t> uniquePartitionIds;
     };
