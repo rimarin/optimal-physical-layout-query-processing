@@ -56,12 +56,13 @@ def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
         logger.info(f"Expecting {total_layouts} layouts to be generated")
         logger.info(f"Expecting {total_queries} queries to be run")
         logger.info(f"Expected time {total_time_hours} hours / {total_time_days} days")
-        return total_layouts
+        return total_layouts, total_queries
 
     logger = initialize_logger()
     initialize_results_file()
-    num_total_layouts = initialize_debug_info()
+    num_total_layouts, num_total_queries = initialize_debug_info()
     generated_layouts = 0
+    completed_queries = 0
     for dataset in datasets:
         try:
             benchmark = BenchmarkInstance.get_benchmark(dataset)
@@ -100,6 +101,8 @@ def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
                             logger.error(f"Error while running benchmark instance with settings: "
                                          f"{dataset}-{partitioning}-{partition_size}-{query_number}-{query_variant}-"
                                          f"{partitioning_columns} - " + str(e))
+                        completed_queries += 1
+                        logger.info(f"Completed query #{completed_queries} (out of {num_total_queries})")
                     benchmark_instance.cleanup()
 
 
