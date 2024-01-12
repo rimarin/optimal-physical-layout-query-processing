@@ -2,6 +2,7 @@ import logging
 import os
 import re
 import subprocess
+import time
 
 from benchmarks.osm import BenchmarkOSM
 from benchmarks.taxi import BenchmarkTaxi
@@ -35,7 +36,11 @@ class BenchmarkInstance:
                                f'{self.config.partition_size}',
                                f'{",".join(self.config.partitioning_columns)}']
         try:
+            start_time = time.time()
             process = subprocess.run(partitioner_command)
+            time_to_partition = int(time.time() - start_time)
+            self.config.time_to_partition = time_to_partition
+            self.logger.info(f'Partitioner took {time_to_partition} seconds')
             if process.returncode != 0:
                 self.logger.error(f'Received return code {str(process.returncode)}')
         except Exception as e:

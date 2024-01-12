@@ -29,8 +29,8 @@ class BenchmarkResult:
     def format(self, filetype='csv'):
         self.total_partitions = StorageManager.get_num_files(self.benchmark.get_dataset_folder(self.config.partitioning))
         self.used_columns = self.benchmark.get_query_columns(self.instance.query_number)
-        return (f'{self.config.dataset};{self.num_rows};{self.config.partitioning};q{self.query_str};'
-                f'{self.benchmark.get_query_selectivity(self.query_str)};'
+        return (f'{self.config.dataset};{self.num_rows};{self.config.partitioning};{self.config.time_to_partition};'
+                f'q{self.query_str};{self.benchmark.get_query_selectivity(self.query_str)};'
                 f'{self.config.partitioning_columns};{len(self.config.partitioning_columns)};{self.used_columns};'
                 f'{self.latencies};{self.latency_avg};{self.latency_std};{self.config.partition_size};'
                 f'{self.average_partition_size};{self.used_partitions};{self.total_partitions};'
@@ -38,6 +38,6 @@ class BenchmarkResult:
 
     @staticmethod
     def format_header():
-        return ('dataset;num_rows;partitioning;query;selectivity;partitioning_columns;num_partitioning_columns;'
-                'used_columns;latencies;latency_avg;latency_std;partition_size;partition_size_mb;used_partitions;'
-                'total_partitions;timestamp\n')
+        return ('dataset;num_rows;partitioning;time_to_partition;query;selectivity;partitioning_columns;'
+                'num_partitioning_columns;used_columns;latencies;latency_avg;latency_std;partition_size;'
+                'partition_size_mb;used_partitions;total_partitions;timestamp\n')
