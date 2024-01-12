@@ -46,7 +46,11 @@ class BenchmarkInstance:
         except Exception as e:
             self.logger.error(f'Partitioning failed: {str(e)}')
 
-        self.config.total_partitions = self.benchmark.get_num_total_partitions(self.config.partitioning)
+        try:
+            self.config.total_partitions = self.benchmark.get_num_total_partitions(self.config.partitioning)
+        except Exception as e:
+            self.logger.error(f'Could not get the total number of partitions - {str(e)}')
+            self.config.total_partitions = 0
         if self.config.total_partitions == 0:
             self.logger.warning('No partitions, something could be wrong. Used command:')
             self.logger.warning(f'{" ".join(partitioner_command)}')
