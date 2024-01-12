@@ -90,8 +90,8 @@ namespace storage {
     // "Foundations of Multidimensional and Metric Data Structures"
     arrow::Result <std::shared_ptr<arrow::Table>> TableGenerator::GenerateCitiesTable() {
         arrow::StringBuilder stringBuilder;
-        std::vector <std::string> city_name = {"Toronto", "Buffalo", "Denver", "Chicago", "Omaha", "Mobile", "Atlanta",
-                                               "Miami"};
+        std::vector <std::string> city_name = {"Tallinn", "Berlin", "Dublin", "Copenhagen", "Oslo", "Moscow",
+                                               "Amsterdam", "Madrid"};
         ARROW_RETURN_NOT_OK(stringBuilder.AppendValues(city_name));
         std::shared_ptr <arrow::Array> city;
         ARROW_ASSIGN_OR_RAISE(city, stringBuilder.Finish());
@@ -108,16 +108,23 @@ namespace storage {
         std::shared_ptr <arrow::Array> coord_y;
         ARROW_ASSIGN_OR_RAISE(coord_y, int32Builder.Finish());
 
-        std::vector <std::shared_ptr<arrow::Array>> columns = {city, coord_x, coord_y};
+        int32Builder.Reset();
+        int32_t years[8] = {1990, 1989, 1912, 1964, 1953, 1932, 1976, 1941};
+        ARROW_RETURN_NOT_OK(int32Builder.AppendValues(years, 8));
+        std::shared_ptr <arrow::Array> year;
+        ARROW_ASSIGN_OR_RAISE(year, int32Builder.Finish());
 
-        std::shared_ptr <arrow::Field> field_city, field_x, field_y;
+        std::vector <std::shared_ptr<arrow::Array>> columns = {city, coord_x, coord_y, year};
+
+        std::shared_ptr <arrow::Field> field_city, field_x, field_y, field_year;
         std::shared_ptr <arrow::Schema> schema;
 
         field_city = arrow::field("city", arrow::utf8());
         field_x = arrow::field("x", arrow::int32());
         field_y = arrow::field("y", arrow::int32());
+        field_year = arrow::field("year", arrow::int32());
 
-        schema = arrow::schema({field_city, field_x, field_y});
+        schema = arrow::schema({field_city, field_x, field_y, field_year});
 
         std::shared_ptr <arrow::Table> table;
         table = arrow::Table::Make(schema, columns);
