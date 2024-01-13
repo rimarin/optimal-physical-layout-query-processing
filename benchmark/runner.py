@@ -105,7 +105,7 @@ def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
                                          f"{dataset}-{partitioning}-{partition_size}-{query_number}-{query_variant}-"
                                          f"{partitioning_columns} - " + str(e))
                         completed_queries += 1
-                        logger.info(f"Progress: {int((completed_queries / num_total_queries) * 100)} "
+                        logger.info(f"Progress: {str(int((completed_queries / num_total_queries) * 100))} "
                                     f"- Completed query {completed_queries}/{num_total_queries}")
                     benchmark_instance.cleanup()
 
