@@ -14,6 +14,7 @@ cmake-build-release
 /benchmark/datasets/taxi
 /benchmark/datasets/tpch-sf1
 /benchmark/datasets/tpch-sf10
+/benchmark/results
 /benchmark/temp
 /partitioner/partitioner
 /test/fixed-grid
