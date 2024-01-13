@@ -60,7 +60,7 @@ class BenchmarkInstance:
         """
         Retrieve the Benchmark object according to the provided name
         """
-        scale = 1
+        scale = 10
         if 'tpch-sf' in name:
             scale = name.split('tpch-sf')[1]
         name_to_workload = {
