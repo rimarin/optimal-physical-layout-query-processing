@@ -23,9 +23,9 @@ class BenchmarkOSM(Benchmark):
             ["min_lon", "max_lon"],
             ["min_lon", "max_lon", "min_lat"],
             ["min_lon", "max_lon", "min_lat", "max_lat"],
-        #   ["min_lon", "max_lon", "min_lat", "max_lat", "created_at"],
-        #   ["min_lon", "max_lon", "min_lat", "max_lat", "created_at", "version"],
-        #   ["min_lon", "max_lon", "min_lat", "max_lat", "created_at", "version", "id"]
+            ["min_lon", "max_lon", "min_lat", "max_lat", "created_at"],
+            ["min_lon", "max_lon", "min_lat", "max_lat", "created_at", "version"],
+            ["min_lon", "max_lon", "min_lat", "max_lat", "created_at", "version", "id"]
         ]
 
     @staticmethod
@@ -103,7 +103,6 @@ class BenchmarkOSM(Benchmark):
             "7h": 0.1744
         }
         return query_to_selectivity.get(query, 0)
-
 
     def get_schema(self):
         return {
