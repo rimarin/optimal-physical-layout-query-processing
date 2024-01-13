@@ -109,28 +109,34 @@ namespace partitioning {
                 std::vector<arrow::Expression> filterExpressions;
                 filterExpressions.reserve(columns.size());
                 for (int i = 0; i < columns.size(); ++i) {
-                    auto toInt32 = arrow::compute::CastOptions::Safe(arrow::int32());
-                    // TODO: apply cast only when dealing with dates, otherwise it is an unnecessary overhead
+                    auto toInt64 = arrow::compute::CastOptions::Safe(arrow::int64());
+                    arrow::Expression columnExpression;
+                    auto columnType = recordBatch->column(dataReader->getColumnIndex(columns[i]).ValueOrDie())->type();
+                    // Apply cast only when dealing with dates, otherwise it is an unnecessary overhead
+                    if (arrow::is_date(columnType->id())) {
+                        columnExpression = arrow::compute::call("cast",
+                                             {arrow::compute::field_ref(columns[i])},
+                                             toInt64);
+                    }
+                    else {
+                        columnExpression = arrow::compute::field_ref(columns[i]);
+                    }
                     filterExpressions.emplace_back(arrow::compute::and_(
                                 arrow::compute::greater_equal(
-                                    arrow::compute::call("cast",
-                                                         {arrow::compute::field_ref(columns[i])},
-                                                         toInt32),
+                                    columnExpression,
                                     arrow::compute::literal(cellsCoordinates[partitionId][i].first)
                                 ),
                                 // AND
                                 arrow::compute::less_equal(
-                                    arrow::compute::call("cast",
-                                                        {arrow::compute::field_ref(columns[i])},
-                                                        toInt32),
+                                    columnExpression,
                                     arrow::compute::literal(cellsCoordinates[partitionId][i].second))
                                 )
                     );
                 }
                 options->filter = arrow::compute::and_(filterExpressions);
                 auto builder = arrow::dataset::ScannerBuilder(dataset, options);
-                auto scanner = builder.Finish();
-                std::shared_ptr<arrow::Table> partitionedTable = scanner.ValueOrDie()->ToTable().ValueOrDie();
+                auto scanner = builder.Finish().ValueOrDie();
+                std::shared_ptr<arrow::Table> partitionedTable = scanner->ToTable().ValueOrDie();
                 if (partitionedTable->num_rows() > 0){
                     std::filesystem::path subPartitionsFolder = folder / std::to_string(partitionId);
                     if (!std::filesystem::exists(subPartitionsFolder)) {
@@ -178,7 +184,7 @@ namespace partitioning {
             uint32_t columnIndex = coord % numColumns;
             double min = scaleRange[columnIndex].first;
             double max = scaleRange[columnIndex].second;
-            bool minMaxMatch = max == min | (max - min) < 0.001;
+            bool minMaxMatch = max == min;
             if (minMaxMatch){
                 continue;
             }
