@@ -223,11 +223,18 @@ class BenchmarkInstance:
         self.logger.info("Collected results from benchmark execution")
 
     def collect_results(self):
-        with open(self.config.results_file, 'a') as result_file:
-            result_file.write(self.result.format())
-        self.logger.info(f'Completed run for benchmark {self.config}, results saved to {self.config.results_file}')
+        try:
+            with open(self.config.results_file, 'a') as result_file:
+                result_file.write(self.result.format())
+            self.logger.info(f'Completed run for benchmark {self.config}, results saved to {self.config.results_file}')
+        except Exception as e:
+            self.logger.error(f"Could not collect results from benchmark - {str(e)}")
 
     def cleanup(self):
-        StorageManager.delete_files(self.benchmark.get_dataset_folder(self.config.partitioning))
-        self.logger.info(
-            f'Removed parquet files from folder {self.benchmark.get_dataset_folder(self.config.partitioning)}')
+        dataset_folder = self.benchmark.get_dataset_folder(self.config.partitioning)
+        try:
+            StorageManager.delete_files(dataset_folder)
+            self.logger.info(
+                f'Removed parquet files from folder {dataset_folder}')
+        except Exception as e:
+            self.logger.error(f"Could not delete parquet files from folder {dataset_folder} - {str(e)}")
