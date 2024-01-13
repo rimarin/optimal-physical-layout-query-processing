@@ -27,8 +27,14 @@ class BenchmarkResult:
         return f'{self.config.dataset} {self.config.partitioning} {self.query_str}'
 
     def format(self, filetype='csv'):
-        self.total_partitions = StorageManager.get_num_files(self.benchmark.get_dataset_folder(self.config.partitioning))
-        self.used_columns = self.benchmark.get_query_columns(self.instance.query_number)
+        try:
+            self.total_partitions = StorageManager.get_num_files(self.benchmark.get_dataset_folder(self.config.partitioning))
+        except Exception as e:
+            self.total_partitions = 0
+        try:
+            self.used_columns = self.benchmark.get_query_columns(self.instance.query_number)
+        except Exception as e:
+            self.used_columns = []
         return (f'{self.config.dataset};{self.num_rows};{self.config.partitioning};{self.config.time_to_partition};'
                 f'q{self.query_str};{self.benchmark.get_query_selectivity(self.query_str)};'
                 f'{self.config.partitioning_columns};{len(self.config.partitioning_columns)};{self.used_columns};'
