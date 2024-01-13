@@ -8,7 +8,7 @@ from benchmark import Benchmark
 
 class BenchmarkTPCH(Benchmark):
 
-    def __init__(self, scale=1):
+    def __init__(self, scale=10):
         super().__init__()
         self.total_rows = None
         self.scale = scale
@@ -73,8 +73,8 @@ class BenchmarkTPCH(Benchmark):
         duckdb.sql('INSTALL tpch')
         duckdb.sql('LOAD tpch')
 
-        # Generate data for scale factor 1, use:
-        self.scale = params.get("scale", 1)
+        # Generate data for scale factor 10, use:
+        self.scale = params.get("scale", 10)
         duckdb.sql(f'CALL dbgen(sf={self.scale})')
 
         # Denormalize database into a big, joined fact table lineitem
