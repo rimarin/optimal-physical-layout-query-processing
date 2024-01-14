@@ -50,62 +50,22 @@ class BenchmarkTaxi(Benchmark):
     @staticmethod
     def get_query_selectivity(query):
         query_to_selectivity = {
-            "1a": 0.0027,
-            "1b": 0.0251,
-            "1c": 0.154,
-            "1d": 0.5868,
-            "1e": 1.0034,
-            "1f": 2.1683,
-            "1g": 3.4793,
-            "1h": 4.7041,
-            "2a": 0.0034,
-            "2b": 0.0107,
-            "2c": 0.0535,
-            "2d": 0.1322,
-            "2e": 1.1513,
-            "2f": 2.1288,
-            "2g": 3.1111,
-            "2h": 4.2517,
-            "3a": 0.0044,
-            "3b": 0.0195,
-            "3c": 0.1928,
-            "3d": 0.6289,
-            "3e": 1.0777,
-            "3f": 2.6023,
-            "3g": 3.3549,
-            "3h": 4.3734,
-            "4a": 0.0985,
-            "4b": 0.124,
-            "4c": 0.1462,
-            "4d": 0.5056,
-            "4e": 1.1477,
-            "4f": 2.3439,
-            "4g": 3.6698,
-            "4h": 4.9588,
-            "5a": 0.0075,
-            "5b": 0.0102,
-            "5c": 0.0562,
-            "5d": 0.2594,
-            "5e": 0.8729,
-            "5f": 1.1687,
-            "5g": 2.7484,
-            "5h": 3.0695,
-            "6a": 0.0016,
-            "6b": 0.0024,
-            "6c": 0.0092,
-            "6d": 0.0248,
-            "6e": 0.0346,
-            "6f": 0.0753,
-            "6g": 0.2939,
-            "6h": 0.9807,
-            "7a": 0.0011,
-            "7b": 0.0052,
-            "7c": 0.0267,
-            "7d": 0.0482,
-            "7e": 0.1292,
-            "7f": 0.4595,
-            "7g": 0.7751,
-            "7h": 2.2899
+            "1a": 0.0019,
+            "1b": 0.0246,
+            "1c": 0.1733,
+            "1d": 0.8217,
+            "1e": 1.0819,
+            "1f": 2.2285,
+            "1g": 3.6278,
+            "1h": 4.9007,
+            "2a": 0.0025,
+            "2b": 0.0606,
+            "2c": 0.1709,
+            "2d": 0.5399,
+            "2e": 0.7789,
+            "2f": 1.0238,
+            "2g": 2.0985,
+            "2h": 4.0018
         }
         return query_to_selectivity.get(query, 0)
 
@@ -157,7 +117,7 @@ class BenchmarkTaxi(Benchmark):
         number of dimensions.
         """
         start_date = datetime.datetime(2018, 1, 1)
-        end_date = datetime.datetime(2019, 12, 31)
+        end_date = datetime.datetime(2018, 1, 31)
         value_ranges = {
             'PULocationID': [1, 265],
             'DOLocationID': [1, 265],
@@ -210,7 +170,7 @@ class BenchmarkTaxi(Benchmark):
                     continue
                 rounding_digits = 4
                 query_selectivity = round((num_tuples / self.get_total_rows()) * 100, rounding_digits)
-                min_selectivity, max_selectivity = 0.001, 10
+                min_selectivity, max_selectivity = 0.001, 5
                 if query_selectivity != 0 and min_selectivity < query_selectivity < max_selectivity:
                     with open(os.path.join(self.get_generated_queries_folder(), f'{str(template)}_{str(query_selectivity)}.sql'),
                               'w') as query_file:

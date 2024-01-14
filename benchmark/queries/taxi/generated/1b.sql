@@ -1,3 +1,3 @@
 -- Q1
 SELECT *
-FROM read_parquet('/home/brancaleone/Projects/optimal-physical-layout-query-processing/benchmark/datasets/taxi/trips*.parquet') where PULocationID > 217.8978077026288 AND PULocationID < 222.30993234550226
+FROM read_parquet('/home/brancaleone/Projects/optimal-physical-layout-query-processing/benchmark/datasets/taxi/no-partition/*.parquet') where PULocationID > 213.73841691645174 AND PULocationID < 218.38704476608208
