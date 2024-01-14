@@ -50,13 +50,13 @@ class BenchmarkTPCH(Benchmark):
     @staticmethod
     def get_query_selectivity(query):
         query_to_selectivity = {
-            "3a": 0.2397,
-            "5a": 0.001,
-            "6a": 0.0002,
-            "10a": 0.7382,
-            "12a": 0.0004,
-            "14a": 0.0002,
-            "19a": 0.0002
+            "3a": 0.4745,
+            "5a": 0.0002,
+            "6a": 0.000042,
+            "10a": 1.8014,
+            "12a": 0.0001,
+            "14a": 0.000042,
+            "19a": 0.000042
         }
         return query_to_selectivity.get(query, 0)
 
@@ -106,8 +106,8 @@ class BenchmarkTPCH(Benchmark):
         Use the tpch-dbgen utility (https://github.com/electrum/tpch-dbgen) to generate the tpc-h queries.
         # export DSS_QUERY=PATH_TO_QUERIES_FOLDER
         """
-        templates = [3, 5, 6, 10, 12, 14, 19]
-        num_queries_per_template = 10
+        templates = [6, 14, 19]
+        num_queries_per_template = 8
 
         templates_folder = os.path.join(self.get_queries_folder())
         subprocess.check_output(f'cd {templates_folder}; export DSS_QUERY={templates_folder}', shell=True)
@@ -124,7 +124,7 @@ class BenchmarkTPCH(Benchmark):
                 except Exception as e:
                     print(f"Error {str(e)} while executing query: {query}")
                     continue
-                rounding_digits = 4
+                rounding_digits = 5
                 query_selectivity = round((num_tuples / self.get_total_rows()) * 100, rounding_digits)
                 min_selectivity, max_selectivity = 0, 50
                 if query_selectivity != 0 and min_selectivity < query_selectivity < max_selectivity:

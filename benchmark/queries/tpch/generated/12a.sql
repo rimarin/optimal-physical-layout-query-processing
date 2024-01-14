@@ -1,3 +1,6 @@
+-- using 1705221821 as a seed to the RNG
+
+
 select
 	l_shipmode,
 	sum(case
@@ -12,9 +15,9 @@ select
 			then 1
 		else 0
 	end) as low_line_count
-FROM read_parquet('/home/brancaleone/Projects/optimal-physical-layout-query-processing/benchmark/datasets/tpch/lineitem*.parquet') where
+FROM read_parquet('/home/brancaleone/Projects/optimal-physical-layout-query-processing/benchmark/datasets/tpch-sf10/no-partition/tpch-sf10*.parquet') where
 	o_orderkey = l_orderkey
-	and l_shipmode in ('REG AIR', 'TRUCK')
+	and l_shipmode in ('MAIL', 'AIR')
 	and l_commitdate < l_receiptdate
 	and l_shipdate < l_commitdate
 	and l_receiptdate >= date '1996-01-01'
