@@ -33,6 +33,9 @@ class Benchmark(abc.ABC):
     def get_generated_queries_folder(self):
         return os.path.abspath(os.path.join(self.get_queries_folder(), 'generated'))
 
+    def get_num_queries(self):
+        return len([f.endswith(".sql") for f in os.listdir(self.get_generated_queries_folder())])
+
     @staticmethod
     def get_partitioning_columns():
         raise NotImplementedError
@@ -57,9 +60,11 @@ class Benchmark(abc.ABC):
             self.total_rows = len(duckdb.sql(f'SELECT * FROM read_parquet(\'{self.get_files_pattern()}\')'))
         return self.total_rows
 
-    @abc.abstractmethod
     def is_dataset_generated(self) -> bool:
-        pass
+        return os.path.exists(os.path.join(self.get_dataset_folder(), self.get_name() + '.parquet'))
+
+    def is_query_workload_generated(self) -> bool:
+        return any(f.endswith(".sql") for f in os.listdir(self.get_generated_queries_folder()))
 
     @staticmethod
     def rename_queries(path: str):

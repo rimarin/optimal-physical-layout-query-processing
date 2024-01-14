@@ -26,10 +26,3 @@ PARTITIONS_LOG_FILE = 'partitions.log'
 
 LOG_TO_CONSOLE = True
 LOG_TO_FILE = True
-
-NUM_QUERIES = {
-    TPCH_SF1: 7,
-    TPCH_SF10: 7,
-    TAXI: 56,
-    OSM: 56
-}

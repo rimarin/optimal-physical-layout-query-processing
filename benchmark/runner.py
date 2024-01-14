@@ -6,7 +6,7 @@ from config import BenchmarkConfig
 from instance import BenchmarkInstance
 from result import BenchmarkResult
 from settings import RESULTS_FILE, PARTITIONINGS, PARTITION_SIZES, DATASETS, LOG_TO_CONSOLE, LOG_TO_FILE, \
-    RESULTS_FOLDER, NUM_QUERIES
+    RESULTS_FOLDER
 
 
 def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
@@ -51,8 +51,9 @@ def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
             num_partition_sizes = len(partition_sizes)
             num_partitioning_columns = len(_benchmark.get_partitioning_columns())
             num_dataset_layouts = num_partitionings * num_partition_sizes * num_partitioning_columns
+            num_dataset_queries = _benchmark.get_num_queries()
             total_layouts += num_dataset_layouts
-            total_queries += NUM_QUERIES.get(_dataset, 0) * num_dataset_layouts
+            total_queries += num_dataset_queries * num_dataset_layouts
         total_time = total_layouts * avg_partitioning_time + total_queries * avg_query_latency
         total_time_hours = int(total_time / 3600)
         total_time_days = int(total_time / 86400)

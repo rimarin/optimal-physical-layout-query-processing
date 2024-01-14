@@ -189,10 +189,3 @@ class BenchmarkOSM(Benchmark):
                                            f'{str(template)}_{str(query_selectivity)}.sql'),
                               'w') as query_file:
                         query_file.write(final_query)
-
-    def is_dataset_generated(self) -> bool:
-        return any(f.endswith(".parquet") for f in os.listdir(self.get_dataset_folder()))
-
-    def is_query_workload_generated(self) -> bool:
-        # TODO: implement
-        return any(f.endswith(".sql") for f in os.listdir(self.get_generated_queries_folder()))

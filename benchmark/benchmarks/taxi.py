@@ -185,11 +185,3 @@ class BenchmarkTaxi(Benchmark):
                           os.path.join(self.get_generated_queries_folder(), f.replace(str(num),
                                                                                       str(round(num, digits)))))
 
-    def is_dataset_generated(self) -> bool:
-        taxi_file = os.path.join(self.get_dataset_folder(), f'{self.get_name()}{DATA_FORMAT}')
-        return os.path.exists(taxi_file)
-
-    def is_query_workload_generated(self) -> bool:
-        # TODO: implement
-        return any(f.endswith(".sql") for f in os.listdir(self.get_generated_queries_folder()))
-
