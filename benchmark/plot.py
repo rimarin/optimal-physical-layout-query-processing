@@ -11,7 +11,11 @@ RESULTS_FILE = RESULTS_FOLDER + 'results.csv'
 PLOTS_FOLDER = RESULTS_FOLDER + 'plots/'
 
 # Parse csv results and clean rows
-df = pd.read_csv(RESULTS_FILE, sep=';', on_bad_lines='skip')
+df = pd.read_csv(RESULTS_FILE, sep=';', on_bad_lines='skip',
+                 converters={
+                     "partitioning_columns": lambda x: x.strip("[]").replace("'", "").split(", "),
+                     "used_columns": lambda x: x.strip("[]").replace("'", "").split(", ")
+                 })
 df.columns = df.columns.str.strip()
 # Drop invalid data (measured latency is 0)
 df = df[df.latency_avg != 0]
@@ -19,6 +23,10 @@ df['used_partitions'] = df[['used_partitions', 'total_partitions']].min(axis=1)
 
 # Compute additional information
 df['scan_ratio'] = (df['used_partitions'] / df['total_partitions']) * 100
+
+df['column_match'] = [list(set(a).intersection(set(b)))
+                      for a, b in zip(df['partitioning_columns'], df['used_columns'])]
+df['column_match_ratio'] = (df['column_match'].str.len() / df['used_columns'].str.len()) * 100
 
 # Create subsets for specific analysis
 df_partition_size = df.groupby(['partition_size', 'dataset', 'partitioning']).agg({'latency_avg': 'mean'}).reset_index()
