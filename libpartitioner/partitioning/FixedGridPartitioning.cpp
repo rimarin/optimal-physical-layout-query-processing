@@ -6,6 +6,11 @@
 namespace partitioning {
 
     arrow::Status FixedGridPartitioning::partition() {
+        // TODO: Adjust algorithm:
+        //  1. Read in batches
+        //  2. Compute index of cell
+        //  3. Write out sorted batched by cell index
+        //  4. Sort-merge the sorted batches
         // The data space is superimposed with an n-dimension grid with fixed cell size.
         // This way, all the points falling into one cell of the uniform grid are mapped to the correspondent cell id.
         // In order to force the partition size constraint, we are linearizing the obtained cells.
@@ -71,17 +76,16 @@ namespace partitioning {
         std::vector<uint32_t> cellIndexes = {};
         for (int i = 0; i < batchNumRows; ++i){
             uint32_t cellIndex = 0;
+            uint32_t multiplier = 1;
             for (int j = 0; j < numColumns; ++j){
-                auto dimensionNumCells = (uint32_t) std::ceil(columnToDomain[j] / cellWidth);
+                auto dimensionDomain = columnToDomain[j];
+                auto dimensionNumCells = (uint32_t) std::ceil(dimensionDomain / cellWidth);
                 auto column = columnData[j];
                 double_t columnValue = column->at(i);
                 auto cellDimensionIndex = (uint32_t) std::floor(columnValue / cellWidth);
-                if (j > 0){
-                    cellIndex += cellDimensionIndex * dimensionNumCells;
-                }
-                else{
-                    cellIndex += cellDimensionIndex;
-                }
+                assert(cellDimensionIndex < columnToDomain[j]);
+                cellIndex += cellDimensionIndex * multiplier;
+                multiplier *= dimensionNumCells;
             }
             cellIndexes.emplace_back(cellIndex);
         }
