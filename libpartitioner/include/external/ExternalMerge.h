@@ -73,6 +73,8 @@ namespace external {
 
                 // Determine the index of the ordering column
                 auto sortingColumnIndex = schema->GetFieldIndex(columnName);
+                // Make sure that the specified column exists in the schema
+                assert(sortingColumnIndex != -1);
 
                 uint32_t usedBatchRows = 0;
                 uint32_t completedReaders = 0;
