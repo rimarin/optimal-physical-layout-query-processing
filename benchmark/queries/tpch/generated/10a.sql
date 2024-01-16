@@ -1,6 +1,3 @@
--- using 1705221819 as a seed to the RNG
-
-
 select
 	c_custkey,
 	c_name,
@@ -10,11 +7,11 @@ select
 	c_address,
 	c_phone,
 	c_comment
-FROM read_parquet('/home/brancaleone/Projects/optimal-physical-layout-query-processing/benchmark/datasets/tpch-sf10/no-partition/tpch-sf10*.parquet') where
+FROM read_parquet('/home/brancaleone/Projects/optimal-physical-layout-query-processing/benchmark/datasets/tpch/lineitem*.parquet') where
 	c_custkey = o_custkey
 	and l_orderkey = o_orderkey
-	and o_orderdate >= date '1993-06-01'
-	and o_orderdate < date '1993-06-01' + interval '3' month
+	and o_orderdate >= date '1995-01-01'
+	and o_orderdate < date '1995-01-01' + interval '3' month
 	and l_returnflag = 'R'
 	and c_nationkey = n_nationkey
 group by

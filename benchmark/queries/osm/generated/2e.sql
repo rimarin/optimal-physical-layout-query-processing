@@ -1,4 +1,4 @@
 -- Q2
 SELECT *
-FROM read_parquet('/home/brancaleone/Projects/optimal-physical-layout-query-processing/benchmark/datasets/osm/no-partition/*.parquet') where min_lon > -90.69569007743719 AND min_lon < -12.34802346301484 AND
-      max_lon > -41.52223631195176 AND max_lon < 135.15340799370688
+FROM read_parquet('/home/brancaleone/Projects/optimal-physical-layout-query-processing/benchmark/datasets/osm/*.parquet') where min_lon > -75.76565303225497 AND min_lon < 153.1170176580983 AND
+      max_lon > 79.0511992969266 AND max_lon < 92.995187433294

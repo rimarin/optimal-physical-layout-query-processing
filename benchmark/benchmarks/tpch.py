@@ -50,13 +50,13 @@ class BenchmarkTPCH(Benchmark):
     @staticmethod
     def get_query_selectivity(query):
         query_to_selectivity = {
-            "3a": 0.4745,
-            "5a": 0.0002,
-            "6a": 0.000042,
-            "10a": 1.8014,
-            "12a": 0.0001,
-            "14a": 0.000042,
-            "19a": 0.000042
+            "3a": 0.2397,
+            "5a": 0.001,
+            "6a": 0.0002,
+            "10a": 0.7382,
+            "12a": 0.0004,
+            "14a": 0.0002,
+            "19a": 0.0002
         }
         return query_to_selectivity.get(query, 0)
 
