@@ -71,6 +71,15 @@ public:
         return columnVector;
     }
 
+    template <typename ArrayType, typename T = typename ArrayType::TypeClass>
+    arrow::Status checkPartition(std::filesystem::path partitionPath, std::string columnName,
+                        std::vector<typename T::c_type> columnVector){
+        if (readColumn<ArrayType>(partitionPath, columnName) == columnVector){
+            return arrow::Status::OK();
+        }
+        return arrow::Status::Invalid("Read column does not match data");
+    }
+
     static bool addColumnPartitionId(const std::string &datasetName){
         // Test datasets should have an additional column with the partition id
         if(ExperimentsConfig::testDatasets.count(datasetName)) {

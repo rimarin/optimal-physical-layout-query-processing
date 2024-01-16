@@ -21,26 +21,26 @@ TEST_F(TestOptimalLayoutFixture, TestExternalMergeSort){
         if (record_batch == nullptr) {
             break;
         }
-        std::filesystem::path sortedBatchPath = folder / ("s" + std::to_string(0) + fileExtension);
-        ASSERT_EQ(external::ExternalSort::writeSorted(record_batch->Slice(2, 2), "x", sortedBatchPath), arrow::Status::OK());
-        std::filesystem::path sortedBatchPath2 = folder / ("s" + std::to_string(1) + fileExtension);
-        ASSERT_EQ(external::ExternalSort::writeSorted(record_batch->Slice(4, 2), "x", sortedBatchPath2), arrow::Status::OK());
-        std::filesystem::path sortedBatchPath3 = folder / ("s" + std::to_string(2) + fileExtension);
-        ASSERT_EQ(external::ExternalSort::writeSorted(record_batch->Slice(0, 2), "x", sortedBatchPath3), arrow::Status::OK());
-        std::filesystem::path sortedBatchPath4 = folder / ("s" + std::to_string(3) + fileExtension);
-        ASSERT_EQ(external::ExternalSort::writeSorted(record_batch->Slice(6, 2), "x", sortedBatchPath4), arrow::Status::OK());
+        ASSERT_EQ(external::ExternalSort::writeSorted(record_batch->Slice(2, 2), "x", folder / ("s0" + fileExtension)),
+                  arrow::Status::OK());
+        ASSERT_EQ(external::ExternalSort::writeSorted(record_batch->Slice(4, 2), "x", folder / ("s1" + fileExtension)),
+                  arrow::Status::OK());
+        ASSERT_EQ(external::ExternalSort::writeSorted(record_batch->Slice(0, 2), "x", folder / ("s2" + fileExtension)),
+                  arrow::Status::OK());
+        ASSERT_EQ(external::ExternalSort::writeSorted(record_batch->Slice(6, 2), "x", folder / ("s3" + fileExtension)),
+                  arrow::Status::OK());
     }
-    auto pathPartition1 = folder / ("s0" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition1, "x"), std::vector<int32_t>({5, 35}));
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition1, "y"), std::vector<int32_t>({45, 42}));
-    auto pathPartition2 = folder / ("s1" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition2, "x"), std::vector<int32_t>({27, 52}));
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition2, "y"), std::vector<int32_t>({35, 10}));
-    auto pathPartition3 = folder / ("s2" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition3, "x"), std::vector<int32_t>({62, 82}));
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition3, "y"), std::vector<int32_t>({77, 65}));
-    auto pathPartition4 = folder / ("s3" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition4, "x"), std::vector<int32_t>({85, 90}));
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition4, "y"), std::vector<int32_t>({15, 5}));
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("s0" + fileExtension), "x", std::vector<int32_t>({5, 35})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("s0" + fileExtension), "y", std::vector<int32_t>({45, 42})), arrow::Status::OK());
+
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("s1" + fileExtension), "x", std::vector<int32_t>({27, 52})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("s1" + fileExtension), "y", std::vector<int32_t>({35, 10})), arrow::Status::OK());
+
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("s2" + fileExtension), "x", std::vector<int32_t>({62, 82})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("s2" + fileExtension), "y", std::vector<int32_t>({77, 65})), arrow::Status::OK());
+
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("s3" + fileExtension), "x", std::vector<int32_t>({85, 90})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("s3" + fileExtension), "y", std::vector<int32_t>({15, 5})), arrow::Status::OK());
+
     ASSERT_EQ(external::ExternalMerge::mergeFiles(folder, "hilbert_curve"), arrow::Status::OK());
 }
