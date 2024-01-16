@@ -3,7 +3,10 @@
 namespace partitioning {
 
     arrow::Status HilbertCurvePartitioning::partition(){
-
+        // TODO: Adjust algorithm:
+        //  1. Read in batches
+        //  2. Write out sorted batched by Hilbert value
+        //  3. Sort-merge the sorted batches
         // Read the table in batches
         auto batch_reader = dataReader->getTableBatchReader().ValueOrDie();
         uint32_t batchId = 0;

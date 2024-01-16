@@ -30,6 +30,7 @@ namespace external {
              */
             // Handle a standard batch size of 65536
             uint32_t batchSize = 64 * 1024;
+            constexpr int readFinished = -1;
 
             // Prepare vector of file readers for each sorted batch
             std::vector<std::pair<std::shared_ptr<parquet::arrow::FileReader>, uint32_t>> readers;
@@ -59,9 +60,9 @@ namespace external {
             // Prepare a vector of empty columns matching the schema. It will be populated with the merged data
             if (numReaders > 0 ) {
 
-                // Size of the read from a sorted file. Computed this way so that we merged parts will be exactly
+                // Size of the read from a sorted file. Computed this way so that we merged fragments will be exactly
                 // one batch, that can be directly written to disk
-                uint32_t partSize = batchSize / numReaders;
+                uint32_t fragmentSize = batchSize / numReaders;
 
                 // Prepare an array containing the columns of merge sorted batch
                 std::shared_ptr<arrow::RecordBatchReader> firstReader;
@@ -74,8 +75,9 @@ namespace external {
                 auto sortingColumnIndex = schema->GetFieldIndex(columnName);
 
                 uint32_t usedBatchRows = 0;
-                // Use slice to select parts of each batch
-                while(usedBatchRows < batchSize){
+                uint32_t completedReaders = 0;
+                // Use slice to select fragments of each batch
+                while(usedBatchRows < batchSize || completedReaders < numReaders){
                     // Initialize a priority queue, storing pairs of arrow values and related reader index
                     // The index is needed to identity the source batch and reconstruct the row order later
                     std::priority_queue<std::pair<double, uint32_t>,
@@ -83,23 +85,32 @@ namespace external {
                                         std::greater<>> q;
                     for (int i = 0; i < readers.size(); ++i) {
                         std::shared_ptr<arrow::RecordBatchReader> batchReader;
-                        ARROW_RETURN_NOT_OK(readers.at(i).first->GetRecordBatchReader(&batchReader));
-                        // auto batchReader = readers.at(i).first->GetRecordBatchReader();
-                        uint32_t batchReaderIndex = readers.at(i).second;
-                        // Load column values from each reader
-                        auto batchPart = batchReader->ToRecordBatches()->at(0)->Slice(batchReaderIndex, partSize);
-                        // TODO: keep track of readerSlice to know when to terminate (=sum of readerslices size = total rows read)
-                        auto numRows = batchPart->num_rows();
-                        // Retrieve only the sorted column from the batch part
-                        std::vector<std::shared_ptr<arrow::Array>> arrowArray = {batchPart->column(sortingColumnIndex)};
-                        // Convert the value to double
-                        auto converter = common::ColumnDataConverter();
-                        std::vector<std::shared_ptr<std::vector<double>>> castedArray = converter.toDouble({arrowArray}).ValueOrDie();
-                        std::shared_ptr<std::vector<double>> castedColumn = castedArray.at(0);
-                        for (const auto &columnValue: *castedColumn){
-                            // Push the value and the index of the reader to the heap
-                            std::pair<double, uint32_t> pair = std::make_pair(columnValue, batchReaderIndex);
-                            q.push(pair);
+                        std::optional<std::pair<std::shared_ptr<parquet::arrow::FileReader>, uint32_t>> currentReader = readers.at(i);
+                        if (currentReader->second != readFinished){
+                            ARROW_RETURN_NOT_OK(currentReader->first->GetRecordBatchReader(&batchReader));
+                            uint32_t batchReaderIndex = currentReader->second;
+                            // Load column values from each reader
+                            auto batchFragment = batchReader->ToRecordBatches()->at(0)->Slice(batchReaderIndex, fragmentSize);
+                            auto fragmentNumRows = batchFragment->num_rows();
+                            if (fragmentNumRows == 0){
+                                currentReader->second = readFinished;
+                                completedReaders += 1;
+                            } else{
+                                currentReader->second += fragmentNumRows;
+                            }
+                            // TODO: keep track of readerSlice to know when to terminate (=sum of readerslices size = total rows read)
+                            // Retrieve only the sorted column from the batch fragment
+                            std::vector<std::shared_ptr<arrow::Array>> arrowArray = {batchFragment->column(sortingColumnIndex)};
+                            // Convert the value to double
+                            auto converter = common::ColumnDataConverter();
+                            std::vector<std::shared_ptr<std::vector<double>>> castedArray = converter.toDouble({arrowArray}).ValueOrDie();
+                            std::shared_ptr<std::vector<double>> castedColumn = castedArray.at(0);
+                            assert(castedColumn->size() == batchFragment->num_rows());
+                            for (const auto &columnValue: *castedColumn){
+                                // Push the value and the index of the reader to the heap
+                                std::pair<double, uint32_t> pair = std::make_pair(columnValue, batchReaderIndex);
+                                q.push(pair);
+                            }
                         }
                     }
 
@@ -118,11 +129,11 @@ namespace external {
                         // Extract matching rows by
                         std::shared_ptr<arrow::RecordBatchReader> sourceBatchReader;
                         ARROW_RETURN_NOT_OK(reader->GetRecordBatchReader(&sourceBatchReader));
-                        auto batchPart = sourceBatchReader->ToRecordBatches()->at(0)->Slice(pointer, 1);
-                        std::shared_ptr<arrow::Table> rowTable = arrow::Table::FromRecordBatches(schema, {batchPart}).ValueOrDie();
+                        auto batchFragment = sourceBatchReader->ToRecordBatches()->at(0)->Slice(pointer, 1);
+                        std::shared_ptr<arrow::Table> rowTable = arrow::Table::FromRecordBatches(schema, {batchFragment}).ValueOrDie();
                         // Append the row to the mergedTable
                         mergedTable = arrow::ConcatenateTables({mergedTable, rowTable}).ValueOrDie();
-                        // In the end should be partSize * readers.size()
+                        // In the end should be fragmentSize * readers.size()
                         usedBatchRows += 1;
                     }
                 }
