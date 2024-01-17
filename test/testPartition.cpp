@@ -17,7 +17,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningFailures){
          {
              auto partitioning = partitioning::PartitioningFactory::create(partitioning::FIXED_GRID, dataReader,
                                                                            {"x"}, 20, folder);
-             partitioning->partition();
+             partitioning->partition().ToString();
          }
          catch( const InsufficientNumberOfColumns& e )
          {
@@ -29,7 +29,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningFailures){
          {
              auto partitioning = partitioning::PartitioningFactory::create(partitioning::STR_TREE, dataReader,
                                                                            {"x", "y"}, 0, folder);
-             partitioning->partition();
+             partitioning->partition().ToString();
          }
          catch( const InvalidPartitionSize& e )
          {
@@ -41,7 +41,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningFailures){
          {
              auto partitioning = partitioning::PartitioningFactory::create(partitioning::HILBERT_CURVE, dataReader,
                                                                            {"x", "y", "42"}, 8, folder);
-             partitioning->partition();
+             partitioning->partition().ToString();
          }
          catch( const InvalidColumn& e )
          {

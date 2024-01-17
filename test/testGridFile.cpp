@@ -22,6 +22,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFileSchool){
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("0" + fileExtension), "Age", std::vector<int32_t>({21, 18, 27, 23, 22})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("1" + fileExtension), "Student_id", std::vector<int32_t>({16, 74, 34})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("1" + fileExtension), "Age", std::vector<int32_t>({30, 41, 37})), arrow::Status::OK());
+    ASSERT_EQ(std::filesystem::exists(folder / ("2" + fileExtension)), false);
 }
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFileCities){
@@ -41,4 +42,5 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFileCities){
     ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("3" + fileExtension), "city", std::vector<std::string>({"Dublin", "Copenhagen"})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("4" + fileExtension), "city", std::vector<std::string>({"Tallinn"})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("5" + fileExtension), "city", std::vector<std::string>({"Berlin"})), arrow::Status::OK());
+    ASSERT_EQ(std::filesystem::exists(folder / ("6" + fileExtension)), false);
 }

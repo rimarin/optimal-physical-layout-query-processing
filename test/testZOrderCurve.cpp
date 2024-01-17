@@ -1,19 +1,12 @@
-#include <iostream>
-#include <filesystem>
-
 #include <arrow/io/api.h>
+#include <filesystem>
 
 #include "fixture.cpp"
 #include "gtest/gtest.h"
 #include "partitioning/PartitioningFactory.h"
-#include "storage/DataReader.h"
 #include "storage/TableGenerator.h"
 
-TEST_F(TestOptimalLayoutFixture, TestPartitioningZOrderCurveSchool){
-    auto folder = ExperimentsConfig::zOrderCurveFolder;
-    auto dataset = getDatasetPath(ExperimentsConfig::datasetSchool);
-    auto partitionSize = 2;
-    auto fileExtension = ExperimentsConfig::fileExtension;
+TEST_F(TestOptimalLayoutFixture, TestPartitioningZOrderCurve) {
     auto zOrderCurve = structures::ZOrderCurve();
     uint64_t arr1[2] = {18, 21};
     uint64_t arr2[2] = {21, 45};
@@ -24,6 +17,14 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningZOrderCurveSchool){
     ASSERT_EQ(std::vector<uint64_t>(std::begin(arr2), std::end(arr2)), zOrderCurve.decode(2483, 2));
     ASSERT_EQ(9118, zOrderCurve.encode(arr3, 2));
     ASSERT_EQ(std::vector<uint64_t>(std::begin(arr3), std::end(arr3)), zOrderCurve.decode(9118, 2));
+}
+
+TEST_F(TestOptimalLayoutFixture, TestPartitioningZOrderCurveSchool){
+    auto folder = ExperimentsConfig::zOrderCurveFolder;
+    auto dataset = getDatasetPath(ExperimentsConfig::datasetSchool);
+    auto partitionSize = 2;
+    auto fileExtension = ExperimentsConfig::fileExtension;
+    auto zOrderCurve = structures::ZOrderCurve();
     cleanUpFolder(folder);
     arrow::Result<std::shared_ptr<arrow::Table>> table = storage::TableGenerator::GenerateSchoolTable().ValueOrDie();
     std::vector<std::string> partitioningColumns = {"Age", "Student_id"};
@@ -31,18 +32,15 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningZOrderCurveSchool){
     ASSERT_EQ(dataReader->load(dataset), arrow::Status::OK());
     auto partitioning = partitioning::PartitioningFactory::create(partitioning::Z_ORDER_CURVE, dataReader, partitioningColumns, partitionSize, folder);
     ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
-    auto pathPartition0 = folder / ("0" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition0, "Student_id"), std::vector<int32_t>({21, 7}));
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition0, "Age"), std::vector<int32_t>({18, 27}));
-    auto pathPartition1 = folder / ("1" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition1, "Student_id"), std::vector<int32_t>({16, 45}));
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition1, "Age"), std::vector<int32_t>({30, 21}));
-    auto pathPartition2 = folder / ("2" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition2, "Student_id"), std::vector<int32_t>({34, 91}));
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition2, "Age"), std::vector<int32_t>({37, 22}));
-    auto pathPartition3 = folder / ("3" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition3, "Student_id"), std::vector<int32_t>({74, 111}));
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition3, "Age"), std::vector<int32_t>({41, 23}));
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("0" + fileExtension), "Student_id", std::vector<int32_t>({21, 7})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("0" + fileExtension), "Age", std::vector<int32_t>({18, 27})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("1" + fileExtension), "Student_id", std::vector<int32_t>({16, 45})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("1" + fileExtension), "Age", std::vector<int32_t>({30, 21})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("2" + fileExtension), "Student_id", std::vector<int32_t>({34, 91})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("2" + fileExtension), "Age", std::vector<int32_t>({37, 22})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("3" + fileExtension), "Student_id", std::vector<int32_t>({74, 111})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("3" + fileExtension), "Age", std::vector<int32_t>({41, 23})), arrow::Status::OK());
+    ASSERT_EQ(std::filesystem::exists(folder / ("4" + fileExtension)), false);
 }
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningZOrderCurveCities) {
@@ -59,12 +57,9 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningZOrderCurveCities) {
     auto partitioning = partitioning::PartitioningFactory::create(partitioning::Z_ORDER_CURVE, dataReader,
                                                                   partitioningColumns, partitionSize, folder);
     ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
-    auto pathPartition0 = folder / ("0" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition0, "city"), std::vector<std::string>({"Dublin", "Moscow"}));
-    auto pathPartition1 = folder / ("1" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition1, "city"), std::vector<std::string>({"Copenhagen", "Oslo"}));
-    auto pathPartition2 = folder / ("2" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition2, "city"), std::vector<std::string>({"Amsterdam", "Madrid"}));
-    auto pathPartition3 = folder / ("3" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition3, "city"), std::vector<std::string>({"Tallinn", "Berlin"}));
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("0" + fileExtension), "city", std::vector<std::string>({"Dublin", "Moscow"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("1" + fileExtension), "city", std::vector<std::string>({"Copenhagen", "Oslo"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("2" + fileExtension), "city", std::vector<std::string>({"Amsterdam", "Madrid"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("3" + fileExtension), "city", std::vector<std::string>({"Tallinn", "Berlin"})), arrow::Status::OK());
+    ASSERT_EQ(std::filesystem::exists(folder / ("4" + fileExtension)), false);
 }

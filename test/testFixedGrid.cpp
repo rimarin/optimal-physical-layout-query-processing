@@ -23,6 +23,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningFixedGridWeather){
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("1" + fileExtension), "Month", std::vector<int32_t>({3, 5})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("2" + fileExtension), "Day", std::vector<int32_t>({23})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("2" + fileExtension), "Month", std::vector<int32_t>({7})), arrow::Status::OK());
+    ASSERT_EQ(std::filesystem::exists(folder / ("3" + fileExtension)), false);
 }
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningFixedGridCities){
@@ -40,4 +41,5 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningFixedGridCities){
     ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("1" + fileExtension), "city", std::vector<std::string>({"Oslo", "Amsterdam"})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("2" + fileExtension), "city", std::vector<std::string>({"Dublin", "Copenhagen"})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("3" + fileExtension), "city", std::vector<std::string>({"Tallinn", "Berlin"})), arrow::Status::OK());
+    ASSERT_EQ(std::filesystem::exists(folder / ("4" + fileExtension)), false);
 }
