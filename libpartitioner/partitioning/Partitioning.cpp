@@ -8,9 +8,11 @@ namespace partitioning {
                                                                const std::vector<std::string> &partitionColumns,
                                                                const size_t rowsPerPartition,
                                                                const std::filesystem::path &outputFolder) {
+        // Initialize data members
         dataReader = reader;
         columns = partitionColumns;
         folder = outputFolder;
+        numRows = reader->getNumRows();
         numColumns = partitionColumns.size();
         expectedNumBatches = dataReader->getExpectedNumBatches();
         partitionSize = rowsPerPartition;
@@ -48,7 +50,7 @@ namespace partitioning {
     // If the partition size is greater than the available rows, we do not need to partition
     // Therefore, we directly copy the original file to the partitioned folder
     bool MultiDimensionalPartitioning::checkNoNecessaryPartition() {
-        if (partitionSize >= dataReader->getNumRows()) {
+        if (partitionSize >= numRows) {
             std::cout << "[Partitioning] Partition size greater than the available rows" << std::endl;
             std::cout << "[Partitioning] Therefore put all data in one partition" << std::endl;
             std::filesystem::path source = dataReader->getReaderPath();
