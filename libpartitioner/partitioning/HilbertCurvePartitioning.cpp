@@ -25,8 +25,8 @@ namespace partitioning {
             std::cout << "[HilbertCurvePartitioning] Imported " << totalNumRows << " out of " << numRows << " rows" << std::endl;
             batchId += 1;
         }
+        ARROW_RETURN_NOT_OK(external::ExternalMerge::mergeFiles(folder, "hilbert_curve", partitionSize));
         std::cout << "[HilbertCurvePartitioning] Partitioning of " << batchId << " batches completed" << std::endl;
-        ARROW_RETURN_NOT_OK(storage::DataWriter::mergeBatches(folder, uniquePartitionIds));
         return arrow::Status::OK();
     }
 
@@ -44,27 +44,28 @@ namespace partitioning {
         arrow::UInt32Builder int32Builder;
         auto hilbertCurve = structures::HilbertCurve();
         int numBits = 8;
-        int numDims = columnData.size();
-        int columnSize = columnData[0]->size();
+        auto batchNumRows = recordBatch->num_rows();
+        assert(columnData.size() == numColumns);
+        assert(batchNumRows == columnData[0]->size());
         std::map<IntRow, int64_t> rowToHilbertValue;
         std::vector<IntRow> rows;
         std::vector<uint64_t> hilbertValues = {};
         // Convert columnar format to rows and compute Hilbert value for each for them
-        // Build a hashmap to link each row to the generated Hilbert value
-        // In addition, append Hilbert values to one vector
-        for (int i = 0; i < columnSize; ++i) {
+        // Append Hilbert values to one vector
+        for (int i = 0; i < batchNumRows; ++i) {
             IntRow rowVector;
-            for (int j = 0; j < numDims; ++j) {
+            for (int j = 0; j < numColumns; ++j) {
                 rowVector.emplace_back(columnData[j]->at(i));
             }
             rows.emplace_back(rowVector);
             auto coordinatesVector = IntRow(rowVector);
             int64_t* coordinates = coordinatesVector.data();
-            hilbertCurve.axesToTranspose(coordinates, numBits, numDims);
-            unsigned int hilbertValue = hilbertCurve.interleaveBits(coordinates, numBits, numDims);
+            hilbertCurve.axesToTranspose(coordinates, numBits, (int) numColumns);
+            unsigned int hilbertValue = hilbertCurve.interleaveBits(coordinates, numBits, (int) numColumns);
             hilbertValues.emplace_back(hilbertValue);
         }
 
+        // Add to the record batch the new column with the Hilbert values
         arrow::UInt64Builder uint64Builder;
         ARROW_RETURN_NOT_OK(uint64Builder.AppendValues(hilbertValues));
         std::shared_ptr<arrow::Array> hilbertValuesArrow;
@@ -74,16 +75,7 @@ namespace partitioning {
         std::cout << "[HilbertCurvePartitioning] Added column with hilbert curve values " << std::endl;
 
         std::filesystem::path sortedBatchPath = folder / ("s" + std::to_string(batchId) + ".parquet");
-        ARROW_RETURN_NOT_OK(external::ExternalSort::writeSorted(updatedRecordBatch->Slice(2, 2), "hilbert_curve", sortedBatchPath));
-        std::filesystem::path sortedBatchPath2 = folder / ("s" + std::to_string(batchId+1) + ".parquet");
-        ARROW_RETURN_NOT_OK(external::ExternalSort::writeSorted(updatedRecordBatch->Slice(4, 2), "hilbert_curve", sortedBatchPath2));
-        std::filesystem::path sortedBatchPath3 = folder / ("s" + std::to_string(batchId+2) + ".parquet");
-        ARROW_RETURN_NOT_OK(external::ExternalSort::writeSorted(updatedRecordBatch->Slice(0, 2), "hilbert_curve", sortedBatchPath3));
-        std::filesystem::path sortedBatchPath4 = folder / ("s" + std::to_string(batchId+3) + ".parquet");
-        ARROW_RETURN_NOT_OK(external::ExternalSort::writeSorted(updatedRecordBatch->Slice(6, 2), "hilbert_curve", sortedBatchPath4));
-
-        ARROW_RETURN_NOT_OK(external::ExternalMerge::mergeFiles(folder, "hilbert_curve", partitionSize));
-
+        ARROW_RETURN_NOT_OK(external::ExternalSort::writeSorted(updatedRecordBatch, "hilbert_curve", sortedBatchPath));
         return arrow::Status::OK();
     }
 

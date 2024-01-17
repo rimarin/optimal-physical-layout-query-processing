@@ -17,9 +17,12 @@ namespace partitioning {
         partitionSize = rowsPerPartition;
         assert(partitionSize > 0);
 
-        std::cout << "[" << typeid(this).name() << "] Initializing partitioning technique" << std::endl;
-        std::string displayColumns = std::accumulate(columns.begin(), columns.end(), std::string(" "));
-        std::cout << "[" <<  typeid(this).name() << "] Partition has to be done on columns: " << displayColumns << std::endl;
+        std::cout << "[Partitioning] Initializing partitioning technique" << std::endl;
+        std::cout << "[Partitioning] Partition has to be done on columns: <";
+        for (const auto &column: columns){
+            std::cout << column << ", ";
+        }
+        std::cout << ">" << std::endl;
 
         finished = checkNoNecessaryPartition();
     };
