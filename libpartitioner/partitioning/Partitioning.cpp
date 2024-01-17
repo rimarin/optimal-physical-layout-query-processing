@@ -11,9 +11,11 @@ namespace partitioning {
         columns = partitionColumns;
         folder = outputFolder;
         numColumns = partitionColumns.size();
+        assert(numColumns >= 2);
         numRows = dataReader->getNumRows();
         expectedNumBatches = dataReader->getExpectedNumBatches();
         partitionSize = rowsPerPartition;
+        assert(partitionSize > 0);
 
         std::cout << "[" << typeid(this).name() << "] Initializing partitioning technique" << std::endl;
         std::string displayColumns = std::accumulate(columns.begin(), columns.end(), std::string(" "));

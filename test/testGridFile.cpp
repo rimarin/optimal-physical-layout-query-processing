@@ -1,12 +1,9 @@
-#include <iostream>
-#include <filesystem>
-
 #include <arrow/io/api.h>
+#include <filesystem>
 
 #include "fixture.cpp"
 #include "gtest/gtest.h"
 #include "partitioning/PartitioningFactory.h"
-#include "storage/DataReader.h"
 #include "storage/TableGenerator.h"
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFileSchool){
@@ -21,12 +18,10 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFileSchool){
     ASSERT_EQ(dataReader->load(dataset), arrow::Status::OK());
     auto partitioning = partitioning::PartitioningFactory::create(partitioning::GRID_FILE, dataReader, partitioningColumns, partitionSize, folder);
     ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
-    auto pathPartition0 = folder / ("0" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition0, "Student_id"), std::vector<int32_t>({45, 21, 7, 111, 91}));
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition0, "Age"), std::vector<int32_t>({21, 18, 27, 23, 22}));
-    auto pathPartition1 = folder / ("1" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition1, "Student_id"), std::vector<int32_t>({16, 74, 34}));
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition1, "Age"), std::vector<int32_t>({30, 41, 37}));
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("0" + fileExtension), "Student_id", std::vector<int32_t>({45, 21, 7, 111, 91})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("0" + fileExtension), "Age", std::vector<int32_t>({21, 18, 27, 23, 22})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("1" + fileExtension), "Student_id", std::vector<int32_t>({16, 74, 34})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("1" + fileExtension), "Age", std::vector<int32_t>({30, 41, 37})), arrow::Status::OK());
 }
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFileCities){
@@ -40,16 +35,10 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFileCities){
     ASSERT_EQ(dataReader->load(dataset), arrow::Status::OK());
     auto partitioning = partitioning::PartitioningFactory::create(partitioning::GRID_FILE, dataReader, partitioningColumns, partitionSize, folder);
     ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
-    auto pathPartition0 = folder / ("0" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition0, "city"), std::vector<std::string>({"Oslo"}));
-    auto pathPartition1 = folder / ("1" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition1, "city"), std::vector<std::string>({"Moscow"}));
-    auto pathPartition2 = folder / ("2" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition2, "city"), std::vector<std::string>({"Amsterdam", "Madrid"}));
-    auto pathPartition3 = folder / ("3" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition3, "city"), std::vector<std::string>({"Dublin", "Copenhagen"}));
-    auto pathPartition4 = folder / ("4" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition4, "city"), std::vector<std::string>({"Tallinn"}));
-    auto pathPartition5 = folder / ("5" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition5, "city"), std::vector<std::string>({"Berlin"}));
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("0" + fileExtension), "city", std::vector<std::string>({"Oslo"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("1" + fileExtension), "city", std::vector<std::string>({"Moscow"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("2" + fileExtension), "city", std::vector<std::string>({"Amsterdam", "Madrid"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("3" + fileExtension), "city", std::vector<std::string>({"Dublin", "Copenhagen"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("4" + fileExtension), "city", std::vector<std::string>({"Tallinn"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("5" + fileExtension), "city", std::vector<std::string>({"Berlin"})), arrow::Status::OK());
 }

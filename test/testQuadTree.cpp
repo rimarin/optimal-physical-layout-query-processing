@@ -1,12 +1,9 @@
-#include <iostream>
-#include <filesystem>
-
 #include <arrow/io/api.h>
+#include <filesystem>
 
 #include "fixture.cpp"
 #include "gtest/gtest.h"
 #include "partitioning/PartitioningFactory.h"
-#include "storage/DataReader.h"
 #include "storage/TableGenerator.h"
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningQuadTreeSchool){
