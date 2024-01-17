@@ -211,6 +211,7 @@ namespace external {
                         }
                     }
 
+                    std::vector<std::shared_ptr<arrow::RecordBatch>> rowBatches;
                     // Popping from the min heap guarantees that the values are ordered
                     while(!q.empty()){
                         // Pop from the min heap, this will return the minimum
@@ -227,22 +228,25 @@ namespace external {
                         std::shared_ptr<arrow::RecordBatchReader> sourceBatchReader;
                         ARROW_RETURN_NOT_OK(reader->GetRecordBatchReader(&sourceBatchReader));
                         auto batchFragment = sourceBatchReader->ToRecordBatches()->at(recordBatchIndex)->Slice(fragmentIndex, 1);
-                        std::shared_ptr<arrow::Table> rowTable = arrow::Table::FromRecordBatches(schema, {batchFragment}).ValueOrDie();
-                        // Append the row to the mergedTable
-                        mergedTable = arrow::ConcatenateTables({mergedTable, rowTable}).ValueOrDie();
+
+                        rowBatches.emplace_back(batchFragment);
+
                         // Early export of table in case we already reached desired batch size
-                        if (mergedTable->num_rows() >= batchSize){
+                        if (rowBatches.size() >= batchSize){
+                            // Append the row to the mergedTable
+                            mergedTable = arrow::Table::FromRecordBatches(schema, {rowBatches}).ValueOrDie();
                             std::cout << "[External Merge] Merged table has " << mergedTable->num_rows() <<
                                          ", already reached batchSize " << batchSize;
                             auto partitionFilePath = folder / (std::to_string(partitionIndex) + ".parquet");
                             if (exportTableToDisk(mergedTable, partitionFilePath) == arrow::Status::OK()){
                                 partitionIndex += 1;
                                 std::cout << "[External Merge] Exported " << numRowsRead << " rows to file " << partitionFilePath << std::endl;
-                                mergedTable = arrow::Table::MakeEmpty(schema, arrow::default_memory_pool()).ValueOrDie();
+                                rowBatches = {};
                             }
                         }
                     }
                     // Export the batch to disk
+                    mergedTable = arrow::Table::FromRecordBatches(schema, {rowBatches}).ValueOrDie();
                     auto partitionFilePath = folder / (std::to_string(partitionIndex) + ".parquet");
                     if (exportTableToDisk(mergedTable, partitionFilePath) == arrow::Status::OK()){
                         partitionIndex += 1;
@@ -250,6 +254,7 @@ namespace external {
                     }
                 }
                 std::cout << "[External Merge] Completed, scanned " << numRowsRead << " in total" << std::endl;
+                // TODO: remove parts (files with 's')
             }
             return arrow::Status::OK();
         }
