@@ -18,30 +18,18 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningQuadTreeSchool){
     ASSERT_EQ(dataReader->load(dataset), arrow::Status::OK());
     auto partitioning = partitioning::PartitioningFactory::create(partitioning::QUAD_TREE, dataReader, partitioningColumns, partitionSize, folder);
     ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
-    auto pathPartition0 = folder / ("0" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition0, "Student_id"), std::vector<int32_t>({111, 91}));
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition0, "Age"), std::vector<int32_t>({23, 22}));
-    ASSERT_EQ(readColumn<arrow::UInt32Array>(pathPartition0, "partition_id"), std::vector<uint32_t>({0, 0}));
-    auto pathPartition1 = folder / ("1" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition1, "Student_id"), std::vector<int32_t>({74}));
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition1, "Age"), std::vector<int32_t>({41}));
-    ASSERT_EQ(readColumn<arrow::UInt32Array>(pathPartition1, "partition_id"), std::vector<uint32_t>({1}));
-    auto pathPartition2 = folder / ("2" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition2, "Student_id"), std::vector<int32_t>({45}));
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition2, "Age"), std::vector<int32_t>({21}));
-    ASSERT_EQ(readColumn<arrow::UInt32Array>(pathPartition2, "partition_id"), std::vector<uint32_t>({2}));
-    auto pathPartition3 = folder / ("3" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition3, "Student_id"), std::vector<int32_t>({21}));
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition3, "Age"), std::vector<int32_t>({18}));
-    ASSERT_EQ(readColumn<arrow::UInt32Array>(pathPartition3, "partition_id"), std::vector<uint32_t>({3}));
-    auto pathPartition4 = folder / ("4" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition4, "Student_id"), std::vector<int32_t>({7}));
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition4, "Age"), std::vector<int32_t>({27}));
-    ASSERT_EQ(readColumn<arrow::UInt32Array>(pathPartition4, "partition_id"), std::vector<uint32_t>({4}));
-    auto pathPartition5 = folder / ("5" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition5, "Student_id"), std::vector<int32_t>({16, 34}));
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition5, "Age"), std::vector<int32_t>({30, 37}));
-    ASSERT_EQ(readColumn<arrow::Int32Array>(pathPartition5, "partition_id"), std::vector<int32_t>({5, 5}));
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("0" + fileExtension), "Student_id", std::vector<int32_t>({111, 91})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("0" + fileExtension), "Age", std::vector<int32_t>({23, 22})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("1" + fileExtension), "Student_id", std::vector<int32_t>({74})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("1" + fileExtension), "Age", std::vector<int32_t>({41})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("2" + fileExtension), "Student_id", std::vector<int32_t>({45})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("2" + fileExtension), "Age", std::vector<int32_t>({21})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("3" + fileExtension), "Student_id", std::vector<int32_t>({21})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("3" + fileExtension), "Age", std::vector<int32_t>({18})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("4" + fileExtension), "Student_id", std::vector<int32_t>({7})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("4" + fileExtension), "Age", std::vector<int32_t>({27})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("5" + fileExtension), "Student_id", std::vector<int32_t>({16, 34})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("5" + fileExtension), "Age", std::vector<int32_t>({30, 37})), arrow::Status::OK());
 }
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningQuadTreeCities){
@@ -55,16 +43,10 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningQuadTreeCities){
     ASSERT_EQ(dataReader->load(dataset), arrow::Status::OK());
     auto partitioning = partitioning::PartitioningFactory::create(partitioning::QUAD_TREE, dataReader, partitioningColumns, partitionSize, folder);
     ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
-    auto pathPartition0 = folder / ("0" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition0, "city"), std::vector<std::string>({"Dublin", "Copenhagen"}));
-    auto pathPartition1 = folder / ("1" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition1, "city"), std::vector<std::string>({"Tallinn", "Berlin"}));
-    auto pathPartition2 = folder / ("2" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition2, "city"), std::vector<std::string>({"Oslo"}));
-    auto pathPartition3 = folder / ("3" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition3, "city"), std::vector<std::string>({"Moscow"}));
-    auto pathPartition4 = folder / ("4" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition4, "city"), std::vector<std::string>({"Amsterdam"}));
-    auto pathPartition5 = folder / ("5" + fileExtension);
-    ASSERT_EQ(readColumn<arrow::StringArray>(pathPartition5, "city"), std::vector<std::string>({"Madrid"}));
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("0" + fileExtension), "city", std::vector<std::string>({"Dublin", "Copenhagen"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("1" + fileExtension), "city", std::vector<std::string>({"Tallinn", "Berlin"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("2" + fileExtension), "city", std::vector<std::string>({"Oslo"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("3" + fileExtension), "city", std::vector<std::string>({"Moscow"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("4" + fileExtension), "city", std::vector<std::string>({"Amsterdam"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("5" + fileExtension), "city", std::vector<std::string>({"Madrid"})), arrow::Status::OK());
 }
