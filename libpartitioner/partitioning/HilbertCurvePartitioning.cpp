@@ -82,7 +82,7 @@ namespace partitioning {
         std::filesystem::path sortedBatchPath4 = folder / ("s" + std::to_string(batchId+3) + ".parquet");
         ARROW_RETURN_NOT_OK(external::ExternalSort::writeSorted(updatedRecordBatch->Slice(6, 2), "hilbert_curve", sortedBatchPath4));
 
-        ARROW_RETURN_NOT_OK(external::ExternalMerge::mergeFiles(folder, "hilbert_curve"));
+        ARROW_RETURN_NOT_OK(external::ExternalMerge::mergeFiles(folder, "hilbert_curve", partitionSize));
 
         return arrow::Status::OK();
     }

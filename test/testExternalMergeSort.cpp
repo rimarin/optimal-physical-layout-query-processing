@@ -38,7 +38,8 @@ TEST_F(TestOptimalLayoutFixture, TestExternalMergeSort){
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("s3" + fileExtension), "x", std::vector<int32_t>({85, 90})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("s3" + fileExtension), "y", std::vector<int32_t>({15, 5})), arrow::Status::OK());
 
-    ASSERT_EQ(external::ExternalMerge::mergeFiles(folder, "x"), arrow::Status::OK());
+    auto partitionSize = 8;
+    ASSERT_EQ(external::ExternalMerge::mergeFiles(folder, "x", partitionSize), arrow::Status::OK());
 
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("0" + fileExtension), "x", std::vector<int32_t>({5, 27, 35, 52, 62, 82, 85, 90})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("0" + fileExtension), "y", std::vector<int32_t>({45, 35, 42, 10, 77, 65, 15, 5})), arrow::Status::OK());
