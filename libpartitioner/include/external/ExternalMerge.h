@@ -4,6 +4,7 @@
 #include <iostream>
 #include <filesystem>
 #include <map>
+#include <regex>
 #include <set>
 #include <string>
 #include <vector>
@@ -20,6 +21,26 @@
 #include <parquet/arrow/writer.h>
 
 namespace external {
+    struct ExternalFileReader{
+        ExternalFileReader(std::shared_ptr<parquet::arrow::FileReader> &_fileReader, int _recordBatchIndex,
+                           int _fragmentStartIndex, uint32_t _numRows): fileReader(_fileReader),
+                                recordBatchIndex(_recordBatchIndex), fragmentStartIndex(_fragmentStartIndex),
+                                numRows(_numRows) {};
+        std::shared_ptr<parquet::arrow::FileReader> fileReader;
+        uint32_t recordBatchIndex;
+        uint32_t fragmentStartIndex;
+        uint32_t numRows;
+    };
+
+    struct ExternalRow{
+        ExternalRow(double &_columnValue, uint32_t _readerIndex, uint32_t _recordBatchIndex, uint32_t _fragmentStartIndex):
+                    columnValue(_columnValue), readerIndex(_readerIndex), recordBatchIndex(_recordBatchIndex),
+                    fragmentStartIndex(_fragmentStartIndex) {};
+        double columnValue;
+        uint32_t readerIndex;
+        uint32_t recordBatchIndex;
+        uint32_t fragmentStartIndex;
+    };
 
     class ExternalMerge {
     public:
@@ -54,14 +75,17 @@ namespace external {
             constexpr int readFinished = -1;
 
             // Prepare vector of file readers for each sorted batch
-            // pair<arrow file reader, fragment start index>
-            std::vector<std::pair<std::shared_ptr<parquet::arrow::FileReader>, uint32_t>> readers;
+            // pair<arrow file reader, record batch index, fragment start index>
+            std::vector<ExternalFileReader> readers;
             parquet::arrow::FileReaderBuilder reader_builder;
 
-            // List files in folder
+            // Compute sum of rows of readers, so that later we can compare it with the total read rows
+            uint32_t totalNumRows = 0;
+            // List files in folder. The sorted parts are marked with an initial "s" in the filename
+            const std::regex regexFiles{R"(.*s\d+\.parquet)"};
             for (const auto &folderFile : std::filesystem::directory_iterator(folder)) {
                 const std::filesystem::path& filePath = folderFile.path();
-                if (filePath.extension() == ".parquet"){
+                if (std::regex_match(filePath.string(), regexFiles)){
                     // Define properties for the file readers
                     auto reader_properties = parquet::ReaderProperties(arrow::default_memory_pool());
                     reader_properties.set_buffer_size(4096 * 4);
@@ -73,28 +97,24 @@ namespace external {
                     reader_builder.properties(arrow_reader_props);
                     std::shared_ptr<parquet::arrow::FileReader> reader;
                     ARROW_ASSIGN_OR_RAISE(reader, reader_builder.Build());
-                    readers.emplace_back(reader, 0);
+                    std::shared_ptr<arrow::RecordBatchReader> rb_reader;
+                    ARROW_RETURN_NOT_OK(reader->GetRecordBatchReader(&rb_reader));
+                    std::shared_ptr<arrow::RecordBatch> record_batch;
+                    uint32_t readerNumRows = 0;
+                    while (true) {
+                        RETURN_NOT_OK(rb_reader->ReadNext(&record_batch));
+                        if (record_batch == nullptr) {
+                            break;
+                        }
+                        readerNumRows += record_batch->num_rows();
+                    }
+                    totalNumRows += readerNumRows;
+                    readers.emplace_back(reader, 0, 0, readerNumRows);
                 }
             }
 
             auto numReaders = readers.size();
             std::cout << "[External Merge] Found " << numReaders << " files/readers to merge" << std::endl;
-
-            // Compute sum of rows of readers, so that later we can compare it with the total read rows
-            uint32_t totalNumRows = 0;
-            for (const auto &reader: readers){
-                std::shared_ptr<arrow::RecordBatchReader> rb_reader;
-                ARROW_RETURN_NOT_OK(reader.first->GetRecordBatchReader(&rb_reader));
-                std::shared_ptr<arrow::RecordBatch> record_batch;
-                while (true) {
-                    RETURN_NOT_OK(rb_reader->ReadNext(&record_batch));
-                    if (record_batch == nullptr) {
-                        break;
-                    }
-                    totalNumRows += record_batch->num_rows();
-                }
-            }
-
             std::cout << "[External Merge] Expected " << totalNumRows << " rows to merge in total" << std::endl;
 
             // Prepare a vector of empty columns matching the schema. It will be populated with the merged data
@@ -115,7 +135,7 @@ namespace external {
 
                 // Prepare an array containing the columns of merge sorted batch
                 std::shared_ptr<arrow::RecordBatchReader> firstReader;
-                ARROW_RETURN_NOT_OK(readers.at(0).first->GetRecordBatchReader(&firstReader));
+                ARROW_RETURN_NOT_OK(readers.at(0).fileReader->GetRecordBatchReader(&firstReader));
                 // Obtain the common schema
                 auto schema = firstReader->schema();
 
@@ -131,9 +151,8 @@ namespace external {
                 while(numRowsRead < totalNumRows) { // || completedReaders < numReaders) {
                     // Initialize a priority queue, storing pairs of arrow values and related reader index
                     // The index is needed to identity the source batch and reconstruct the row order later
-                    std::priority_queue<std::tuple<double, uint32_t, uint32_t>,
-                                        std::vector<std::tuple<double, uint32_t, uint32_t>>,
-                                        std::greater<>> q;
+                    auto compare = [](ExternalRow a, ExternalRow b) { return a.columnValue > b.columnValue; };
+                    std::priority_queue<ExternalRow, std::vector<ExternalRow>, decltype(compare)> q(compare);
                     // Prepare mergedTable
                     auto mergedTable = arrow::Table::MakeEmpty(schema, arrow::default_memory_pool()).ValueOrDie();
                     // Fragment rows read
@@ -144,24 +163,34 @@ namespace external {
                             break;
                         }
                         std::shared_ptr<arrow::RecordBatchReader> batchReader;
-                        std::optional<std::pair<std::shared_ptr<parquet::arrow::FileReader>, uint32_t>> currentReader = readers.at(i);
-                        if (currentReader->second != readFinished){
-                            ARROW_RETURN_NOT_OK(currentReader->first->GetRecordBatchReader(&batchReader));
-                            uint32_t fragmentStart = currentReader->second;
+                        ExternalFileReader currentReader = readers.at(i);
+                        if (currentReader.fragmentStartIndex != readFinished){
+                            ARROW_RETURN_NOT_OK(currentReader.fileReader->GetRecordBatchReader(&batchReader));
+                            uint32_t recordBatchIndex = currentReader.recordBatchIndex;
+                            uint32_t fragmentStart = currentReader.fragmentStartIndex;
                             // Load fragment-sized values from the reader
                             // Use slice to select fragments of each batch
                             assert(fragmentStart >= 0);
-                            auto batchFragment = batchReader->ToRecordBatches()->at(0)->Slice(fragmentStart, fragmentSize);
+                            auto batchFragment = batchReader->ToRecordBatches()->at(recordBatchIndex)->Slice(fragmentStart, fragmentSize);
                             auto fragmentNumRows = batchFragment->num_rows();
-                            // If there is no more data to fetch from the reader, set the finished flag
+                            // If there is no more data to fetch from the record batch
                             if (fragmentNumRows == 0){
-                                readers.at(i).second = readFinished;
-                                completedReaders += 1;
+                                // If this was the last record batch, set the finished flag
+                                if (fragmentStart >= currentReader.numRows){
+                                    readers.at(i).fragmentStartIndex = readFinished;
+                                    completedReaders += 1;
+                                }
+                                // Otherwise, update the index to the next record batch. Consequently, the
+                                // fragmentIndex is reset to zero
+                                else{
+                                    readers.at(i).recordBatchIndex += 1;
+                                    readers.at(i).fragmentStartIndex = 0;
+                                }
                                 continue;
                             }
                             // Otherwise, advance the reading index
                             else{
-                                readers.at(i).second += fragmentNumRows;
+                                readers.at(i).fragmentStartIndex += fragmentNumRows;
                                 numRowsRead += fragmentNumRows;
                                 numRowsFragments += fragmentNumRows;
                             }
@@ -174,9 +203,10 @@ namespace external {
                             assert(castedColumn->size() == batchFragment->num_rows());
                             for (int j = 0; j < castedColumn->size(); ++j){
                                 auto columnValue = castedColumn->at(j);
-                                // Push the value, the index of the reader and the fragment start index to the heap
-                                std::tuple<double, uint32_t, uint32_t> tuple = std::make_tuple(columnValue, i, fragmentStart + j);
-                                q.push(tuple);
+                                // Push the value, the index of the reader, the index of the record batch and the
+                                // fragment start index to the heap
+                                ExternalRow heapRow = ExternalRow(columnValue, i, recordBatchIndex, fragmentStart + j);
+                                q.push(heapRow);
                             }
                         }
                     }
@@ -184,41 +214,64 @@ namespace external {
                     // Popping from the min heap guarantees that the values are ordered
                     while(!q.empty()){
                         // Pop from the min heap, this will return the minimum
-                        auto minTuple = q.top();
+                        auto minRow = q.top();
                         q.pop();
-                        auto columnValue = std::get<0>(minTuple);
-                        auto readerIndex = std::get<1>(minTuple);
-                        auto fragmentIndex = std::get<2>(minTuple);
+                        auto columnValue = minRow.columnValue;
+                        auto readerIndex = minRow.readerIndex;
+                        auto recordBatchIndex = minRow.recordBatchIndex;
+                        auto fragmentIndex = minRow.fragmentStartIndex;
                         // Information about the batch source
-                        auto reader = readers.at(readerIndex).first;
+                        auto reader = readers.at(readerIndex).fileReader;
 
-                        // Extract matching rows by
+                        // Extract matching rows using the fragment index
                         std::shared_ptr<arrow::RecordBatchReader> sourceBatchReader;
                         ARROW_RETURN_NOT_OK(reader->GetRecordBatchReader(&sourceBatchReader));
-                        auto batchFragment = sourceBatchReader->ToRecordBatches()->at(0)->Slice(fragmentIndex, 1);
+                        auto batchFragment = sourceBatchReader->ToRecordBatches()->at(recordBatchIndex)->Slice(fragmentIndex, 1);
                         std::shared_ptr<arrow::Table> rowTable = arrow::Table::FromRecordBatches(schema, {batchFragment}).ValueOrDie();
                         // Append the row to the mergedTable
                         mergedTable = arrow::ConcatenateTables({mergedTable, rowTable}).ValueOrDie();
+                        // Early export of table in case we already reached desired batch size
+                        if (mergedTable->num_rows() >= batchSize){
+                            std::cout << "[External Merge] Merged table has " << mergedTable->num_rows() <<
+                                         ", already reached batchSize " << batchSize;
+                            auto partitionFilePath = folder / (std::to_string(partitionIndex) + ".parquet");
+                            if (exportTableToDisk(mergedTable, partitionFilePath) == arrow::Status::OK()){
+                                partitionIndex += 1;
+                                std::cout << "[External Merge] Exported " << numRowsRead << " rows to file " << partitionFilePath << std::endl;
+                                mergedTable = arrow::Table::MakeEmpty(schema, arrow::default_memory_pool()).ValueOrDie();
+                            }
+                        }
                     }
                     // Export the batch to disk
-                    std::shared_ptr<arrow::io::FileOutputStream> partitionFile;
                     auto partitionFilePath = folder / (std::to_string(partitionIndex) + ".parquet");
-                    ARROW_ASSIGN_OR_RAISE(partitionFile, arrow::io::FileOutputStream::Open(partitionFilePath));
-                    // Prepare the Parquet writer
-                    std::unique_ptr<parquet::arrow::FileWriter> writer;
-                    ARROW_ASSIGN_OR_RAISE(writer, parquet::arrow::FileWriter::Open(*mergedTable->schema(),
-                                                                                   arrow::default_memory_pool(), partitionFile));
-                    // Write the batch and close the file
-                    ARROW_RETURN_NOT_OK(writer->WriteTable(*mergedTable));
-                    ARROW_RETURN_NOT_OK(writer->Close());
-                    partitionIndex += 1;
-                    std::cout << "[External Merge] Exported " << numRowsRead << " rows to file " << partitionFilePath << std::endl;
+                    if (exportTableToDisk(mergedTable, partitionFilePath) == arrow::Status::OK()){
+                        partitionIndex += 1;
+                        std::cout << "[External Merge] Exported " << numRowsRead << " rows to file " << partitionFilePath << std::endl;
+                    }
                 }
                 std::cout << "[External Merge] Completed, scanned " << numRowsRead << " in total" << std::endl;
             }
             return arrow::Status::OK();
         }
     private:
+        static arrow::Status exportTableToDisk(const std::shared_ptr<arrow::Table> &table,
+                                               const std::filesystem::path &outputPath){
+            // Export the batch to disk
+            if (table->num_rows() > 0) {
+                std::shared_ptr<arrow::io::FileOutputStream> outFile;
+                ARROW_ASSIGN_OR_RAISE(outFile, arrow::io::FileOutputStream::Open(outputPath));
+                // Prepare the Parquet writer
+                std::unique_ptr<parquet::arrow::FileWriter> writer;
+                ARROW_ASSIGN_OR_RAISE(writer, parquet::arrow::FileWriter::Open(*table->schema(),
+                                                                               arrow::default_memory_pool(),
+                                                                               outFile));
+                // Write the batch and close the file
+                ARROW_RETURN_NOT_OK(writer->WriteTable(*table));
+                ARROW_RETURN_NOT_OK(writer->Close());
+                return arrow::Status::OK();
+            }
+            return arrow::Status::IOError("Table is empty");
+        }
     };
 }
 
