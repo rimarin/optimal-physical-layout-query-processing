@@ -42,6 +42,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurveSchool){
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("0" + fileExtension), "Age", std::vector<int32_t>({27, 18, 30, 21, 37})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("1" + fileExtension), "Student_id", std::vector<int32_t>({74, 91, 111})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("1" + fileExtension), "Age", std::vector<int32_t>({41, 22, 23})), arrow::Status::OK());
+    ASSERT_EQ(std::filesystem::exists(folder / ("2" + fileExtension)), false);
 }
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurveCities){
@@ -59,4 +60,5 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurveCities){
     ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("1" + fileExtension), "city", std::vector<std::string>({"Oslo", "Copenhagen"})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("2" + fileExtension), "city", std::vector<std::string>({"Amsterdam", "Madrid"})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("3" + fileExtension), "city", std::vector<std::string>({"Berlin", "Tallinn"})), arrow::Status::OK());
+    ASSERT_EQ(std::filesystem::exists(folder / ("4" + fileExtension)), false);
 }

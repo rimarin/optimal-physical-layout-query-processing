@@ -45,4 +45,8 @@ TEST_F(TestOptimalLayoutFixture, TestExternalMergeSort){
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("0" + fileExtension), "y", std::vector<int32_t>({45, 35, 42, 10, 77, 65, 15, 5})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("0" + fileExtension), "year", std::vector<int32_t>({1912, 1953, 1964, 1932, 1990, 1989, 1976, 1941})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("0" + fileExtension), "city", std::vector<std::string>({"Dublin", "Oslo", "Copenhagen", "Moscow", "Tallinn", "Berlin", "Amsterdam", "Madrid"})), arrow::Status::OK());
+
+    ASSERT_EQ(std::filesystem::exists(folder / ("1" + fileExtension)), false);
+    ASSERT_EQ(std::filesystem::exists(folder / ("2" + fileExtension)), false);
+    ASSERT_EQ(std::filesystem::exists(folder / ("3" + fileExtension)), false);
 }
