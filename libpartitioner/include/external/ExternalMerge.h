@@ -49,6 +49,8 @@ namespace external {
              *    E.g. the same will be done with the second fragment of each file, etc...
              */
 
+            std::cout << "[External Merge] Start external merge" << std::endl;
+
             constexpr int readFinished = -1;
 
             // Prepare vector of file readers for each sorted batch
@@ -76,6 +78,7 @@ namespace external {
             }
 
             auto numReaders = readers.size();
+            std::cout << "[External Merge] Found " << numReaders << " files/readers to merge" << std::endl;
 
             // Compute sum of rows of readers, so that later we can compare it with the total read rows
             uint32_t totalNumRows = 0;
@@ -92,19 +95,29 @@ namespace external {
                 }
             }
 
+            std::cout << "[External Merge] Expected " << totalNumRows << " rows to merge in total" << std::endl;
+
             // Prepare a vector of empty columns matching the schema. It will be populated with the merged data
             if (numReaders > 0 ) {
 
                 // Size of the read from a sorted file. Computed this way so that we merged fragments will be exactly
                 // one batch, that can be directly written to disk
-                uint32_t fragmentSize = batchSize / numReaders;
+                uint32_t fragmentSize;
+                if(batchSize >= numReaders){
+                    fragmentSize = std::ceil(batchSize / numReaders);
+                }
+                else{
+                    fragmentSize = 1;
+                }
+
+                assert(fragmentSize > 0);
+                std::cout << "[External Merge] Using fragment size " << fragmentSize << std::endl;
 
                 // Prepare an array containing the columns of merge sorted batch
                 std::shared_ptr<arrow::RecordBatchReader> firstReader;
                 ARROW_RETURN_NOT_OK(readers.at(0).first->GetRecordBatchReader(&firstReader));
+                // Obtain the common schema
                 auto schema = firstReader->schema();
-                // Prepare mergedTable
-                auto mergedTable = arrow::Table::MakeEmpty(schema, arrow::default_memory_pool()).ValueOrDie();
 
                 // Determine the index of the ordering column
                 auto sortingColumnIndex = schema->GetFieldIndex(columnName);
@@ -115,13 +128,21 @@ namespace external {
                 uint32_t completedReaders = 0;
                 uint32_t partitionIndex = 0;
                 // Termination conditions: the data from all readers is exhausted
-                while(numRowsRead < totalNumRows) { // || completedReaders < numReaders){
+                while(numRowsRead < totalNumRows) { // || completedReaders < numReaders) {
                     // Initialize a priority queue, storing pairs of arrow values and related reader index
                     // The index is needed to identity the source batch and reconstruct the row order later
                     std::priority_queue<std::tuple<double, uint32_t, uint32_t>,
                                         std::vector<std::tuple<double, uint32_t, uint32_t>>,
                                         std::greater<>> q;
-                    for (int i = 0; i < readers.size(); ++i) {
+                    // Prepare mergedTable
+                    auto mergedTable = arrow::Table::MakeEmpty(schema, arrow::default_memory_pool()).ValueOrDie();
+                    // Fragment rows read
+                    uint32_t numRowsFragments = 0;
+                    for (int i = 0; i < numReaders; ++i) {
+                        // If we already reached the desired batch size
+                        if (numRowsFragments >= batchSize){
+                            break;
+                        }
                         std::shared_ptr<arrow::RecordBatchReader> batchReader;
                         std::optional<std::pair<std::shared_ptr<parquet::arrow::FileReader>, uint32_t>> currentReader = readers.at(i);
                         if (currentReader->second != readFinished){
@@ -129,17 +150,20 @@ namespace external {
                             uint32_t fragmentStart = currentReader->second;
                             // Load fragment-sized values from the reader
                             // Use slice to select fragments of each batch
+                            assert(fragmentStart >= 0);
                             auto batchFragment = batchReader->ToRecordBatches()->at(0)->Slice(fragmentStart, fragmentSize);
                             auto fragmentNumRows = batchFragment->num_rows();
                             // If there is no more data to fetch from the reader, set the finished flag
                             if (fragmentNumRows == 0){
-                                currentReader->second = readFinished;
+                                readers.at(i).second = readFinished;
                                 completedReaders += 1;
+                                continue;
                             }
                             // Otherwise, advance the reading index
                             else{
-                                currentReader->second += fragmentNumRows;
+                                readers.at(i).second += fragmentNumRows;
                                 numRowsRead += fragmentNumRows;
+                                numRowsFragments += fragmentNumRows;
                             }
                             // Retrieve only the sorted column from the batch fragment
                             std::vector<std::shared_ptr<arrow::Array>> arrowArray = {batchFragment->column(sortingColumnIndex)};
@@ -188,7 +212,9 @@ namespace external {
                     ARROW_RETURN_NOT_OK(writer->WriteTable(*mergedTable));
                     ARROW_RETURN_NOT_OK(writer->Close());
                     partitionIndex += 1;
+                    std::cout << "[External Merge] Exported " << numRowsRead << " rows to file " << partitionFilePath << std::endl;
                 }
+                std::cout << "[External Merge] Completed, scanned " << numRowsRead << " in total" << std::endl;
             }
             return arrow::Status::OK();
         }
