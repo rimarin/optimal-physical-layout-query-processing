@@ -31,6 +31,8 @@ namespace external {
              * Helper method to sort a RecordBatch by a certain column and export it to a Parquet file
              */
             // Sort by the provided column name
+            std::cout << "[ExternalSort] Starting to write sorted file " << outputPath << " for sort column "
+                      << sortColumn << std::endl;
             ARROW_ASSIGN_OR_RAISE(auto sort_indices,
                                  arrow::compute::SortIndices(recordBatch->GetColumnByName(sortColumn),
                                  arrow::compute::SortOptions({arrow::compute::SortKey{sortColumn}})));
@@ -46,8 +48,10 @@ namespace external {
                                                                            storage::DataWriter::getWriterProperties(),
                                                                            storage::DataWriter::getArrowWriterProperties()));
             // Write the batch and close the file
+            std::cout << "[ExternalSort] Writing " << sorted.record_batch()->num_rows() << " rows" << std::endl;
             ARROW_RETURN_NOT_OK(writer->WriteRecordBatch(*sorted.record_batch()));
             ARROW_RETURN_NOT_OK(writer->Close());
+            std::cout << "[ExternalSort] Completed, written sorted file to " << outputPath << std::endl;
             return arrow::Status::OK();
         }
     private:
