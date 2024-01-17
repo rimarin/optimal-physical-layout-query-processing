@@ -1,3 +1,4 @@
+#include "common/Exception.h"
 #include "partitioning/Partitioning.h"
 
 namespace partitioning {
@@ -11,12 +12,27 @@ namespace partitioning {
         columns = partitionColumns;
         folder = outputFolder;
         numColumns = partitionColumns.size();
-        assert(numColumns >= 2);
-        numRows = dataReader->getNumRows();
         expectedNumBatches = dataReader->getExpectedNumBatches();
         partitionSize = rowsPerPartition;
-        assert(partitionSize > 0);
 
+        // Validate number of columns
+        if(numColumns < minNumberOfColumns){
+            throw InsufficientNumberOfColumns(minNumberOfColumns);
+        }
+
+        // Validate column names
+        for (const auto &column: columns){
+            if (dataReader->getColumnIndex(column).ValueOrDie() == -1){
+                throw InvalidColumn(column);
+            }
+        }
+
+        // Validate partition size
+        if(partitionSize < minPartitionSize){
+            throw InvalidPartitionSize(minPartitionSize, std::numeric_limits<size_t>::max());
+        }
+
+        // Print the names of the columns to index
         std::cout << "[Partitioning] Initializing partitioning technique" << std::endl;
         std::cout << "[Partitioning] Partition has to be done on columns: <";
         for (const auto &column: columns){
@@ -24,6 +40,8 @@ namespace partitioning {
         }
         std::cout << ">" << std::endl;
 
+        // Check if we actually do not need to partition but only move files around
+        // Might happen when the partition size is greater than the number of rows in the dataset
         finished = checkNoNecessaryPartition();
     };
 

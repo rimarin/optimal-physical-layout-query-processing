@@ -44,6 +44,8 @@ namespace partitioning {
         bool addColumnPartitionId = true;
         std::string fileExtension = ".parquet";
         bool finished = false;
+        const uint32_t minNumberOfColumns = 2;
+        const uint32_t minPartitionSize = 1;
     };
 }
 
