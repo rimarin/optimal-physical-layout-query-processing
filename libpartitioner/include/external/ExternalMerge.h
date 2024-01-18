@@ -20,6 +20,8 @@
 #include <parquet/arrow/reader.h>
 #include <parquet/arrow/writer.h>
 
+#include "common/Settings.h"
+
 namespace external {
     struct ExternalFileReader{
         ExternalFileReader(std::shared_ptr<parquet::arrow::FileReader> &_fileReader,
@@ -179,6 +181,9 @@ namespace external {
                             // Use slice to select fragments of each batch
                             assert(fragmentStart >= 0);
                             auto currentRecordBatch = currentReader->recordBatch;
+                            if (currentRecordBatch == nullptr){
+                                continue;
+                            }
                             auto batchFragment = currentRecordBatch->Slice(fragmentStart, fragmentSize);
                             auto fragmentNumRows = batchFragment->num_rows();
                             // If there is no more data to fetch from the record batch
@@ -245,25 +250,25 @@ namespace external {
                         if (rowBatches.size() >= batchSize){
                             // Append the row to the mergedTable
                             mergedTable = arrow::Table::FromRecordBatches(schema, {rowBatches}).ValueOrDie();
-                            std::cout << "[External Merge] Merged table has " << mergedTable->num_rows() <<
-                                         ", already reached batchSize " << batchSize << std::endl;
-                            auto partitionFilePath = folder / (std::to_string(partitionIndex) + ".parquet");
+                            std::cout << "[External Merge] Reached batch size" << std::endl;
+                            auto partitionFilePath = folder / (std::to_string(partitionIndex) + common::Settings::fileExtension);
                             if (exportTableToDisk(mergedTable, partitionFilePath) == arrow::Status::OK()){
                                 partitionIndex += 1;
-                                std::cout << "[External Merge] Exported " << numRowsRead << " rows to file " << partitionFilePath << std::endl;
+                                std::cout << "[External Merge] Exported " << numRowsRead << " out of " << totalNumRows << std::endl;
                                 rowBatches = {};
                             }
                         }
                     }
                     // Export the batch to disk
                     mergedTable = arrow::Table::FromRecordBatches(schema, {rowBatches}).ValueOrDie();
-                    auto partitionFilePath = folder / (std::to_string(partitionIndex) + ".parquet");
+                    auto partitionFilePath = folder / (std::to_string(partitionIndex) + common::Settings::fileExtension);
                     if (exportTableToDisk(mergedTable, partitionFilePath) == arrow::Status::OK()){
                         partitionIndex += 1;
-                        std::cout << "[External Merge] Exported " << numRowsRead << " rows to file " << partitionFilePath << std::endl;
+                        std::cout << "[External Merge] Exported " << numRowsRead << " out of " << totalNumRows << std::endl;
                     }
                 }
                 std::cout << "[External Merge] Completed, scanned " << numRowsRead << " in total" << std::endl;
+                assert(numRowsRead == totalNumRows);
                 // Remove sorted parts (files starting with 's')
                 for (const auto &folderFile : std::filesystem::directory_iterator(folder)) {
                     const std::filesystem::path& filePath = folderFile.path();
@@ -289,6 +294,7 @@ namespace external {
                 // Write the batch and close the file
                 ARROW_RETURN_NOT_OK(writer->WriteTable(*table));
                 ARROW_RETURN_NOT_OK(writer->Close());
+                std::cout << "[External Merge] Exported " << table->num_rows() << " rows to file " << outputPath << std::endl;
                 return arrow::Status::OK();
             }
             return arrow::Status::IOError("Table is empty");
