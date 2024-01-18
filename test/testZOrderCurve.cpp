@@ -24,7 +24,6 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningZOrderCurveSchool){
     auto dataset = getDatasetPath(ExperimentsConfig::datasetSchool);
     auto partitionSize = 2;
     auto fileExtension = ExperimentsConfig::fileExtension;
-    auto zOrderCurve = structures::ZOrderCurve();
     cleanUpFolder(folder);
     arrow::Result<std::shared_ptr<arrow::Table>> table = storage::TableGenerator::GenerateSchoolTable().ValueOrDie();
     std::vector<std::string> partitioningColumns = {"Age", "Student_id"};
@@ -57,9 +56,9 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningZOrderCurveCities) {
     auto partitioning = partitioning::PartitioningFactory::create(partitioning::Z_ORDER_CURVE, dataReader,
                                                                   partitioningColumns, partitionSize, folder);
     ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
-    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("0" + fileExtension), "city", std::vector<std::string>({"Dublin", "Moscow"})), arrow::Status::OK());
-    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("1" + fileExtension), "city", std::vector<std::string>({"Copenhagen", "Oslo"})), arrow::Status::OK());
-    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("2" + fileExtension), "city", std::vector<std::string>({"Amsterdam", "Madrid"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("0" + fileExtension), "city", std::vector<std::string>({"Moscow", "Dublin"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("1" + fileExtension), "city", std::vector<std::string>({"Oslo", "Copenhagen"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("2" + fileExtension), "city", std::vector<std::string>({"Madrid", "Amsterdam"})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("3" + fileExtension), "city", std::vector<std::string>({"Tallinn", "Berlin"})), arrow::Status::OK());
     ASSERT_EQ(std::filesystem::exists(folder / ("4" + fileExtension)), false);
 }

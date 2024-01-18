@@ -16,10 +16,12 @@
 #include <arrow/table.h>
 
 #include "common/ColumnDataConverter.h"
-#include "structures/ZOrderCurve.h"
+#include "external/ExternalMerge.h"
+#include "external/ExternalSort.h"
 #include "partitioning/Partitioning.h"
 #include "storage/DataReader.h"
 #include "storage/DataWriter.h"
+#include "structures/ZOrderCurve.h"
 
 
 namespace partitioning {
