@@ -1,12 +1,9 @@
-#include <algorithm>
-#include <numeric>
-
 #include "partitioning/FixedGridPartitioning.h"
 
 namespace partitioning {
 
     arrow::Status FixedGridPartitioning::partition() {
-        // TODO: Adjust algorithm:
+        // Idea:
         //  1. Read in batches
         //  2. Compute index of cell
         //  3. Write out sorted batched by cell index
@@ -53,9 +50,10 @@ namespace partitioning {
         }
         // The sum of rows from the batches should match the number of rows expected from parquet metadata
         assert(totalNumRows == numRows);
-        std::cout << "[FixedGridPartitioning] Partitioning of " << expectedNumBatches << " batches completed" << std::endl;
-        // Merge the batches together
-        ARROW_RETURN_NOT_OK(storage::DataWriter::mergeBatches(folder, uniquePartitionIds));
+
+        // Merge the files to create globally sorted partitions
+        ARROW_RETURN_NOT_OK(external::ExternalMerge::mergeFiles(folder, "cell_idx", partitionSize));
+        std::cout << "[FixedGridPartitioning] Partitioning of " << batchId << " batches completed" << std::endl;
         return arrow::Status::OK();
     }
 
@@ -73,16 +71,16 @@ namespace partitioning {
         size_t batchNumRows = columnData[0]->size();
         batchColumns.clear();
 
-        std::vector<uint32_t> cellIndexes = {};
+        std::vector<uint64_t> cellIndexes = {};
         for (int i = 0; i < batchNumRows; ++i){
-            uint32_t cellIndex = 0;
-            uint32_t multiplier = 1;
+            uint64_t cellIndex = 0;
+            uint64_t multiplier = 1;
             for (int j = 0; j < numColumns; ++j){
                 auto dimensionDomain = columnToDomain[j];
-                auto dimensionNumCells = (uint32_t) std::ceil(dimensionDomain / cellWidth);
+                auto dimensionNumCells = (uint64_t) std::ceil(dimensionDomain / cellWidth);
                 auto column = columnData[j];
                 double_t columnValue = column->at(i);
-                auto cellDimensionIndex = (uint32_t) std::floor(columnValue / cellWidth);
+                auto cellDimensionIndex = (uint64_t) std::floor(columnValue / cellWidth);
                 assert(cellDimensionIndex < columnToDomain[j]);
                 cellIndex += cellDimensionIndex * multiplier;
                 multiplier *= dimensionNumCells;
@@ -90,64 +88,18 @@ namespace partitioning {
             cellIndexes.emplace_back(cellIndex);
         }
 
-        std::vector<size_t> idx(cellIndexes.size());
-        iota(idx.begin(), idx.end(), 0);
-
-        std::stable_sort(idx.begin(), idx.end(),
-                         [&cellIndexes](size_t i1, size_t i2) {return cellIndexes[i1] < cellIndexes[i2];});
-
-        std::map<uint32_t, uint32_t> cellIndexToPartition;
-        std::sort(std::begin(cellIndexes), std::end(cellIndexes));
-        uint32_t minBatchCapacity = (numRows > 1000) ? 1000 : 1;
-        uint32_t batchCapacity = std::max( (uint32_t) cellCapacity / expectedNumBatches, minBatchCapacity);
-        std::cout << "[FixedGridPartitioning] In order to fit " << cellCapacity << " elements per cell, "
-                      "each batch has a capacity of " << batchCapacity << std::endl;
-        for (int i = 0; i < idx.size(); ++i) {
-            cellIndexToPartition[idx[i]] = i / batchCapacity;
-        }
-        cellIndexes.clear();
-        for (int i = 0; i < batchNumRows; ++i){
-            partitionIds.emplace_back(cellIndexToPartition[i]);
-        }
-        cellIndexToPartition.clear();
-        arrow::UInt32Builder int32Builder;
-        ARROW_RETURN_NOT_OK(int32Builder.AppendValues(partitionIds));
-        std::cout << "[FixedGridPartitioning] Mapped columns to partition ids" << std::endl;
-        std::shared_ptr<arrow::Array> partitionIdsArrow;
-        ARROW_ASSIGN_OR_RAISE(partitionIdsArrow, int32Builder.Finish());
+        // Add to the record batch the new column with the cell index values
+        arrow::UInt64Builder uint64Builder;
+        ARROW_RETURN_NOT_OK(uint64Builder.AppendValues(cellIndexes));
+        std::shared_ptr<arrow::Array> cellIndexValuesArrow;
+        ARROW_ASSIGN_OR_RAISE(cellIndexValuesArrow, uint64Builder.Finish());
         std::shared_ptr<arrow::RecordBatch> updatedRecordBatch;
-        ARROW_ASSIGN_OR_RAISE(updatedRecordBatch, recordBatch->AddColumn(0, "partition_id", partitionIdsArrow));
-        uniquePartitionIds.merge(std::set(partitionIds.begin(), partitionIds.end()));
-        auto numPartitions = uniquePartitionIds.size();
-        std::cout << "[FixedGridPartitioning] Computed " << numPartitions << " unique partition ids" << std::endl;
+        ARROW_ASSIGN_OR_RAISE(updatedRecordBatch, recordBatch->AddColumn(0, "cell_idx", cellIndexValuesArrow));
+        std::cout << "[FixedGridPartitioning] Added column with cell index values " << std::endl;
 
-        uint64_t partitionedTablesNumRows = 0;
-        uint32_t completedPartitions = 0;
-        for (const auto &partitionId: uniquePartitionIds){
-            auto writeTable = arrow::Table::FromRecordBatches({updatedRecordBatch}).ValueOrDie();
-            std::shared_ptr<arrow::dataset::Dataset> dataset = std::make_shared<arrow::dataset::InMemoryDataset>(writeTable);
-            auto options = std::make_shared<arrow::dataset::ScanOptions>();
-            options->filter = arrow::compute::equal(
-                    arrow::compute::field_ref("partition_id"),
-                    arrow::compute::literal(partitionId));
-            auto builder = arrow::dataset::ScannerBuilder(dataset, options);
-            auto scanner = builder.Finish();
-            std::shared_ptr<arrow::Table> partitionedTable = scanner.ValueOrDie()->ToTable().ValueOrDie();
-            partitionedTablesNumRows += partitionedTable->num_rows();
-            std::filesystem::path subPartitionsFolder = folder / std::to_string(partitionId);
-            if (!std::filesystem::exists(subPartitionsFolder)) {
-                std::filesystem::create_directory(subPartitionsFolder);
-            }
-            if (!addColumnPartitionId){
-                ARROW_ASSIGN_OR_RAISE(partitionedTable, partitionedTable->RemoveColumn(0));
-            }
-            std::filesystem::path outfile = subPartitionsFolder / ("b" + std::to_string(batchId) + fileExtension);
-            ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTableToDisk(partitionedTable, outfile));
-            completedPartitions += 1;
-            std::cout << "[FixedGridPartitioning] Generate partitioned table with " << partitionedTable->num_rows() << " rows" << std::endl;
-            int progress = (int) (float(completedPartitions) / float(numPartitions) * 100);
-            std::cout << "[FixedGridPartitioning] Progress: " << progress << " %" << std::endl;
-        }
+        // Write out a sorted batch
+        std::filesystem::path sortedBatchPath = folder / ("s" + std::to_string(batchId) + fileExtension);
+        ARROW_RETURN_NOT_OK(external::ExternalSort::writeSorted(updatedRecordBatch, "cell_idx", sortedBatchPath));
         return arrow::Status::OK();
     }
 

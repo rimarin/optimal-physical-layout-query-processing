@@ -1,11 +1,13 @@
 #ifndef PARTITIONING_FIXED_GRID_H
 #define PARTITIONING_FIXED_GRID_H
 
+#include <algorithm>
 #include <iostream>
 #include <map>
+#include <numeric>
+#include <set>
 #include <string>
 #include <vector>
-#include <set>
 
 #include <arrow/api.h>
 #include <arrow/compute/api.h>
@@ -16,6 +18,8 @@
 #include <arrow/table.h>
 
 #include "common/ColumnDataConverter.h"
+#include "external/ExternalSort.h"
+#include "external/ExternalMerge.h"
 #include "partitioning/Partitioning.h"
 #include "partitioning/PartitioningType.h"
 #include "storage/DataReader.h"

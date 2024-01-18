@@ -37,9 +37,9 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningFixedGridCities){
     ASSERT_EQ(dataReader->load(dataset), arrow::Status::OK());
     auto partitioning = partitioning::PartitioningFactory::create(partitioning::FIXED_GRID, dataReader, partitioningColumns, partitionSize, folder);
     ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
-    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("0" + fileExtension), "city", std::vector<std::string>({"Moscow", "Madrid"})), arrow::Status::OK());
-    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("1" + fileExtension), "city", std::vector<std::string>({"Oslo", "Amsterdam"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("0" + fileExtension), "city", std::vector<std::string>({"Madrid", "Moscow"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("1" + fileExtension), "city", std::vector<std::string>({"Amsterdam", "Oslo"})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("2" + fileExtension), "city", std::vector<std::string>({"Dublin", "Copenhagen"})), arrow::Status::OK());
-    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("3" + fileExtension), "city", std::vector<std::string>({"Tallinn", "Berlin"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("3" + fileExtension), "city", std::vector<std::string>({"Berlin", "Tallinn"})), arrow::Status::OK());
     ASSERT_EQ(std::filesystem::exists(folder / ("4" + fileExtension)), false);
 }
