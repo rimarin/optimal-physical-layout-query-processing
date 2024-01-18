@@ -22,11 +22,16 @@
 
 namespace external {
     struct ExternalFileReader{
-        ExternalFileReader(std::shared_ptr<parquet::arrow::FileReader> &_fileReader, int _recordBatchIndex,
-                           int _fragmentStartIndex, uint32_t _numRows): fileReader(_fileReader),
-                                recordBatchIndex(_recordBatchIndex), fragmentStartIndex(_fragmentStartIndex),
-                                numRows(_numRows) {};
+        ExternalFileReader(std::shared_ptr<parquet::arrow::FileReader> &_fileReader,
+                           std::shared_ptr<arrow::RecordBatchReader> &_recordBatchReader,
+                           std::shared_ptr<arrow::RecordBatch> &_recordBatch,
+                           int _recordBatchIndex, int _fragmentStartIndex, uint32_t _numRows):
+                           fileReader(_fileReader), recordBatchReader(_recordBatchReader), recordBatch(_recordBatch),
+                           recordBatchIndex(_recordBatchIndex), fragmentStartIndex(_fragmentStartIndex),
+                           numRows(_numRows) {};
         std::shared_ptr<parquet::arrow::FileReader> fileReader;
+        std::shared_ptr<arrow::RecordBatchReader> recordBatchReader;
+        std::shared_ptr<arrow::RecordBatch> recordBatch;
         uint32_t recordBatchIndex;
         uint32_t fragmentStartIndex;
         uint32_t numRows;
@@ -76,7 +81,7 @@ namespace external {
 
             // Prepare vector of file readers for each sorted batch
             // pair<arrow file reader, record batch index, fragment start index>
-            std::vector<ExternalFileReader> readers;
+            std::vector<std::shared_ptr<ExternalFileReader>> readers;
             parquet::arrow::FileReaderBuilder reader_builder;
 
             // Compute sum of rows of readers, so that later we can compare it with the total read rows
@@ -88,7 +93,7 @@ namespace external {
                 if (std::regex_match(filePath.string(), regexFiles)){
                     // Define properties for the file readers
                     auto reader_properties = parquet::ReaderProperties(arrow::default_memory_pool());
-                    reader_properties.set_buffer_size(4096 * 4);
+                    reader_properties.set_buffer_size(common::Settings::bufferSize);
                     reader_properties.enable_buffered_stream();
                     auto arrow_reader_props = parquet::ArrowReaderProperties();
                     arrow_reader_props.set_batch_size(batchSize);  // default 64 * 1024
@@ -97,19 +102,24 @@ namespace external {
                     reader_builder.properties(arrow_reader_props);
                     std::shared_ptr<parquet::arrow::FileReader> reader;
                     ARROW_ASSIGN_OR_RAISE(reader, reader_builder.Build());
-                    std::shared_ptr<arrow::RecordBatchReader> rb_reader;
-                    ARROW_RETURN_NOT_OK(reader->GetRecordBatchReader(&rb_reader));
-                    std::shared_ptr<arrow::RecordBatch> record_batch;
+                    std::shared_ptr<arrow::RecordBatchReader> recordBatchReader;
+                    std::shared_ptr<arrow::RecordBatchReader> firstRecordBatchReader;
+                    ARROW_RETURN_NOT_OK(reader->GetRecordBatchReader(&recordBatchReader));
+                    ARROW_RETURN_NOT_OK(reader->GetRecordBatchReader(&firstRecordBatchReader));
+                    std::shared_ptr<arrow::RecordBatch> currentRecordBatch;
+                    std::shared_ptr<arrow::RecordBatch> firstRecordBatch;
                     uint32_t readerNumRows = 0;
                     while (true) {
-                        RETURN_NOT_OK(rb_reader->ReadNext(&record_batch));
-                        if (record_batch == nullptr) {
+                        RETURN_NOT_OK(recordBatchReader->ReadNext(&currentRecordBatch));
+                        if (currentRecordBatch == nullptr) {
                             break;
                         }
-                        readerNumRows += record_batch->num_rows();
+                        readerNumRows += currentRecordBatch->num_rows();
                     }
                     totalNumRows += readerNumRows;
-                    readers.emplace_back(reader, 0, 0, readerNumRows);
+                    RETURN_NOT_OK(firstRecordBatchReader->ReadNext(&firstRecordBatch));
+                    readers.emplace_back(std::make_shared<ExternalFileReader>(reader, firstRecordBatchReader,
+                                                                              firstRecordBatch, 0, 0, readerNumRows));
                 }
             }
 
@@ -133,11 +143,8 @@ namespace external {
                 assert(fragmentSize > 0);
                 std::cout << "[External Merge] Using fragment size " << fragmentSize << std::endl;
 
-                // Prepare an array containing the columns of merge sorted batch
-                std::shared_ptr<arrow::RecordBatchReader> firstReader;
-                ARROW_RETURN_NOT_OK(readers.at(0).fileReader->GetRecordBatchReader(&firstReader));
                 // Obtain the common schema
-                auto schema = firstReader->schema();
+                auto schema = readers.at(0)->recordBatch->schema();
 
                 // Determine the index of the ordering column
                 auto sortingColumnIndex = schema->GetFieldIndex(columnName);
@@ -162,35 +169,38 @@ namespace external {
                         if (numRowsFragments >= batchSize){
                             break;
                         }
-                        std::shared_ptr<arrow::RecordBatchReader> batchReader;
-                        ExternalFileReader currentReader = readers.at(i);
-                        if (currentReader.fragmentStartIndex != readFinished){
-                            ARROW_RETURN_NOT_OK(currentReader.fileReader->GetRecordBatchReader(&batchReader));
-                            uint32_t recordBatchIndex = currentReader.recordBatchIndex;
-                            uint32_t fragmentStart = currentReader.fragmentStartIndex;
+                        std::shared_ptr<ExternalFileReader> currentReader = readers.at(i);
+                        if (currentReader->fragmentStartIndex != readFinished){
+                            std::shared_ptr<arrow::RecordBatchReader> batchReader;
+                            ARROW_RETURN_NOT_OK(currentReader->fileReader->GetRecordBatchReader(&batchReader));
+                            uint32_t recordBatchIndex = currentReader->recordBatchIndex;
+                            uint32_t fragmentStart = currentReader->fragmentStartIndex;
                             // Load fragment-sized values from the reader
                             // Use slice to select fragments of each batch
                             assert(fragmentStart >= 0);
-                            auto batchFragment = batchReader->ToRecordBatches()->at(recordBatchIndex)->Slice(fragmentStart, fragmentSize);
+                            auto currentRecordBatch = currentReader->recordBatch;
+                            auto batchFragment = currentRecordBatch->Slice(fragmentStart, fragmentSize);
                             auto fragmentNumRows = batchFragment->num_rows();
                             // If there is no more data to fetch from the record batch
                             if (fragmentNumRows == 0){
                                 // If this was the last record batch, set the finished flag
-                                if (fragmentStart >= currentReader.numRows){
-                                    readers.at(i).fragmentStartIndex = readFinished;
+                                if (fragmentStart >= currentReader->numRows){
+                                    readers.at(i)->fragmentStartIndex = readFinished;
                                     completedReaders += 1;
                                 }
                                 // Otherwise, update the index to the next record batch. Consequently, the
                                 // fragmentIndex is reset to zero
                                 else{
-                                    readers.at(i).recordBatchIndex += 1;
-                                    readers.at(i).fragmentStartIndex = 0;
+                                    RETURN_NOT_OK(readers.at(i)->recordBatchReader->ReadNext(&currentRecordBatch));
+                                    readers.at(i)->recordBatch = currentRecordBatch;
+                                    readers.at(i)->recordBatchIndex += 1;
+                                    readers.at(i)->fragmentStartIndex = 0;
                                 }
                                 continue;
                             }
                             // Otherwise, advance the reading index
                             else{
-                                readers.at(i).fragmentStartIndex += fragmentNumRows;
+                                readers.at(i)->fragmentStartIndex += fragmentNumRows;
                                 numRowsRead += fragmentNumRows;
                                 numRowsFragments += fragmentNumRows;
                             }
@@ -211,23 +221,23 @@ namespace external {
                         }
                     }
 
+                    // Prepare record batch readers
+
                     std::vector<std::shared_ptr<arrow::RecordBatch>> rowBatches;
                     // Popping from the min heap guarantees that the values are ordered
                     while(!q.empty()){
                         // Pop from the min heap, this will return the minimum
                         auto minRow = q.top();
                         q.pop();
+                        // Extract information about the reader/batch source
                         auto columnValue = minRow.columnValue;
                         auto readerIndex = minRow.readerIndex;
                         auto recordBatchIndex = minRow.recordBatchIndex;
                         auto fragmentIndex = minRow.fragmentStartIndex;
-                        // Information about the batch source
-                        auto reader = readers.at(readerIndex).fileReader;
 
                         // Extract matching rows using the fragment index
-                        std::shared_ptr<arrow::RecordBatchReader> sourceBatchReader;
-                        ARROW_RETURN_NOT_OK(reader->GetRecordBatchReader(&sourceBatchReader));
-                        auto batchFragment = sourceBatchReader->ToRecordBatches()->at(recordBatchIndex)->Slice(fragmentIndex, 1);
+                        auto recordBatch = getRecordBatch(readers.at(readerIndex), recordBatchIndex).ValueOrDie();
+                        auto batchFragment = recordBatch->Slice(fragmentIndex, 1);
 
                         rowBatches.emplace_back(batchFragment);
 
@@ -236,7 +246,7 @@ namespace external {
                             // Append the row to the mergedTable
                             mergedTable = arrow::Table::FromRecordBatches(schema, {rowBatches}).ValueOrDie();
                             std::cout << "[External Merge] Merged table has " << mergedTable->num_rows() <<
-                                         ", already reached batchSize " << batchSize;
+                                         ", already reached batchSize " << batchSize << std::endl;
                             auto partitionFilePath = folder / (std::to_string(partitionIndex) + ".parquet");
                             if (exportTableToDisk(mergedTable, partitionFilePath) == arrow::Status::OK()){
                                 partitionIndex += 1;
@@ -254,7 +264,13 @@ namespace external {
                     }
                 }
                 std::cout << "[External Merge] Completed, scanned " << numRowsRead << " in total" << std::endl;
-                // TODO: remove parts (files with 's')
+                // Remove sorted parts (files starting with 's')
+                for (const auto &folderFile : std::filesystem::directory_iterator(folder)) {
+                    const std::filesystem::path& filePath = folderFile.path();
+                    if (std::regex_match(filePath.string(), regexFiles)) {
+                        std::filesystem::remove(filePath);
+                    }
+                }
             }
             return arrow::Status::OK();
         }
@@ -276,6 +292,36 @@ namespace external {
                 return arrow::Status::OK();
             }
             return arrow::Status::IOError("Table is empty");
+        }
+
+        static arrow::Result<std::shared_ptr<arrow::RecordBatch>> getRecordBatch(std::shared_ptr<ExternalFileReader> &reader, size_t index) {
+            std::shared_ptr<arrow::RecordBatch> currentRecordBatch;
+            // The reader already holds the record batch looked for: return it directly
+            if (index == reader->recordBatchIndex) {
+                return reader->recordBatch;
+            }
+            // The searched record batch has an index greater than the current: continue search from current record batch
+            else if (index > reader->recordBatchIndex) {
+                currentRecordBatch = reader->recordBatch;
+            }
+            // If the index is lower than the current, we need to restart from the first record batch
+            // Keep the currentRecordBatch variable uninitialized to do so.
+            else{
+                std::shared_ptr<arrow::RecordBatchReader> firstRecordBatchReader;
+                ARROW_RETURN_NOT_OK(reader->fileReader->GetRecordBatchReader(&firstRecordBatchReader));
+                reader->recordBatchReader = firstRecordBatchReader;
+            };
+            // Get the record batch reader
+            // Iterate over the record batches
+            while (true) {
+                RETURN_NOT_OK(reader->recordBatchReader->ReadNext(&currentRecordBatch));
+                // Stop when the index was found, or we reached the end
+                if (reader->recordBatchIndex == index || currentRecordBatch == nullptr) {
+                    break;
+                }
+                reader->recordBatchIndex += 1;
+            }
+            return currentRecordBatch;
         }
     };
 }
