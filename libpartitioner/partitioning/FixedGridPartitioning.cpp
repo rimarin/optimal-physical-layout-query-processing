@@ -32,13 +32,12 @@ namespace partitioning {
         std::cout << "[FixedGridPartitioning] Computed cell width is: " << cellWidth << std::endl;
 
         // Read the table in batches
-        auto batch_reader = dataReader->getTableBatchReader().ValueOrDie();
         uint32_t batchId = 0;
         uint32_t totalNumRows = 0;
         while (true) {
             // Try to load a new batch, when possible
             std::shared_ptr<arrow::RecordBatch> record_batch;
-            ARROW_RETURN_NOT_OK(batch_reader->ReadNext(&record_batch));
+            ARROW_RETURN_NOT_OK(batchReader->ReadNext(&record_batch));
             if (record_batch == nullptr) {
                 break;
             }

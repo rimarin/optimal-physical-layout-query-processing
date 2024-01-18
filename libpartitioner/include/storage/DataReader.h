@@ -21,7 +21,7 @@ class DataReader {
         arrow::Status load(std::filesystem::path &filePath, bool useBatchRead = false);
         std::filesystem::path getReaderPath();
         arrow::Result<std::shared_ptr<arrow::Table>> readTable();
-        arrow::Result<std::shared_ptr<::arrow::RecordBatchReader>> getTableBatchReader();
+        arrow::Result<std::shared_ptr<::arrow::RecordBatchReader>> getBatchReader();
         static arrow::Result<std::vector<std::shared_ptr<arrow::Array>>> getColumnsOld(const std::shared_ptr<arrow::Table> &table,
                                                                                        const std::vector<std::string> &columns);
         arrow::Result<std::vector<std::shared_ptr<arrow::ChunkedArray>>> getColumns(const std::vector<std::string> &columns);

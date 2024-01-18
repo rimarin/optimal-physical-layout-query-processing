@@ -34,6 +34,9 @@ namespace partitioning {
             throw InvalidPartitionSize(minPartitionSize, std::numeric_limits<size_t>::max());
         }
 
+        // Load batch reader
+        batchReader = dataReader->getBatchReader().ValueOrDie();
+
         // Print the names of the columns to index
         std::cout << "[Partitioning] Initializing partitioning technique" << std::endl;
         std::cout << "[Partitioning] Partition has to be done on columns: <";
@@ -59,6 +62,10 @@ namespace partitioning {
             return true;
         }
         return false;
+    }
+
+    bool MultiDimensionalPartitioning::isFinished() {
+        return finished;
     }
 
     // Splitting method to divide a table into sub-tables according to the partition ids

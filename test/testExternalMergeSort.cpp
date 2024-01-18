@@ -14,10 +14,10 @@ TEST_F(TestOptimalLayoutFixture, TestExternalMergeSort){
     auto dataReader = std::make_shared<storage::DataReader>();
     std::vector<std::string> partitioningColumns = {"x", "y", "year"};
     ASSERT_EQ(dataReader->load(dataset), arrow::Status::OK());
-    auto batch_reader = dataReader->getTableBatchReader().ValueOrDie();
+    auto batchReader = dataReader->getBatchReader().ValueOrDie();
     while (true) {
         std::shared_ptr<arrow::RecordBatch> record_batch;
-        ASSERT_EQ(batch_reader->ReadNext(&record_batch), arrow::Status::OK());
+        ASSERT_EQ(batchReader->ReadNext(&record_batch), arrow::Status::OK());
         if (record_batch == nullptr) {
             break;
         }

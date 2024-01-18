@@ -81,13 +81,12 @@ namespace partitioning {
         auto numPartitions = uniquePartitionIds.size();
 
         // Read the table in batches
-        auto batch_reader = dataReader->getTableBatchReader().ValueOrDie();
         uint32_t batchId = 0;
         uint32_t totalNumRows = 0;
         while (true) {
             // Try to load a new batch, when possible
             std::shared_ptr<arrow::RecordBatch> recordBatch;
-            ARROW_RETURN_NOT_OK(batch_reader->ReadNext(&recordBatch));
+            ARROW_RETURN_NOT_OK(batchReader->ReadNext(&recordBatch));
             if (recordBatch == nullptr) {
                 break;
             }

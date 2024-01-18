@@ -30,11 +30,13 @@ namespace partitioning {
         void setColumns(const std::vector<std::string> &partitionColumns);
         void setDataReader(const std::shared_ptr<storage::DataReader> &reader);
         void setPartitionSize(size_t rowsPerPartition);
+        bool isFinished();
     private:
         bool checkNoNecessaryPartition();
         partitioning::PartitioningType type = OTHER;
     protected:
         std::shared_ptr<storage::DataReader> dataReader;
+        std::shared_ptr<::arrow::RecordBatchReader> batchReader;
         std::vector<std::string> columns;
         size_t partitionSize;
         size_t numColumns;

@@ -95,11 +95,11 @@ namespace storage {
 
     // TODO: reduce memory usage, see:
     //  https://github.com/lsst/qserv/blob/a5dbf4175159b874da1cb0907533ba6e3ffd5e7d/src/partition/ParquetInterface.cc#L114
-    arrow::Result<std::shared_ptr<::arrow::RecordBatchReader>> DataReader::getTableBatchReader() {
-        std::shared_ptr<arrow::RecordBatchReader> rb_reader;
-        ARROW_RETURN_NOT_OK(reader->GetRecordBatchReader(&rb_reader));
+    arrow::Result<std::shared_ptr<::arrow::RecordBatchReader>> DataReader::getBatchReader() {
+        std::shared_ptr<arrow::RecordBatchReader> recordBatchReader;
+        ARROW_RETURN_NOT_OK(reader->GetRecordBatchReader(&recordBatchReader));
         std::cout << "[DataReader] Obtained record batch reader" << std::endl;
-        return rb_reader;
+        return recordBatchReader;
     }
 
     arrow::Result<std::vector<std::shared_ptr<arrow::Array>>>

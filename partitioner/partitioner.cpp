@@ -71,7 +71,9 @@ int main(int argc, char **argv) {
     auto partitioningScheme = partitioning::PartitioningFactory::create(scheme, dataReader, partitioningColumns, partitionSize, outputPath);
 
     // Apply the partitioning
-    arrow::Status status = partitioningScheme->partition();
+    if (!partitioningScheme->isFinished()){
+        arrow::Status status = partitioningScheme->partition();
+    }
 
     return 0;
 }
