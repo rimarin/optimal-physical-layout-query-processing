@@ -10,6 +10,8 @@
 #include <parquet/arrow/reader.h>
 #include <parquet/api/reader.h>
 
+#include "common/Settings.h"
+
 namespace storage {
 
 class DataReader {
@@ -38,8 +40,6 @@ class DataReader {
         bool isFolder = false;
         std::unique_ptr<parquet::arrow::FileReader> reader;
         std::shared_ptr<parquet::FileMetaData> metadata;
-        const uint32_t batchSize = 64 * 1024;
-        const uint32_t bufferSize = 4096 * 4;
 };
 } // storage
 

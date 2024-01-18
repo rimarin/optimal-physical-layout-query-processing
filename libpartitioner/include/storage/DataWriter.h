@@ -12,6 +12,7 @@
 #include <parquet/api/reader.h>
 #include <parquet/api/writer.h>
 
+#include "common/Settings.h"
 #include "partitioning/Partitioning.h"
 
 namespace storage {

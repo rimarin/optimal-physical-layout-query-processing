@@ -34,7 +34,7 @@ public:
         if (std::filesystem::is_directory(folder)){
             for (const auto & folderIter : std::filesystem::directory_iterator(folder))
             {
-                if (folderIter.path().extension() == ExperimentsConfig::parquetFileExtension)
+                if (folderIter.path().extension() == ExperimentsConfig::fileExtension)
                 {
                     std::filesystem::remove(folderIter.path());
                 }

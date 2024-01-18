@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
     }
 
     // Validate the actual dataset file
-    std::filesystem::path datasetFilePath = argDatasetPath / ExperimentsConfig::noPartition / (argDatasetName + ".parquet");
+    std::filesystem::path datasetFilePath = argDatasetPath / ExperimentsConfig::noPartition / (argDatasetName + ExperimentsConfig::fileExtension);
     if (!std::filesystem::exists(datasetFilePath)){
         std::cout << "Not partitioned source dataset not found in " << datasetFilePath << std::endl;
         exit(1);

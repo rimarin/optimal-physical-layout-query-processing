@@ -16,9 +16,9 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningFixedGridTPCH){
     ASSERT_EQ(dataReader->getNumRows(), 239917);
     auto partitioning = partitioning::PartitioningFactory::create(partitioning::FIXED_GRID, dataReader, partitioningColumns, partitionSize, folder);
     ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
-    std::filesystem::path partition0 = folder / "0.parquet";
+    std::filesystem::path partition0 = folder / ("0" + ExperimentsConfig::fileExtension);
     ASSERT_EQ(dataReader->load(partition0), arrow::Status::OK());
-    std::filesystem::path partition1 = folder / "13.parquet";
+    std::filesystem::path partition1 = folder / ("13" + ExperimentsConfig::fileExtension);
     ASSERT_EQ(dataReader->load(partition1), arrow::Status::OK());
     auto dirIter = std::filesystem::directory_iterator(folder);
     int fileCount = std::count_if(

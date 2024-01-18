@@ -42,7 +42,7 @@ namespace partitioning {
         std::filesystem::path folder;
         uint32_t expectedNumBatches;
         bool addColumnPartitionId = true;
-        std::string fileExtension = ".parquet";
+        std::string fileExtension = common::Settings::fileExtension;
         bool finished = false;
         const uint32_t minNumberOfColumns = 2;
         const uint32_t minPartitionSize = 1;

@@ -145,7 +145,7 @@ namespace partitioning {
                     if (!addColumnPartitionId) {
                         ARROW_ASSIGN_OR_RAISE(partitionedTable, partitionedTable->RemoveColumn(0));
                     }
-                    std::filesystem::path outfile = subPartitionsFolder / ("b" + std::to_string(batchId) + ".parquet");
+                    std::filesystem::path outfile = subPartitionsFolder / ("b" + std::to_string(batchId) + fileExtension);
                     ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTableToDisk(partitionedTable, outfile));
                     completedPartitions += 1;
                     std::cout << "[GridFilePartitioning] Generate partitioned table with " << partitionedTable->num_rows() << " rows" << std::endl;

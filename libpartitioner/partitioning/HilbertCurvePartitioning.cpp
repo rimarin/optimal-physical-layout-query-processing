@@ -74,7 +74,7 @@ namespace partitioning {
         ARROW_ASSIGN_OR_RAISE(updatedRecordBatch, recordBatch->AddColumn(0, "hilbert_curve", hilbertValuesArrow));
         std::cout << "[HilbertCurvePartitioning] Added column with hilbert curve values " << std::endl;
 
-        std::filesystem::path sortedBatchPath = folder / ("s" + std::to_string(batchId) + ".parquet");
+        std::filesystem::path sortedBatchPath = folder / ("s" + std::to_string(batchId) + fileExtension);
         ARROW_RETURN_NOT_OK(external::ExternalSort::writeSorted(updatedRecordBatch, "hilbert_curve", sortedBatchPath));
         return arrow::Status::OK();
     }

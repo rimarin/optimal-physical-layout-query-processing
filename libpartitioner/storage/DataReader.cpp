@@ -22,12 +22,12 @@ namespace storage {
             // Enable parallel column decoding
             auto reader_properties = parquet::ReaderProperties(pool);
 
-            reader_properties.set_buffer_size(bufferSize);
+            reader_properties.set_buffer_size(common::Settings::bufferSize);
             reader_properties.enable_buffered_stream();
 
             // Configure Arrow-specific Parquet reader settings
             auto arrow_reader_props = parquet::ArrowReaderProperties(/*use_threads=*/false);
-            arrow_reader_props.set_batch_size(batchSize);  // default 64 * 1024
+            arrow_reader_props.set_batch_size(common::Settings::batchSize);  // default 64 * 1024
 
             parquet::arrow::FileReaderBuilder reader_builder;
             ARROW_RETURN_NOT_OK(reader_builder.OpenFile(path, /*memory_map=*/false, reader_properties));
@@ -64,7 +64,7 @@ namespace storage {
     }
 
     uint32_t DataReader::getExpectedNumBatches(){
-        return (uint32_t) std::ceil((float) getNumRows() / (float) batchSize);
+        return (uint32_t) std::ceil((float) getNumRows() / (float) common::Settings::batchSize);
     }
 
     arrow::Result<std::shared_ptr<arrow::Table>> DataReader::getTable(std::filesystem::path &inputFile){
@@ -90,7 +90,7 @@ namespace storage {
 
     std::filesystem::path DataReader::getDatasetPath(const std::filesystem::path &folder, const std::string &datasetName,
                                          const std::string &partitioningScheme){
-        return folder / datasetName / partitioningScheme / (datasetName + ".parquet");
+        return folder / datasetName / partitioningScheme / (datasetName + common::Settings::fileExtension);
     }
 
     // TODO: reduce memory usage, see:

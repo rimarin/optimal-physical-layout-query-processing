@@ -26,12 +26,12 @@ namespace storage {
     std::shared_ptr<parquet::WriterProperties> DataWriter::getWriterProperties(){
         std::shared_ptr<parquet::WriterProperties> props = parquet::WriterProperties::Builder()
                 // Optimal row group length is around 120000 according to several sources
-                .max_row_group_length(100000)
-                ->created_by("Optimal Layout Partitioner")
-                ->version(parquet::ParquetVersion::PARQUET_2_6)
+                .max_row_group_length(common::Settings::rowGroupSize)
+                ->created_by(common::Settings::libraryName)
+                ->version(common::Settings::version)
                 ->data_page_version(parquet::ParquetDataPageVersion::V2)
                 // Worse compression ratio than zstd but faster reads
-                ->compression(arrow::Compression::SNAPPY)
+                ->compression(common::Settings::compression)
                 ->build();
         return props;
     }
@@ -103,7 +103,7 @@ namespace storage {
         ARROW_ASSIGN_OR_RAISE(auto scanner, scan_builder->Finish());
         auto mergedTable = scanner->ToTable();
         if (mergedTable.status() == arrow::Status::OK()){
-            std::filesystem::path mergedFragmentsFilePath = base_dir + ".parquet";
+            std::filesystem::path mergedFragmentsFilePath = base_dir + common::Settings::fileExtension;
             std::cout << "[DataWriter] Exporting merged batches from folder " << base_dir << std::endl;
             std::cout << "[DataWriter] Merged table has " << mergedTable.ValueOrDie()->num_rows() << " rows" << std::endl;
             ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTableToDisk(*mergedTable, mergedFragmentsFilePath));
@@ -119,7 +119,7 @@ namespace storage {
         if (std::filesystem::is_directory(folder)){
             for (const auto &folderIter : std::filesystem::directory_iterator(folder))
             {
-                if (folderIter.path().extension() == ".parquet")
+                if (folderIter.path().extension() == common::Settings::fileExtension)
                 {
                     std::filesystem::remove(folderIter.path());
                 }
