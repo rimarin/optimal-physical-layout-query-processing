@@ -31,7 +31,7 @@ namespace partitioning {
             std::cout << "[ZOrderCurvePartitioning] Imported " << totalNumRows << " out of " << numRows << " rows" << std::endl;
             batchId += 1;
         }
-
+        assert(totalNumRows == numRows);
         // Merge the files to create globally sorted partitions
         ARROW_RETURN_NOT_OK(external::ExternalMerge::mergeFiles(folder, "z_order_curve", partitionSize));
         std::cout << "[ZOrderCurvePartitioning] Partitioning of " << batchId << " batches completed" << std::endl;

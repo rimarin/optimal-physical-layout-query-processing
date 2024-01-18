@@ -31,7 +31,7 @@ namespace partitioning {
             std::cout << "[HilbertCurvePartitioning] Imported " << totalNumRows << " out of " << numRows << " rows" << std::endl;
             batchId += 1;
         }
-
+        assert(totalNumRows == numRows);
         // Merge the files to create globally sorted partitions
         ARROW_RETURN_NOT_OK(external::ExternalMerge::mergeFiles(folder, "hilbert_curve", partitionSize));
         std::cout << "[HilbertCurvePartitioning] Partitioning of " << batchId << " batches completed" << std::endl;
