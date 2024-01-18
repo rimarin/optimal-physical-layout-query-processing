@@ -47,21 +47,27 @@ namespace partitioning {
 
         // Check if we actually do not need to partition but only move files around
         // Might happen when the partition size is greater than the number of rows in the dataset
-        finished = checkNoNecessaryPartition();
+        if (canSkipPartitioning()){
+            finished = copyOriginalToDestination() == arrow::Status::OK();
+        }
     };
 
     // If the partition size is greater than the available rows, we do not need to partition
     // Therefore, we directly copy the original file to the partitioned folder
-    bool MultiDimensionalPartitioning::checkNoNecessaryPartition() {
+    bool MultiDimensionalPartitioning::canSkipPartitioning() {
         if (partitionSize >= numRows) {
             std::cout << "[Partitioning] Partition size greater than the available rows" << std::endl;
-            std::cout << "[Partitioning] Therefore put all data in one partition" << std::endl;
-            std::filesystem::path source = dataReader->getReaderPath();
-            std::filesystem::path destination = folder / "0.parquet";
-            std::filesystem::copy(source, destination, std::filesystem::copy_options::overwrite_existing);
+            std::cout << "[Partitioning] Therefore put all data in one partition and skip partitioning" << std::endl;
             return true;
         }
         return false;
+    }
+
+    arrow::Status MultiDimensionalPartitioning::copyOriginalToDestination(){
+        std::filesystem::path source = dataReader->getReaderPath();
+        std::filesystem::path destination = folder / "0.parquet";
+        std::filesystem::copy(source, destination, std::filesystem::copy_options::overwrite_existing);
+        return arrow::Status::OK();
     }
 
     bool MultiDimensionalPartitioning::isFinished() {

@@ -32,9 +32,10 @@ namespace partitioning {
         void setPartitionSize(size_t rowsPerPartition);
         bool isFinished();
     private:
-        bool checkNoNecessaryPartition();
+        bool canSkipPartitioning();
         partitioning::PartitioningType type = OTHER;
     protected:
+        arrow::Status copyOriginalToDestination();
         std::shared_ptr<storage::DataReader> dataReader;
         std::shared_ptr<::arrow::RecordBatchReader> batchReader;
         std::vector<std::string> columns;
