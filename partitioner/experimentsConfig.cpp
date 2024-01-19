@@ -51,7 +51,7 @@ public:
 
     // Partitioning config
     // Effect of partition size (= number of records per partition)
-    const std::vector<int32_t> partitionSizes = {1000, 10000, 50000, 100000, 250000, 500000, 1000000};
+    const std::vector<int32_t> partitionSizes = {20000, 50000, 100000, 250000, 500000, 1000000};
     // Effect of dataset size
     const std::vector<int32_t> tpchScaleFactors = {1, 10, 50, 60, 70, 80, 90, 100};
     static inline const std::string fileExtension = common::Settings::fileExtension;
