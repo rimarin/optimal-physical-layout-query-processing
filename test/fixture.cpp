@@ -110,5 +110,21 @@ public:
         return false;
     };
 
+    static std::pair<uint32_t, uint32_t> getFolderResults(std::shared_ptr<storage::DataReader> &dataReader,
+                                                          std::filesystem::path &folder) {
+        uint32_t fileCount = 0;
+        uint32_t partitionsTotalRows = 0;
+        for (auto &fileSystemItem: std::filesystem::directory_iterator(folder)) {
+            if (fileSystemItem.is_regular_file() &&
+                fileSystemItem.path().extension() == common::Settings::fileExtension) {
+                fileCount += 1;
+                auto partitionPath = fileSystemItem.path();
+                std::ignore = dataReader->load(partitionPath);
+                partitionsTotalRows += dataReader->getNumRows();
+            }
+        }
+        return std::make_pair(fileCount, partitionsTotalRows);
+    }
+
 
 };
