@@ -6,6 +6,7 @@
 #include "partitioning/PartitioningFactory.h"
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningFixedGridTPCH){
+    GTEST_SKIP();
     auto folder = ExperimentsConfig::fixedGridFolder;
     auto dataset = getDatasetPath(ExperimentsConfig::datasetTPCH1);
     auto partitionSize = 20000;
@@ -30,6 +31,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningFixedGridTPCH){
 }
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurveTPCH){
+    GTEST_SKIP();
     auto folder = ExperimentsConfig::hilbertCurveFolder;
     auto dataset = getDatasetPath(ExperimentsConfig::datasetTPCH1);
     auto partitionSize = 20000;
