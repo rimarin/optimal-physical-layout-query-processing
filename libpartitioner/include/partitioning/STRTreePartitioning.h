@@ -45,6 +45,10 @@ namespace partitioning {
         };
         arrow::Status partition() override;
     private:
+        arrow::Status slicePartition(std::filesystem::path &datasetFile,
+                                     size_t sliceSize,
+                                     uint32_t columnIndex);
+        static bool isCompleted(const std::filesystem::path &partitionFile);
         PartitioningType type = TREE;
         size_t k;
         size_t n;

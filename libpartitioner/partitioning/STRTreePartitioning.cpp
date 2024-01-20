@@ -31,52 +31,138 @@ namespace partitioning {
         //  4. For each slice, read it in batches and sort by y value, sort-merge, ecc...
         //  5. Repeat until we get a partition size <= desired partition size
 
-        // Read the table in batches
-        uint32_t batchId = 0;
-        uint32_t totalNumRows = 0;
-
         // Copy original files to destination and work there
         // This way all the batch readers will point to the right folder from the start
         ARROW_RETURN_NOT_OK(copyOriginalToDestination());
         // Determine the base path of the dataset folder
-        std::filesystem::path datasetFolderPath = dataReader->getReaderPath().parent_path();
-        assert(is_directory(datasetFolderPath) == true);
+        auto datasetFile = folder / ("0" + fileExtension);
 
         size_t sliceSize = numRows;
         uint32_t columnIndex = 0;
-        std::string columnName;
-        while (sliceSize >= partitionSize){
-            // Determine column index
-            columnIndex = columnIndex % k;
-            columnName = columns.at(columnIndex);
-            // Load and sort batches
-            while (true) {
-                // Try to load a new batch, when possible
-                std::shared_ptr<arrow::RecordBatch> recordBatch;
-                ARROW_RETURN_NOT_OK(batchReader->ReadNext(&recordBatch));
-                if (recordBatch == nullptr) {
-                    break;
-                }
-                // Write out a sorted batch
-                std::filesystem::path sortedBatchPath = folder / ("s" + std::to_string(batchId) + fileExtension);
-                ARROW_RETURN_NOT_OK(external::ExternalSort::writeSorted(recordBatch, columnName, sortedBatchPath));
-                std::cout << "[STRTreePartitioning] Batch " << batchId << " completed" << std::endl;
-                std::cout << "[STRTreePartitioning] Imported " << totalNumRows << " out of " << numRows << " rows" << std::endl;
-                batchId += 1;
-                totalNumRows += recordBatch->num_rows();
-            }
-            assert(totalNumRows == sliceSize);
 
-            // Update the slice size and the column index
-            sliceSize = std::ceil(totalNumRows / S);
-            columnIndex += 1;
-            // Merge the files to create sorted partitions
-            ARROW_RETURN_NOT_OK(external::ExternalMerge::mergeFiles(folder, columnName, sliceSize));
-            std::cout << "[STRTreePartitioning] Merged batches with sliceSize " << sliceSize << "and column name "
-                      << columnName << std::endl;
+        std::ignore = slicePartition(datasetFile, sliceSize, columnIndex);
+
+        // Delete intermediate files
+        for (const auto &file : std::filesystem::recursive_directory_iterator(folder)) {
+            if (file.is_regular_file() && !isCompleted(file)) {
+                std::filesystem::remove(file.path());
+            }
         }
+
+        // Retrieve list of completed slices (and sort them indirectly, by adding them to a set)
+        std::set<std::filesystem::path> sortedSlices;
+        for (auto &fileSystemItem : std::filesystem::recursive_directory_iterator(folder)) {
+            if (fileSystemItem.is_regular_file() && isCompleted(fileSystemItem)) {
+                sortedSlices.emplace(fileSystemItem.path());
+            }
+        }
+
+        // Rename completed files to partition ids
+        uint32_t partitionId = 0;
+        for (const auto &slice: sortedSlices){
+            std::filesystem::rename(slice, folder / (std::to_string(partitionId) + fileExtension));
+            partitionId += 1;
+        }
+
+        // Delete empty folders
+        for (auto &fileSystemItem : std::filesystem::directory_iterator(folder)) {
+            if (fileSystemItem.is_directory()) {
+                std::filesystem::remove_all(fileSystemItem.path());
+            }
+        }
+
         std::cout << "[STRTreePartitioning] Completed" << std::endl;
         return arrow::Status::OK();
     }
 
+    arrow::Status STRTreePartitioning::slicePartition(std::filesystem::path &datasetFile,
+                                                      size_t sliceSize,
+                                                      uint32_t columnIndex){
+
+        // Base case: created a slice of size = partition size
+        if (sliceSize <= partitionSize){
+            // Rename the processed slice file
+            auto basePath = datasetFile.parent_path();
+            auto renamedDatasetFile = basePath / ("completed" + datasetFile.filename().string());
+            std::filesystem::rename(datasetFile, renamedDatasetFile);
+            return arrow::Status::OK();
+        }
+
+        // Read the table in batches
+        uint32_t batchId = 0;
+        uint32_t totalNumRows = 0;
+
+        // Update readers for current file
+        std::ignore = dataReader->load(datasetFile);
+        auto currentBatchReader = dataReader->getBatchReader().ValueOrDie();
+
+        // Extract partition id from the file name
+        std::string filename = datasetFile.filename();
+        size_t lastIndex = filename.find_last_of('.');
+        std::string partitionId = filename.substr(0, lastIndex);
+
+        // Generate new sub folder (with this partition id) for this processing iteration
+        auto baseFolder = datasetFile.parent_path();
+        auto subFolder = baseFolder / partitionId;
+        if (!std::filesystem::exists(subFolder)) {
+            std::filesystem::create_directory(subFolder);
+        }
+
+        // Determine column index
+        columnIndex = columnIndex % k;
+        std::string columnName = columns.at(columnIndex);
+
+        // Load and sort batches
+        while (true) {
+
+            // Try to load a new batch, when possible
+            std::shared_ptr<arrow::RecordBatch> recordBatch;
+            ARROW_RETURN_NOT_OK(currentBatchReader->ReadNext(&recordBatch));
+            if (recordBatch == nullptr) {
+                break;
+            }
+
+            // Write out a sorted batch
+            std::filesystem::path sortedBatchPath = subFolder / ("s" + std::to_string(batchId) + fileExtension);
+            ARROW_RETURN_NOT_OK(external::ExternalSort::writeSorted(recordBatch, columnName, sortedBatchPath));
+            std::cout << "[STRTreePartitioning] Batch " << batchId << " completed" << std::endl;
+            std::cout << "[STRTreePartitioning] Imported " << totalNumRows << " out of " << numRows << " rows" << std::endl;
+            batchId += 1;
+            totalNumRows += recordBatch->num_rows();
+        }
+
+        // Update the slice size and the column index
+        sliceSize = std::ceil(totalNumRows / S);
+
+        // Merge the files to create sorted partitions
+        ARROW_RETURN_NOT_OK(external::ExternalMerge::mergeFiles(subFolder, columnName, sliceSize));
+        std::cout << "[STRTreePartitioning] Merged batches with sliceSize " << sliceSize << " and column name "
+                  << columnName << std::endl;
+
+        // Determine partitions to process next from the current folder
+        std::vector<std::filesystem::path> partitionPaths;
+        for (auto &file : std::filesystem::directory_iterator(subFolder)) {
+            if (file.path().extension() == common::Settings::fileExtension) {
+                partitionPaths.emplace_back(file);
+            }
+        }
+
+        // Recursively split the files in the folder
+        for (auto &partitionPath: partitionPaths){
+            // Only for files still to be processed
+            bool isValidFile = partitionPath.extension() == common::Settings::fileExtension;
+            bool isAlreadyCompleted = isCompleted(partitionPath);
+            if (isValidFile && !isAlreadyCompleted) {
+                std::filesystem::path partitionFile = partitionPath;
+                std::ignore = slicePartition(partitionFile, sliceSize, columnIndex + 1);
+            }
+        }
+        return arrow::Status::OK();
+    }
+
+    // Regex for checking whether the file is finalized slice already
+    bool STRTreePartitioning::isCompleted(const std::filesystem::path &partitionFile){
+        auto completedRegex = std::regex{R"(.*completed.*\.parquet)"};
+        return std::regex_match(partitionFile.string(), completedRegex);
+    }
 }
