@@ -33,12 +33,13 @@ namespace partitioning {
         // Copy original files to destination and work there
         // This way all the batch readers will point to the right folder from the start
         ARROW_RETURN_NOT_OK(copyOriginalToDestination());
-        // Determine the base path of the dataset folder
-        auto datasetFile = folder / ("0" + fileExtension);
 
+        // Initialize the reader, slice size and column index
+        auto datasetFile = folder / ("0" + fileExtension);
         size_t sliceSize = numRows;
         uint32_t columnIndex = 0;
 
+        // Call the recursive slicing method
         std::ignore = slicePartition(datasetFile, sliceSize, columnIndex);
 
         // Delete intermediate files
@@ -70,6 +71,7 @@ namespace partitioning {
             }
         }
 
+        // Finished
         std::cout << "[STRTreePartitioning] Completed" << std::endl;
         return arrow::Status::OK();
     }

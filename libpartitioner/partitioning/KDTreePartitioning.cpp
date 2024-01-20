@@ -3,6 +3,17 @@
 namespace partitioning {
 
     arrow::Status KDTreePartitioning::partition(){
+        /* Idea:
+         * 1. (First pass) Read in batches
+         * 2. Find the median from the batches
+         * 3. (Second pass) Assign left or right of median for each batch
+         * 4. Write to disk left and right
+         * 5. Repeat for both left and right on the new dimension
+         */
+
+        // Read the table in batches
+        uint32_t batchId = 0;
+        uint32_t totalNumRows = 0;
 
         // Convert columns to rows
         auto table = dataReader->readTable().ValueOrDie();
