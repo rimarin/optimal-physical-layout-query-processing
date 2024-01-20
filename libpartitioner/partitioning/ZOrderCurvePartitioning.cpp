@@ -3,10 +3,11 @@
 namespace partitioning {
 
     arrow::Status ZOrderCurvePartitioning::partition(){
-        // Idea:
-        //  1. Read in batches
-        //  2. Write out sorted batched by Hilbert value
-        //  3. Sort-merge the sorted batches
+        /* Idea:
+         * 1. Read in batches
+         * 2. Write out sorted batched by Z Order value
+         * 3. Sort-merge the sorted batches
+        */
 
         // Read the table in batches
         uint32_t batchId = 0;

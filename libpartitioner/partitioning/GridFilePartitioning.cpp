@@ -16,7 +16,7 @@ namespace partitioning {
          * As shown in Fig 9 and Fig 15, we'll try to fit elements in each bucket according to their capacity c,
          * that here is equal to the partition size. This is achieved by splitting the linear scales in half
          * until the desired bucket size is reached. This is done in a circular fashion on all partitioning dimensions.
-         * Algorithm:
+         * Idea:
          * 1. Read only partitioning columns
          * 2. Create the linear scales
          * 3. Read the dataset by batches

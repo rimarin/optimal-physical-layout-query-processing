@@ -21,15 +21,14 @@ namespace partitioning {
          * the last slice may contain fewer than S * n rectangles. Now sort the rectangles of each slice
          * by y-coordinate and pack them into nodes by grouping them into runs of length n (the first n
          * rectangles into the first node, the next n into the second node, and so on).
-        */
-
-        // Idea:
-        //  1. Read in batches
-        //  2. Write out sorted batched by x value
-        //  3. Sort-merge the sorted batches into S slices
-        //     Done by calling mergeFiles with a partition size which is totalRows / S
-        //  4. For each slice, read it in batches and sort by y value, sort-merge, ecc...
-        //  5. Repeat until we get a partition size <= desired partition size
+         * Idea:
+         * 1. Read in batches
+         * 2. Write out sorted batched by x value
+         * 3. Sort-merge the sorted batches into S slices
+         *    Done by calling mergeFiles with a partition size which is totalRows / S
+         * 4. For each slice, read it in batches and sort by y value, sort-merge, ecc...
+         * 5. Repeat until we get a partition size <= desired partition size
+         */
 
         // Copy original files to destination and work there
         // This way all the batch readers will point to the right folder from the start

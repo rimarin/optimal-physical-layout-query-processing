@@ -3,6 +3,14 @@
 namespace partitioning {
 
     arrow::Status QuadTreePartitioning::partition(){
+        /*
+         * Idea:
+         * 1. Read metadata for each indexed column
+         * 2. Use min-max values to compute the mean of each column
+         * 3. Read batch by batch and assign data to quadrant
+         * 4. Merge part from batches into 4 quadrants
+         * 5. Repeat recursively from step 3 until we reach partition size
+         */
 
         // In case, we do not have to partition, we can terminate
         auto table = dataReader->readTable().ValueOrDie();

@@ -3,16 +3,18 @@
 namespace partitioning {
 
     arrow::Status FixedGridPartitioning::partition() {
-        // Idea:
-        //  1. Read in batches
-        //  2. Compute index of cell
-        //  3. Write out sorted batched by cell index
-        //  4. Sort-merge the sorted batches
-        // The data space is superimposed with an n-dimension grid with fixed cell size.
-        // This way, all the points falling into one cell of the uniform grid are mapped to the correspondent cell id.
-        // In order to force the partition size constraint, we are linearizing the obtained cells.
-        // Number of cells is = (domain(x) / cellSize) * (domain(y) / cellSize) ... * (domain(n) / cellSize)
-        // e.g. 20x20 grid, 100x100 coordinates -> (100 / 20) * (100 / 20) = 5 * 5 = 25 squares
+        /* The data space is superimposed with an n-dimension grid with fixed cell size.
+         * This way, all the points falling into one cell of the uniform grid are mapped to the correspondent cell id.
+         * In order to force the partition size constraint, we are linearizing the obtained cells.
+         * Number of cells is = (domain(x) / cellSize) * (domain(y) / cellSize) ... * (domain(n) / cellSize)
+         * e.g. 20x20 grid, 100x100 coordinates -> (100 / 20) * (100 / 20) = 5 * 5 = 25 squares
+         * Idea:
+         * 1. Read in batches
+         * 2. Compute index of cell
+         * 3. Write out sorted batched by cell index
+         * 4. Sort-merge the sorted batches
+         */
+
         std::cout << "[FixedGridPartitioning] Analyzing span of column values to determine cell width" << std::endl;
         double_t maxColumnDomain = 0;
         double_t minColumnDomain = std::numeric_limits<double>::max();
