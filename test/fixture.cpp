@@ -32,7 +32,7 @@ public:
 
     void cleanUpFolder(std::filesystem::path folder){
         if (std::filesystem::is_directory(folder)){
-            for (const auto & folderIter : std::filesystem::directory_iterator(folder))
+            for (const auto & folderIter : std::filesystem::recursive_directory_iterator(folder))
             {
                 if (folderIter.path().extension() == ExperimentsConfig::fileExtension)
                 {

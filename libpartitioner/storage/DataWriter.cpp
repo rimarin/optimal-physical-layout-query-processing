@@ -117,7 +117,7 @@ namespace storage {
     // Restore a clean state by removing all Parquet files from a specified folder
     void DataWriter::cleanUpFolder(const std::filesystem::path &folder){
         if (std::filesystem::is_directory(folder)){
-            for (const auto &folderIter : std::filesystem::directory_iterator(folder))
+            for (const auto &folderIter : std::filesystem::recursive_directory_iterator(folder))
             {
                 if (folderIter.path().extension() == common::Settings::fileExtension)
                 {

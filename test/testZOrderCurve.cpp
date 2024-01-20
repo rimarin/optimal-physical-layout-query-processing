@@ -31,8 +31,8 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningZOrderCurveSchool){
     ASSERT_EQ(dataReader->load(dataset), arrow::Status::OK());
     auto partitioning = partitioning::PartitioningFactory::create(partitioning::Z_ORDER_CURVE, dataReader, partitioningColumns, partitionSize, folder);
     ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
-    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("0" + fileExtension), "Student_id", std::vector<int32_t>({21, 7})), arrow::Status::OK());
-    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("0" + fileExtension), "Age", std::vector<int32_t>({18, 27})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("0" + fileExtension), "Student_id", std::vector<int32_t>({7, 21})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("0" + fileExtension), "Age", std::vector<int32_t>({27, 18})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("1" + fileExtension), "Student_id", std::vector<int32_t>({16, 45})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("1" + fileExtension), "Age", std::vector<int32_t>({30, 21})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("2" + fileExtension), "Student_id", std::vector<int32_t>({34, 91})), arrow::Status::OK());
