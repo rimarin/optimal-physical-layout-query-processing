@@ -17,6 +17,8 @@
 
 #include "common/ColumnDataConverter.h"
 #include "common/Point.h"
+#include "external/ExternalSort.h"
+#include "external/ExternalMerge.h"
 #include "partitioning/Partitioning.h"
 #include "storage/DataWriter.h"
 #include "storage/DataReader.h"
@@ -30,8 +32,6 @@ namespace partitioning {
                             const size_t rowsPerPartition,
                             const std::filesystem::path &outputFolder) :
                 MultiDimensionalPartitioning(reader, partitionColumns, rowsPerPartition, outputFolder) {
-            // Vertical slices of the R-Tree
-            slices = {};
             // k: number of dimensions
             k = numColumns;
             // r: number of points
@@ -46,8 +46,6 @@ namespace partitioning {
         arrow::Status partition() override;
     private:
         PartitioningType type = TREE;
-        void sortTileRecursive(std::vector<std::shared_ptr<common::Point>> points, int coord);
-        std::vector<std::vector<std::shared_ptr<common::Point>>> slices;
         size_t k;
         size_t n;
         size_t r;

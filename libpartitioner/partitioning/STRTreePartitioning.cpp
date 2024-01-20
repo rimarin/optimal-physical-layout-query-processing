@@ -23,61 +23,60 @@ namespace partitioning {
          * rectangles into the first node, the next n into the second node, and so on).
         */
 
-        // Convert columns to rows
-        auto table = dataReader->readTable().ValueOrDie();
-        auto columnArrowArrays = storage::DataReader::getColumnsOld(table, columns).ValueOrDie();
-        auto converter = common::ColumnDataConverter();
-        auto columnData = converter.toDouble(columnArrowArrays).ValueOrDie();
-        std::vector<std::shared_ptr<common::Point>> points = common::ColumnDataConverter::toRows(columnData);
+        // Idea:
+        //  1. Read in batches
+        //  2. Write out sorted batched by x value
+        //  3. Sort-merge the sorted batches into S slices
+        //     Done by calling mergeFiles with a partition size which is totalRows / S
+        //  4. For each slice, read it in batches and sort by y value, sort-merge, ecc...
+        //  5. Repeat until we get a partition size <= desired partition size
 
-        // Recursively pack points into the R-tree
-        int coord = 0;
-        sortTileRecursive(points, coord);
+        // Read the table in batches
+        uint32_t batchId = 0;
+        uint32_t totalNumRows = 0;
 
-        // Each obtained slice has to be mapped to a partition id
-        std::map<std::shared_ptr<common::Point>, int64_t> pointToPartitionId;
-        for (int i = 0; i < slices.size(); ++i) {
-            for (const auto &point: slices[i]){
-                pointToPartitionId[point] = i;
+        // Copy original files to destination and work there
+        // This way all the batch readers will point to the right folder from the start
+        ARROW_RETURN_NOT_OK(copyOriginalToDestination());
+        // Determine the base path of the dataset folder
+        std::filesystem::path datasetFolderPath = dataReader->getReaderPath().parent_path();
+        assert(is_directory(datasetFolderPath) == true);
+
+        size_t sliceSize = numRows;
+        uint32_t columnIndex = 0;
+        std::string columnName;
+        while (sliceSize >= partitionSize){
+            // Determine column index
+            columnIndex = columnIndex % k;
+            columnName = columns.at(columnIndex);
+            // Load and sort batches
+            while (true) {
+                // Try to load a new batch, when possible
+                std::shared_ptr<arrow::RecordBatch> recordBatch;
+                ARROW_RETURN_NOT_OK(batchReader->ReadNext(&recordBatch));
+                if (recordBatch == nullptr) {
+                    break;
+                }
+                // Write out a sorted batch
+                std::filesystem::path sortedBatchPath = folder / ("s" + std::to_string(batchId) + fileExtension);
+                ARROW_RETURN_NOT_OK(external::ExternalSort::writeSorted(recordBatch, columnName, sortedBatchPath));
+                std::cout << "[STRTreePartitioning] Batch " << batchId << " completed" << std::endl;
+                std::cout << "[STRTreePartitioning] Imported " << totalNumRows << " out of " << numRows << " rows" << std::endl;
+                batchId += 1;
+                totalNumRows += recordBatch->num_rows();
             }
-        }
-        // Accumulate partition ids values in the same order of the rows
-        std::vector<uint32_t> values = {};
-        for (const auto &point: points){
-            values.emplace_back(pointToPartitionId[point]);
-        }
-        arrow::UInt32Builder int32Builder;
-        ARROW_RETURN_NOT_OK(int32Builder.AppendValues(values));
-        std::cout << "[STRTreePartitioning] Mapped columns to partition ids" << std::endl;
-        std::shared_ptr<arrow::Array> partitionIds;
-        ARROW_ASSIGN_OR_RAISE(partitionIds, int32Builder.Finish());
-        return partitioning::MultiDimensionalPartitioning::writeOutPartitions(table, partitionIds, folder);
-    }
+            assert(totalNumRows == sliceSize);
 
-    void STRTreePartitioning::sortTileRecursive(std::vector<std::shared_ptr<common::Point>> points, int coord) {
-        // Base case: reached desired partition size
-        if (points.size() <= n){
-            slices.emplace_back(points);
-            return;
+            // Update the slice size and the column index
+            sliceSize = std::ceil(totalNumRows / S);
+            columnIndex += 1;
+            // Merge the files to create sorted partitions
+            ARROW_RETURN_NOT_OK(external::ExternalMerge::mergeFiles(folder, columnName, sliceSize));
+            std::cout << "[STRTreePartitioning] Merged batches with sliceSize " << sliceSize << "and column name "
+                      << columnName << std::endl;
         }
-        // Pick current dimension to use
-        size_t coordToUse = coord % k;
-        // Sort on that dimension
-        std::sort(points.begin(), points.end(),
-                  [&coordToUse](const std::shared_ptr<std::vector<double>>& a, const std::shared_ptr<std::vector<double>>& b) {
-                      return a->at(coordToUse) < b->at(coordToUse);
-                  });
-        // For each slice, define the further splits
-        for (int i = 0; i < S; ++i) {
-            auto pointsPerSlice = std::max((size_t) 1, points.size() / S);
-            auto begin = points.begin() + (i * pointsPerSlice );
-            auto end = points.begin() + ((i + 1) * pointsPerSlice );
-            if (end >= points.end()){
-                end = points.end();
-            }
-            auto slice = std::vector<std::shared_ptr<common::Point>>(begin, end);
-            sortTileRecursive(slice, coordToUse+1);
-        }
+        std::cout << "[STRTreePartitioning] Completed" << std::endl;
+        return arrow::Status::OK();
     }
 
 }
