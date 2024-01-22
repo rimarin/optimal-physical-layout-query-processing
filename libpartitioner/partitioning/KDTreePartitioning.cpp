@@ -48,7 +48,7 @@ namespace partitioning {
 
         // Compute the median of current file to partition
         uint32_t columnIndex = depth % numColumns;
-        double median = findMedian(datasetFile, depth).ValueOrDie();
+        double median = findMedian(datasetFile, columnIndex).ValueOrDie();
 
         // Read the table in batches
         uint32_t batchId = 0;
@@ -124,6 +124,7 @@ namespace partitioning {
                 std::filesystem::path filteredBatchPath = subFolder / "0" / (std::to_string(batchId) + fileExtension);
                 ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTableToDisk(batchTable, filteredBatchPath));
             }
+            batchId += 1;
         }
 
         // Merge the fragments
@@ -164,7 +165,6 @@ namespace partitioning {
         std::ignore = dataReader->load(datasetFile);
         auto currentBatchReader = dataReader->getBatchReader().ValueOrDie();
         std::vector<double> medians;
-        columnIndex = columnIndex % numColumns;
         std::string sortColumn = columns.at(columnIndex);
 
         // Load and sort batches
@@ -206,7 +206,8 @@ namespace partitioning {
                   [&](const double &a, const double &b) {
                       return a < b;
                   });
-        return medians.at(medians.size() / 2);
+        auto medianIdx = std::max((int) medians.size() / 2, 0);
+        return medians.at(medianIdx);
     }
 
 
