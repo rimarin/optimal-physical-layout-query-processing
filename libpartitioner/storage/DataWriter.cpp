@@ -61,13 +61,13 @@ namespace storage {
         //    -- b2.parquet
         auto numPartitions = partitionIds.size();
         for (const uint32_t &partitionId: partitionIds){
-            std::string root_path;
+            std::string rootPath;
             std::filesystem::path subPartitionsFolder = basePath / std::to_string(partitionId);
             // Merge batches for a batch folder
             if (std::filesystem::exists(subPartitionsFolder)) {
-                ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(subPartitionsFolder, &root_path));
+                ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(subPartitionsFolder, &rootPath));
                 std::cout << "[DataWriter] Start merging batches for partition id " << partitionId << std::endl;
-                auto statusPartitionMerge = mergeBatchesInFolder(fs, root_path);
+                auto statusPartitionMerge = mergeBatchesInFolder(fs, rootPath);
                 if (statusPartitionMerge == arrow::Status::OK()){
                     std::cout << "[DataWriter] Partition " << partitionId << " (out of " << numPartitions <<
                                  " ) merged :" << statusPartitionMerge.ToString() << std::endl;
