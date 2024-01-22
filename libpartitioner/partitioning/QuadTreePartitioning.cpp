@@ -175,6 +175,7 @@ namespace partitioning {
                 std::filesystem::path filteredBatchPath = subFolder / "0" / (std::to_string(batchId) + fileExtension);
                 ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTableToDisk(batchTable, filteredBatchPath));
             }
+            batchId += 1;
         }
 
         // Merge into 4 quadrants
