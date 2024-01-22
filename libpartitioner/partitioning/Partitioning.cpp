@@ -175,4 +175,44 @@ namespace partitioning {
         auto completedRegex = std::regex{R"(.*completed.*\.parquet)"};
         return std::regex_match(partitionFile.string(), completedRegex);
     }
+
+    // Delete intermediate files
+    void MultiDimensionalPartitioning::deleteIntermediateFiles() {
+        for (const auto &file : std::filesystem::recursive_directory_iterator(folder)) {
+            if (file.is_regular_file() && !isFileCompleted(file)) {
+                std::filesystem::remove(file.path());
+            }
+        }
+    }
+
+    // Retrieve list of completed slices (and sort them indirectly, by adding them to a set)
+    std::set<std::filesystem::path> MultiDimensionalPartitioning::getCompletedFiles() {
+        std::set<std::filesystem::path> completedFiles;
+        for (auto &fileSystemItem : std::filesystem::recursive_directory_iterator(folder)) {
+            if (fileSystemItem.is_regular_file() && isFileCompleted(fileSystemItem)) {
+                completedFiles.emplace(fileSystemItem.path());
+            }
+        }
+        return completedFiles;
+    }
+
+    // Rename completed files to partition ids
+    void MultiDimensionalPartitioning::moveCompletedFiles() {
+        auto completedFiles = getCompletedFiles();
+        uint32_t partitionId = 0;
+        for (const auto &completedFile: completedFiles){
+            std::filesystem::rename(completedFile, folder / (std::to_string(partitionId) + fileExtension));
+            partitionId += 1;
+        }
+    }
+
+    // Delete empty folders
+    void MultiDimensionalPartitioning::deleteSubfolders() {
+        for (auto &fileSystemItem : std::filesystem::directory_iterator(folder)) {
+            if (fileSystemItem.is_directory()) {
+                std::filesystem::remove_all(fileSystemItem.path());
+            }
+        }
+    }
+
 }

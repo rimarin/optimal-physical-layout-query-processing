@@ -37,6 +37,10 @@ namespace partitioning {
     protected:
         arrow::Status copyOriginalToDestination();
         bool isFileCompleted(const std::filesystem::path &partitionFile);
+        void deleteIntermediateFiles();
+        std::set<std::filesystem::path> getCompletedFiles();
+        void moveCompletedFiles();
+        void deleteSubfolders();
         std::shared_ptr<storage::DataReader> dataReader;
         std::shared_ptr<::arrow::RecordBatchReader> batchReader;
         std::vector<std::string> columns;

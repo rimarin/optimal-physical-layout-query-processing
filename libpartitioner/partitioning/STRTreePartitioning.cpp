@@ -42,34 +42,10 @@ namespace partitioning {
         // Call the recursive slicing method
         std::ignore = slicePartition(datasetFile, sliceSize, columnIndex);
 
-        // Delete intermediate files
-        for (const auto &file : std::filesystem::recursive_directory_iterator(folder)) {
-            if (file.is_regular_file() && !isFileCompleted(file)) {
-                std::filesystem::remove(file.path());
-            }
-        }
-
-        // Retrieve list of completed slices (and sort them indirectly, by adding them to a set)
-        std::set<std::filesystem::path> sortedSlices;
-        for (auto &fileSystemItem : std::filesystem::recursive_directory_iterator(folder)) {
-            if (fileSystemItem.is_regular_file() && isFileCompleted(fileSystemItem)) {
-                sortedSlices.emplace(fileSystemItem.path());
-            }
-        }
-
-        // Rename completed files to partition ids
-        uint32_t partitionId = 0;
-        for (const auto &slice: sortedSlices){
-            std::filesystem::rename(slice, folder / (std::to_string(partitionId) + fileExtension));
-            partitionId += 1;
-        }
-
-        // Delete empty folders
-        for (auto &fileSystemItem : std::filesystem::directory_iterator(folder)) {
-            if (fileSystemItem.is_directory()) {
-                std::filesystem::remove_all(fileSystemItem.path());
-            }
-        }
+        // Finalize the files
+        deleteIntermediateFiles();
+        moveCompletedFiles();
+        deleteSubfolders();
 
         // Finished
         std::cout << "[STRTreePartitioning] Completed" << std::endl;
