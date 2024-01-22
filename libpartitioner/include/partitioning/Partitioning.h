@@ -33,10 +33,10 @@ namespace partitioning {
         bool isFinished();
     private:
         bool canSkipPartitioning();
-
         partitioning::PartitioningType type = OTHER;
     protected:
         arrow::Status copyOriginalToDestination();
+        bool isFileCompleted(const std::filesystem::path &partitionFile);
         std::shared_ptr<storage::DataReader> dataReader;
         std::shared_ptr<::arrow::RecordBatchReader> batchReader;
         std::vector<std::string> columns;
@@ -50,8 +50,6 @@ namespace partitioning {
         bool finished = false;
         const uint32_t minNumberOfColumns = 2;
         const uint32_t minPartitionSize = 1;
-
-        bool isFileCompleted(const std::filesystem::path &partitionFile);
     };
 }
 
