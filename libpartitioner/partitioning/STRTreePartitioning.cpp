@@ -44,7 +44,7 @@ namespace partitioning {
 
         // Delete intermediate files
         for (const auto &file : std::filesystem::recursive_directory_iterator(folder)) {
-            if (file.is_regular_file() && !isCompleted(file)) {
+            if (file.is_regular_file() && !isFileCompleted(file)) {
                 std::filesystem::remove(file.path());
             }
         }
@@ -52,7 +52,7 @@ namespace partitioning {
         // Retrieve list of completed slices (and sort them indirectly, by adding them to a set)
         std::set<std::filesystem::path> sortedSlices;
         for (auto &fileSystemItem : std::filesystem::recursive_directory_iterator(folder)) {
-            if (fileSystemItem.is_regular_file() && isCompleted(fileSystemItem)) {
+            if (fileSystemItem.is_regular_file() && isFileCompleted(fileSystemItem)) {
                 sortedSlices.emplace(fileSystemItem.path());
             }
         }
@@ -152,18 +152,12 @@ namespace partitioning {
         for (auto &partitionPath: partitionPaths){
             // Only for files still to be processed
             bool isValidFile = partitionPath.extension() == common::Settings::fileExtension;
-            bool isAlreadyCompleted = isCompleted(partitionPath);
+            bool isAlreadyCompleted = isFileCompleted(partitionPath);
             if (isValidFile && !isAlreadyCompleted) {
                 std::filesystem::path partitionFile = partitionPath;
                 std::ignore = slicePartition(partitionFile, sliceSize, columnIndex + 1);
             }
         }
         return arrow::Status::OK();
-    }
-
-    // Regex for checking whether the file is finalized slice already
-    bool STRTreePartitioning::isCompleted(const std::filesystem::path &partitionFile){
-        auto completedRegex = std::regex{R"(.*completed.*\.parquet)"};
-        return std::regex_match(partitionFile.string(), completedRegex);
     }
 }

@@ -1,8 +1,7 @@
-#include <iostream>
-#include <filesystem>
-
 #include <arrow/csv/api.h>
 #include <arrow/io/api.h>
+#include <filesystem>
+#include <iostream>
 #include <parquet/arrow/writer.h>
 
 #include "storage/DataWriter.h"
@@ -12,13 +11,22 @@ namespace storage {
     // Write to disk a table, given its pointer and the output path
     arrow::Status DataWriter::WriteTableToDisk(std::shared_ptr<arrow::Table>& table,
                                                std::filesystem::path &outputPath) {
-        auto outfile = arrow::io::FileOutputStream::Open(outputPath);
+        std::cout << "[DataWriter] Starting to write table to file " << outputPath << std::endl;
+        // Prepare the output file
+        std::shared_ptr<arrow::io::FileOutputStream> outfile;
+        ARROW_ASSIGN_OR_RAISE(outfile, arrow::io::FileOutputStream::Open(outputPath.string()));
+        // Prepare the Parquet writer
         std::unique_ptr<parquet::arrow::FileWriter> writer;
-        std::shared_ptr<parquet::WriterProperties> props = getWriterProperties();
-        std::shared_ptr<parquet::ArrowWriterProperties> arrow_props = getArrowWriterProperties();
-        PARQUET_THROW_NOT_OK(parquet::arrow::WriteTable(*table, arrow::default_memory_pool(), *outfile,
-                                                         table->num_rows(), props, arrow_props));
-        std::cout << "[DataWriter] Written table to " << outputPath << std::endl;
+        ARROW_ASSIGN_OR_RAISE(writer, parquet::arrow::FileWriter::Open(*table->schema(),
+                                                                       arrow::default_memory_pool(),
+                                                                       outfile,
+                                                                       storage::DataWriter::getWriterProperties(),
+                                                                       storage::DataWriter::getArrowWriterProperties()));
+        // Write the batch and close the file
+        std::cout << "[DataWriter] Writing " << table->num_rows() << " rows" << std::endl;
+        ARROW_RETURN_NOT_OK(writer->WriteTable(*table));
+        ARROW_RETURN_NOT_OK(writer->Close());
+        std::cout << "[DataWriter] Completed, written table to file " << outputPath << std::endl;
         return arrow::Status::OK();
     }
 
@@ -59,7 +67,7 @@ namespace storage {
             if (std::filesystem::exists(subPartitionsFolder)) {
                 ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(subPartitionsFolder, &root_path));
                 std::cout << "[DataWriter] Start merging batches for partition id " << partitionId << std::endl;
-                auto statusPartitionMerge = mergeBatchesForPartition(partitionId, fs, root_path);
+                auto statusPartitionMerge = mergeBatchesInFolder(fs, root_path);
                 if (statusPartitionMerge == arrow::Status::OK()){
                     std::cout << "[DataWriter] Partition " << partitionId << " (out of " << numPartitions <<
                                  " ) merged :" << statusPartitionMerge.ToString() << std::endl;
@@ -81,9 +89,8 @@ namespace storage {
         return arrow::Status::OK();
     }
 
-    arrow::Status DataWriter::mergeBatchesForPartition(const uint32_t &partitionId,
-                                                       const std::shared_ptr<arrow::fs::FileSystem> &filesystem,
-                                                       const std::string &base_dir) {
+    arrow::Status DataWriter::mergeBatchesInFolder(const std::shared_ptr<arrow::fs::FileSystem> &filesystem,
+                                                   const std::string &base_dir) {
         arrow::fs::FileSelector selector;
         selector.base_dir = base_dir;
         ARROW_ASSIGN_OR_RAISE(auto factory,

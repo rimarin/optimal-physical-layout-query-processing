@@ -169,4 +169,10 @@ namespace partitioning {
     void MultiDimensionalPartitioning::setDataReader(const std::shared_ptr<storage::DataReader> &reader) {
         dataReader = reader;
     }
+
+    // Regex for checking whether the file is finalized slice already
+    bool MultiDimensionalPartitioning::isFileCompleted(const std::filesystem::path &partitionFile) {
+        auto completedRegex = std::regex{R"(.*completed.*\.parquet)"};
+        return std::regex_match(partitionFile.string(), completedRegex);
+    }
 }

@@ -26,9 +26,8 @@ class DataWriter {
         static std::shared_ptr<parquet::WriterProperties> getWriterProperties();
         static std::shared_ptr<parquet::ArrowWriterProperties> getArrowWriterProperties();
         static arrow::Status mergeBatches(const std::filesystem::path &basePath, const std::set<uint32_t> &partitionIds);
-        static arrow::Status mergeBatchesForPartition(const uint32_t &partitionId,
-                                               const std::shared_ptr<arrow::fs::FileSystem> &filesystem,
-                                               const std::string &base_dir);
+        static arrow::Status mergeBatchesInFolder(const std::shared_ptr<arrow::fs::FileSystem> &filesystem,
+                                                  const std::string &base_dir);
         static void cleanUpFolder(const std::filesystem::path &folder);
         };
 } // storage
