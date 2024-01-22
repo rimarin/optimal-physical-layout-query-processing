@@ -12,55 +12,203 @@ namespace partitioning {
          * 5. Repeat recursively from step 3 until we reach partition size
          */
 
-        // In case, we do not have to partition, we can terminate
-        auto table = dataReader->readTable().ValueOrDie();
-        auto columnArrowArrays = storage::DataReader::getColumnsOld(table, columns).ValueOrDie();
-        auto converter = common::ColumnDataConverter();
-        auto columnData = converter.toDouble(columnArrowArrays).ValueOrDie();
+        // Copy original files to destination and work there
+        // This way all the batch readers will point to the right folder from the start
+        ARROW_RETURN_NOT_OK(copyOriginalToDestination());
 
-        // Extract column vectors from the batch, convert them from arrow array to std vector of points
-        std::vector<common::Point> partitioningColumnValues = {};
-        for(const auto & column : columnData){
-            common::Point columnValues;
-            for (double i : *column) {
-                columnValues.push_back(i);
+        // Initialize the reader, slice size and column index
+        auto datasetFile = folder / ("0" + fileExtension);
+
+        // Call the recursive quadrant slicing method
+        std::ignore = partitionQuadrants(datasetFile, 0);
+
+        // Finalize the files
+        deleteIntermediateFiles();
+        moveCompletedFiles();
+        deleteSubfolders();
+
+        return arrow::Status::OK();
+    }
+
+    arrow::Status QuadTreePartitioning::partitionQuadrants(std::filesystem::path &datasetFile,
+                                                           uint32_t depth){
+
+        // Base case: created a quadrant of size = partition size
+        std::ignore = dataReader->load(datasetFile);
+        auto quadrantSize = dataReader->getNumRows();
+        if (quadrantSize <= partitionSize){
+            // Rename the processed quadrant file
+            auto basePath = datasetFile.parent_path();
+            auto renamedDatasetFile = basePath / ("completed" + datasetFile.filename().string());
+            std::filesystem::rename(datasetFile, renamedDatasetFile);
+            return arrow::Status::OK();
+        }
+
+        // Determine the columns to use for the split
+        // We follow this policy: we always use 2 dimensions (with more than that,
+        // this would be a QuadTree anymore).
+        // When the indexing columns are >= 2, we rotate the pairs of columns to use
+        assert(numColumns >= 2);
+        uint32_t columnIndexX;
+        uint32_t columnIndexY;
+        if (numColumns == 2){
+            columnIndexX = 0;
+            columnIndexY = 1;
+        } else{
+            columnIndexX = depth % numColumns;
+            columnIndexY = (depth + 1) % numColumns;
+        }
+
+        // Read the metadata from the indexing columns
+        std::string columnX = columns.at(columnIndexX);
+        std::pair<double_t, double_t> columnStatsX = dataReader->getColumnStats(columnX).ValueOrDie();
+        std::string columnY = columns.at(columnIndexY);
+        std::pair<double_t, double_t> columnStatsY = dataReader->getColumnStats(columnY).ValueOrDie();
+        // Compute the mean from the min-max statistics
+        double meanDimX = (columnStatsX.first + columnStatsX.second) / 2;
+        double meanDimY = (columnStatsY.first + columnStatsY.second) / 2;
+
+        // Read the table in batches
+        uint32_t batchId = 0;
+        uint32_t totalNumRows = 0;
+
+        // Update readers for current file
+        std::ignore = dataReader->load(datasetFile);
+        auto currentBatchReader = dataReader->getBatchReader().ValueOrDie();
+
+        // Extract partition id from the file name
+        std::string filename = datasetFile.filename();
+        size_t lastIndex = filename.find_last_of('.');
+        std::string partitionId = filename.substr(0, lastIndex);
+
+        // Generate new sub folder (with this partition id) for this processing iteration
+        auto baseFolder = datasetFile.parent_path();
+        auto subFolder = baseFolder / partitionId;
+        if (!std::filesystem::exists(subFolder)) {
+            std::filesystem::create_directory(subFolder);
+        }
+
+        std::vector<arrow::Expression> filterExpressions;
+        // Load and sort batches
+        while (true) {
+
+            // Try to load a new batch, when possible
+            std::shared_ptr<arrow::RecordBatch> recordBatch;
+            ARROW_RETURN_NOT_OK(currentBatchReader->ReadNext(&recordBatch));
+            if (recordBatch == nullptr) {
+                break;
             }
-            partitioningColumnValues.emplace_back(columnValues);
-        }
 
-        // Columnar to row layout: vector of columns is transformed into a vector of points (rows)
-        std::vector<std::shared_ptr<common::Point>> points = common::ColumnDataConverter::toRows(columnData);
-
-        // Build a QuadTree on the vector of points
-        std::shared_ptr<structures::QuadTree> quadTree = std::make_shared<structures::QuadTree>(points, partitionSize,
-                                                                                                numColumns);
-
-        // Retrieve the leaves, where the points have partitioned and stored
-        std::vector<std::shared_ptr<structures::QuadNode>> leaves = quadTree->getLeaves();
-
-        // Build a hashmap to link each point to the partition induced by the QuadTree
-        std::map<std::shared_ptr<common::Point>, int64_t> pointToPartitionId;
-        for (int i = 0; i < leaves.size(); i++){
-            auto partitionedPoints = leaves[i]->data;
-            for (auto &point: partitionedPoints){
-                pointToPartitionId[point] = i;
+            auto batchRows = recordBatch->num_rows();
+            // If it makes sense to divide into quadrants
+            if (batchRows > partitionSize){
+                // Define filters for the quadrants
+                auto batchTable = arrow::Table::FromRecordBatches({recordBatch}).ValueOrDie();
+                std::shared_ptr<arrow::dataset::Dataset> batchDataset = std::make_shared<arrow::dataset::InMemoryDataset>(batchTable);
+                auto options = std::make_shared<arrow::dataset::ScanOptions>();
+                filterExpressions = {
+                        // North West -> (x < meanDimX && y >= meanDimY)
+                        arrow::compute::and_(
+                            arrow::compute::less(
+                                    arrow::compute::field_ref(columnX),
+                                    arrow::compute::literal(meanDimX)
+                            ),
+                            // AND
+                            arrow::compute::greater_equal(
+                                    arrow::compute::field_ref(columnY),
+                                    arrow::compute::literal(meanDimY)
+                        )),
+                        // North East -> (x >= meanDimX && y >= meanDimY)
+                        arrow::compute::and_(
+                            arrow::compute::greater_equal(
+                                    arrow::compute::field_ref(columnX),
+                                    arrow::compute::literal(meanDimX)
+                            ),
+                            // AND
+                            arrow::compute::greater_equal(
+                                    arrow::compute::field_ref(columnY),
+                                    arrow::compute::literal(meanDimY)
+                        )),
+                        // South West -> (x < meanDimX && y < meanDimY)
+                        arrow::compute::and_(
+                            arrow::compute::less(
+                                    arrow::compute::field_ref(columnX),
+                                    arrow::compute::literal(meanDimX)
+                            ),
+                            // AND
+                            arrow::compute::less(
+                                    arrow::compute::field_ref(columnY),
+                                    arrow::compute::literal(meanDimY)
+                        )),
+                        // South East -> (x >= meanDimX && y < meanDimY)
+                        arrow::compute::and_(
+                            arrow::compute::greater_equal(
+                                    arrow::compute::field_ref(columnX),
+                                    arrow::compute::literal(meanDimX)
+                            ),
+                            // AND
+                            arrow::compute::less(
+                                    arrow::compute::field_ref(columnY),
+                                    arrow::compute::literal(meanDimY)
+                        ))
+                };
+                // Filter a batch by the mean values, for each quadrant
+                // TODO: maybe date cast could necessary, see GridFile
+                for (int i = 0; i < filterExpressions.size(); ++i) {
+                    options->filter = filterExpressions.at(i);
+                    auto builder = arrow::dataset::ScannerBuilder(batchDataset, options);
+                    auto scanner = builder.Finish().ValueOrDie();
+                    std::shared_ptr<arrow::Table> filteredBatchTable = scanner->ToTable().ValueOrDie();
+                    if (filteredBatchTable->num_rows() > 0){
+                        std::filesystem::path filteredQuadrantPath = subFolder / std::to_string(i);
+                        if (!std::filesystem::exists(filteredQuadrantPath)) {
+                            std::filesystem::create_directory(filteredQuadrantPath);
+                        }
+                        std::filesystem::path filteredBatchPath = filteredQuadrantPath / (std::to_string(batchId) + fileExtension);
+                        // Write out filtered batch
+                        ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTableToDisk(filteredBatchTable, filteredBatchPath));
+                        std::cout << "[QuadTreePartitioning] Exported quadrant " << std::to_string(i) << " for batch " << batchId << std::endl;
+                    }
+                }
+            // Otherwise, the record batch size can already fit in partition
+            } else{
+                auto batchTable = arrow::Table::FromRecordBatches({recordBatch}).ValueOrDie();
+                std::filesystem::path filteredBatchPath = subFolder / "0" / (std::to_string(batchId) + fileExtension);
+                ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTableToDisk(batchTable, filteredBatchPath));
             }
         }
 
-        // We need to return a vector of partition id for the passed columns
-        // However, the partition id have to be aligned with the initial sorting of the points
-        // Therefore, iterate over points (as passed in the first place) and assign to the return value
-        // the mapped partition
-        std::shared_ptr<arrow::Array> partitionIds;
-        arrow::UInt32Builder int32Builder;
-        std::vector<uint32_t> values = {};
-        for(const auto & point : points){
-            values.emplace_back(pointToPartitionId[point]);
+        // Merge into 4 quadrants
+        for (int i = 0; i < filterExpressions.size(); ++i) {
+            std::filesystem::path quadrantPartsPath = subFolder / std::to_string(i);
+            if (std::filesystem::exists(quadrantPartsPath)) {
+                std::string rootPath;
+                ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(quadrantPartsPath, &rootPath));
+                ARROW_RETURN_NOT_OK(storage::DataWriter::mergeBatchesInFolder(fs, rootPath));
+                std::filesystem::rename(quadrantPartsPath.string() + fileExtension,
+                                        quadrantPartsPath.parent_path() / (std::to_string(i) + fileExtension));
+            }
         }
-        ARROW_RETURN_NOT_OK(int32Builder.AppendValues(values));
-        std::cout << "[QuadTreePartitioning] Mapped columns to partition ids" << std::endl;
-        ARROW_ASSIGN_OR_RAISE(partitionIds, int32Builder.Finish());
-        return partitioning::MultiDimensionalPartitioning::writeOutPartitions(table, partitionIds, folder);
+
+        // Determine partitions to process next from the current folder
+        std::vector<std::filesystem::path> partitionPaths;
+        for (auto &file : std::filesystem::directory_iterator(subFolder)) {
+            if (file.path().extension() == common::Settings::fileExtension) {
+                partitionPaths.emplace_back(file);
+            }
+        }
+
+        // Recursively split the files in the folder
+        for (auto &partitionPath: partitionPaths){
+            // Only for files still to be processed
+            bool isValidFile = partitionPath.extension() == common::Settings::fileExtension;
+            bool isAlreadyCompleted = isFileCompleted(partitionPath);
+            if (isValidFile && !isAlreadyCompleted) {
+                std::filesystem::path partitionFile = partitionPath;
+                std::ignore = partitionQuadrants(partitionFile, depth + 1);
+            }
+        }
+        return arrow::Status::OK();
     }
 
 }

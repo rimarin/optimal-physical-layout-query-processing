@@ -17,6 +17,7 @@
 #include <arrow/table.h>
 
 #include "common/ColumnDataConverter.h"
+#include "external/ExternalMerge.h"
 #include "partitioning/Partitioning.h"
 #include "partitioning/PartitioningType.h"
 #include "structures/QuadTree.h"
@@ -36,6 +37,8 @@ namespace partitioning {
         };
         arrow::Status partition() override;
     private:
+        arrow::Status partitionQuadrants(std::filesystem::path &datasetFile,
+                                         uint32_t depth);
         partitioning::PartitioningType type = TREE;
     };
 }
