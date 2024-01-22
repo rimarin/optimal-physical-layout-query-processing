@@ -70,7 +70,6 @@ namespace partitioning {
 
         // Read the table in batches
         uint32_t batchId = 0;
-        uint32_t totalNumRows = 0;
 
         // Update readers for current file
         std::ignore = dataReader->load(datasetFile);

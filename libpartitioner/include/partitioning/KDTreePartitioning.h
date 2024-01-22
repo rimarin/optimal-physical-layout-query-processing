@@ -36,6 +36,8 @@ namespace partitioning {
         arrow::Status partition() override;
     private:
         partitioning::PartitioningType type = TREE;
+        arrow::Status partitionBranches(std::filesystem::path &datasetFile, uint32_t depth);
+        arrow::Result<double> findMedian(std::filesystem::path &datasetFile, uint32_t columnIndex);
     };
 }
 
