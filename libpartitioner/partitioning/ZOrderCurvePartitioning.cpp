@@ -64,7 +64,6 @@ namespace partitioning {
             zOrderValues.emplace_back(zOrderValue);
         }
 
-
         // Add to the record batch the new column with the Z Order values
         arrow::Int64Builder int64Builder;
         ARROW_RETURN_NOT_OK(int64Builder.AppendValues(zOrderValues));
