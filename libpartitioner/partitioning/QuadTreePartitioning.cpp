@@ -159,7 +159,7 @@ namespace partitioning {
                     auto scanner = builder.Finish().ValueOrDie();
                     std::shared_ptr<arrow::Table> filteredBatchTable = scanner->ToTable().ValueOrDie();
                     if (filteredBatchTable->num_rows() > 0){
-                        std::filesystem::path filteredQuadrantPath = subFolder / std::to_string(i);
+                        std::filesystem::path filteredQuadrantPath = subFolder / filterExpressions.at(i).ToString();
                         if (!std::filesystem::exists(filteredQuadrantPath)) {
                             std::filesystem::create_directory(filteredQuadrantPath);
                         }
@@ -172,21 +172,22 @@ namespace partitioning {
             // Otherwise, the record batch size can already fit in partition
             } else{
                 auto batchTable = arrow::Table::FromRecordBatches({recordBatch}).ValueOrDie();
-                std::filesystem::path filteredBatchPath = subFolder / "0" / (std::to_string(batchId) + fileExtension);
+                std::filesystem::path filteredBatchPath = subFolder / "(All)" / (std::to_string(batchId) + fileExtension);
                 ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTableToDisk(batchTable, filteredBatchPath));
+                std::cout << "[QuadTreePartitioning] Exported entire block for batch " << batchId << std::endl;
             }
             batchId += 1;
         }
 
         // Merge into 4 quadrants
         for (int i = 0; i < filterExpressions.size(); ++i) {
-            std::filesystem::path quadrantPartsPath = subFolder / std::to_string(i);
+            std::filesystem::path quadrantPartsPath = subFolder / filterExpressions.at(i).ToString();
             if (std::filesystem::exists(quadrantPartsPath)) {
                 std::string rootPath;
                 ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(quadrantPartsPath, &rootPath));
                 ARROW_RETURN_NOT_OK(storage::DataWriter::mergeBatchesInFolder(fs, rootPath));
-                std::filesystem::rename(quadrantPartsPath.string() + fileExtension,
-                                        quadrantPartsPath.parent_path() / (std::to_string(i) + fileExtension));
+                std::filesystem::remove_all(quadrantPartsPath);
+                std::cout << "[QuadTreePartitioning] Merged batches into 4 quadrants" << std::endl;
             }
         }
 
