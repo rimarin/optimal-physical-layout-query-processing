@@ -82,6 +82,7 @@ namespace partitioning {
             }
 
             auto batchRows = recordBatch->num_rows();
+            std::cout << "[KDTreePartitioning] Batch has " << batchRows << " rows" << std::endl;
             // If it makes sense to divide into >= and < than median
             if (batchRows > partitionSize){
                 // Define filters for median split
@@ -107,8 +108,9 @@ namespace partitioning {
                     auto builder = arrow::dataset::ScannerBuilder(batchDataset, options);
                     auto scanner = builder.Finish().ValueOrDie();
                     std::shared_ptr<arrow::Table> filteredBatchTable = scanner->ToTable().ValueOrDie();
+                    std::cout << "[KDTreePartitioning] Filtered batch table has " << filteredBatchTable->num_rows() << " rows" << std::endl;
                     if (filteredBatchTable->num_rows() > 0){
-                        std::filesystem::path filteredFragmentPath = subFolder / std::to_string(i);
+                        std::filesystem::path filteredFragmentPath = subFolder / filterExpressions.at(i).ToString();
                         if (!std::filesystem::exists(filteredFragmentPath)) {
                             std::filesystem::create_directory(filteredFragmentPath);
                         }
@@ -121,21 +123,21 @@ namespace partitioning {
                 // Otherwise, the record batch size can already fit in partition
             } else{
                 auto batchTable = arrow::Table::FromRecordBatches({recordBatch}).ValueOrDie();
-                std::filesystem::path filteredBatchPath = subFolder / "0" / (std::to_string(batchId) + fileExtension);
+                std::filesystem::path filteredBatchPath = subFolder / "(All)" / (std::to_string(batchId) + fileExtension);
                 ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTableToDisk(batchTable, filteredBatchPath));
+                std::cout << "[KDTreePartitioning] Exported entire fragment for batch " << batchId << std::endl;
             }
             batchId += 1;
         }
 
-        // Merge the fragments
+        // Merge the fragments of the same group but from different batches
         for (int i = 0; i < filterExpressions.size(); ++i) {
-            std::filesystem::path fragmentPartsPath = subFolder / std::to_string(i);
+            std::filesystem::path fragmentPartsPath = subFolder / filterExpressions.at(i).ToString();
             if (std::filesystem::exists(fragmentPartsPath)) {
                 std::string rootPath;
                 ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(fragmentPartsPath, &rootPath));
                 ARROW_RETURN_NOT_OK(storage::DataWriter::mergeBatchesInFolder(fs, rootPath));
-                std::filesystem::rename(fragmentPartsPath.string() + fileExtension,
-                                        fragmentPartsPath.parent_path() / (std::to_string(i) + fileExtension));
+                std::filesystem::remove_all(fragmentPartsPath);
             }
         }
 
