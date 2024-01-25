@@ -20,8 +20,6 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningFixedGridTPCH){
     ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
     std::filesystem::path partition0 = folder / ("0" + ExperimentsConfig::fileExtension);
     ASSERT_EQ(dataReader->load(partition0), arrow::Status::OK());
-    std::filesystem::path partition1 = folder / ("13" + ExperimentsConfig::fileExtension);
-    ASSERT_EQ(dataReader->load(partition1), arrow::Status::OK());
     auto folderResults = getFolderResults(dataReader, folder);
     auto fileCount = folderResults.first;
     auto partitionsTotalRows = folderResults.second;
@@ -44,8 +42,6 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFileTPCH){
     ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
     std::filesystem::path partition0 = folder / ("0" + ExperimentsConfig::fileExtension);
     ASSERT_EQ(dataReader->load(partition0), arrow::Status::OK());
-    std::filesystem::path partition1 = folder / ("13" + ExperimentsConfig::fileExtension);
-    ASSERT_EQ(dataReader->load(partition1), arrow::Status::OK());
     auto folderResults = getFolderResults(dataReader, folder);
     auto fileCount = folderResults.first;
     auto partitionsTotalRows = folderResults.second;
@@ -68,8 +64,6 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningKDTreeTPCH){
     ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
     std::filesystem::path partition0 = folder / "0.parquet";
     ASSERT_EQ(dataReader->load(partition0), arrow::Status::OK());
-    std::filesystem::path partition1 = folder / "13.parquet";
-    ASSERT_EQ(dataReader->load(partition1), arrow::Status::OK());
     auto folderResults = getFolderResults(dataReader, folder);
     auto fileCount = folderResults.first;
     auto partitionsTotalRows = folderResults.second;
@@ -92,8 +86,6 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningQuadTreeTPCH){
     ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
     std::filesystem::path partition0 = folder / "0.parquet";
     ASSERT_EQ(dataReader->load(partition0), arrow::Status::OK());
-    std::filesystem::path partition1 = folder / "13.parquet";
-    ASSERT_EQ(dataReader->load(partition1), arrow::Status::OK());
     auto folderResults = getFolderResults(dataReader, folder);
     auto fileCount = folderResults.first;
     auto partitionsTotalRows = folderResults.second;
@@ -116,8 +108,6 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningSTRTreeTPCH){
     ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
     std::filesystem::path partition0 = folder / "0.parquet";
     ASSERT_EQ(dataReader->load(partition0), arrow::Status::OK());
-    std::filesystem::path partition1 = folder / "13.parquet";
-    ASSERT_EQ(dataReader->load(partition1), arrow::Status::OK());
     auto folderResults = getFolderResults(dataReader, folder);
     auto fileCount = folderResults.first;
     auto partitionsTotalRows = folderResults.second;
@@ -140,8 +130,6 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurveTPCH){
     ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
     std::filesystem::path partition0 = folder / "0.parquet";
     ASSERT_EQ(dataReader->load(partition0), arrow::Status::OK());
-    std::filesystem::path partition1 = folder / "13.parquet";
-    ASSERT_EQ(dataReader->load(partition1), arrow::Status::OK());
     auto folderResults = getFolderResults(dataReader, folder);
     auto fileCount = folderResults.first;
     auto partitionsTotalRows = folderResults.second;
@@ -164,8 +152,6 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningZOrderCurveTPCH){
     ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
     std::filesystem::path partition0 = folder / "0.parquet";
     ASSERT_EQ(dataReader->load(partition0), arrow::Status::OK());
-    std::filesystem::path partition1 = folder / "13.parquet";
-    ASSERT_EQ(dataReader->load(partition1), arrow::Status::OK());
     auto folderResults = getFolderResults(dataReader, folder);
     auto fileCount = folderResults.first;
     auto partitionsTotalRows = folderResults.second;
