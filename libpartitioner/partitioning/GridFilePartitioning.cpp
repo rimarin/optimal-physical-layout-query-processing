@@ -111,6 +111,8 @@ namespace partitioning {
                     auto toInt64 = arrow::compute::CastOptions::Safe(arrow::int64());
                     arrow::Expression columnExpression;
                     auto columnType = recordBatch->column(dataReader->getColumnIndex(columns[i]).ValueOrDie())->type();
+                    // Also the cell coordinates need to match the size of the data type
+                    auto cellCoordinatesType = arrow::float64();
                     // Apply cast only when dealing with dates, otherwise it is an unnecessary overhead
                     if (arrow::is_date(columnType->id())) {
                         columnExpression = arrow::compute::call("cast",
@@ -123,13 +125,20 @@ namespace partitioning {
                     filterExpressions.emplace_back(arrow::compute::and_(
                                 arrow::compute::greater_equal(
                                     columnExpression,
-                                    arrow::compute::literal(cellsCoordinates[partitionId][i].first)
+                                    arrow::compute::call("cast",
+                                         {arrow::compute::literal(cellsCoordinates[partitionId][i].first)},
+                                          arrow::compute::CastOptions::Safe(cellCoordinatesType)
+                                          )
                                 ),
                                 // AND
                                 arrow::compute::less_equal(
                                     columnExpression,
-                                    arrow::compute::literal(cellsCoordinates[partitionId][i].second))
+                                    arrow::compute::call("cast",
+                                        {arrow::compute::literal(cellsCoordinates[partitionId][i].second)},
+                                         arrow::compute::CastOptions::Safe(cellCoordinatesType)
+                                    )
                                 )
+                            )
                     );
                 }
                 options->filter = arrow::compute::and_(filterExpressions);
