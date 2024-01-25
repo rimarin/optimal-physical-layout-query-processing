@@ -112,7 +112,7 @@ namespace partitioning {
                     arrow::Expression columnExpression;
                     auto columnType = recordBatch->column(dataReader->getColumnIndex(columns[i]).ValueOrDie())->type();
                     // Also the cell coordinates need to match the size of the data type
-                    auto cellCoordinatesType = arrow::float64();
+                    const auto& cellCoordinatesType = arrow::float64();
                     // Apply cast only when dealing with dates, otherwise it is an unnecessary overhead
                     if (arrow::is_date(columnType->id())) {
                         columnExpression = arrow::compute::call("cast",
