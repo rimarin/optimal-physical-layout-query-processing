@@ -105,61 +105,109 @@ namespace partitioning {
                 auto batchTable = arrow::Table::FromRecordBatches({recordBatch}).ValueOrDie();
                 std::shared_ptr<arrow::dataset::Dataset> batchDataset = std::make_shared<arrow::dataset::InMemoryDataset>(batchTable);
                 auto options = std::make_shared<arrow::dataset::ScanOptions>();
+                // Possibly cast date to int64 - for column X
+                auto toInt64 = arrow::compute::CastOptions::Safe(arrow::int64());
+                arrow::Expression columnXExpression;
+                auto columnXType = recordBatch->column(dataReader->getColumnIndex(columnX).ValueOrDie())->type();
+                if (arrow::is_date(columnXType->id())) {
+                    columnXExpression = arrow::compute::call("cast",
+                                                            {arrow::compute::field_ref(columnX)},
+                                                            toInt64);
+                }
+                else {
+                    columnXExpression = arrow::compute::field_ref(columnX);
+                }
+                // Possibly cast date to int64 - for column Y
+                arrow::Expression columnYExpression;
+                auto columnYType = recordBatch->column(dataReader->getColumnIndex(columnY).ValueOrDie())->type();
+                if (arrow::is_date(columnYType->id())) {
+                    columnYExpression = arrow::compute::call("cast",
+                                                             {arrow::compute::field_ref(columnY)},
+                                                             toInt64);
+                }
+                else {
+                    columnYExpression = arrow::compute::field_ref(columnY);
+                }
+                // Align the mean value data type
+                const auto& meanValueType = arrow::float64();
                 filterExpressions = {
                         // North West -> (x < meanDimX && y >= meanDimY)
                         arrow::compute::and_(
                             arrow::compute::less(
-                                    arrow::compute::field_ref(columnX),
-                                    arrow::compute::literal(meanDimX)
+                                    columnXExpression,
+                                    arrow::compute::call("cast",
+                                                         {arrow::compute::literal(meanDimX)},
+                                                         arrow::compute::CastOptions::Safe(meanValueType)
+                                    )
                             ),
                             // AND
                             arrow::compute::greater_equal(
-                                    arrow::compute::field_ref(columnY),
-                                    arrow::compute::literal(meanDimY)
+                                    columnYExpression,
+                                    arrow::compute::call("cast",
+                                                         {arrow::compute::literal(meanDimY)},
+                                                         arrow::compute::CastOptions::Safe(meanValueType)
+                                    )
                         )),
                         // North East -> (x >= meanDimX && y >= meanDimY)
                         arrow::compute::and_(
                             arrow::compute::greater_equal(
-                                    arrow::compute::field_ref(columnX),
-                                    arrow::compute::literal(meanDimX)
+                                    columnXExpression,
+                                    arrow::compute::call("cast",
+                                                         {arrow::compute::literal(meanDimX)},
+                                                         arrow::compute::CastOptions::Safe(meanValueType)
+                                    )
                             ),
                             // AND
                             arrow::compute::greater_equal(
-                                    arrow::compute::field_ref(columnY),
-                                    arrow::compute::literal(meanDimY)
+                                    columnYExpression,
+                                    arrow::compute::call("cast",
+                                                         {arrow::compute::literal(meanDimY)},
+                                                         arrow::compute::CastOptions::Safe(meanValueType)
+                                    )
                         )),
                         // South West -> (x < meanDimX && y < meanDimY)
                         arrow::compute::and_(
                             arrow::compute::less(
-                                    arrow::compute::field_ref(columnX),
-                                    arrow::compute::literal(meanDimX)
+                                    columnXExpression,
+                                    arrow::compute::call("cast",
+                                                         {arrow::compute::literal(meanDimX)},
+                                                         arrow::compute::CastOptions::Safe(meanValueType)
+                                    )
                             ),
                             // AND
                             arrow::compute::less(
-                                    arrow::compute::field_ref(columnY),
-                                    arrow::compute::literal(meanDimY)
+                                    columnYExpression,
+                                    arrow::compute::call("cast",
+                                                         {arrow::compute::literal(meanDimY)},
+                                                         arrow::compute::CastOptions::Safe(meanValueType)
+                                    )
                         )),
                         // South East -> (x >= meanDimX && y < meanDimY)
                         arrow::compute::and_(
                             arrow::compute::greater_equal(
-                                    arrow::compute::field_ref(columnX),
-                                    arrow::compute::literal(meanDimX)
+                                    columnXExpression,
+                                    arrow::compute::call("cast",
+                                                         {arrow::compute::literal(meanDimX)},
+                                                         arrow::compute::CastOptions::Safe(meanValueType)
+                                    )
                             ),
                             // AND
                             arrow::compute::less(
-                                    arrow::compute::field_ref(columnY),
-                                    arrow::compute::literal(meanDimY)
+                                    columnYExpression,
+                                    arrow::compute::call("cast",
+                                                         {arrow::compute::literal(meanDimY)},
+                                                         arrow::compute::CastOptions::Safe(meanValueType)
+                                    )
                         ))
                 };
                 // Filter a batch by the mean values, for each quadrant
-                // TODO: maybe date cast could necessary, see GridFile
                 for (int i = 0; i < filterExpressions.size(); ++i) {
                     options->filter = filterExpressions.at(i);
                     auto builder = arrow::dataset::ScannerBuilder(batchDataset, options);
                     auto scanner = builder.Finish().ValueOrDie();
                     std::shared_ptr<arrow::Table> filteredBatchTable = scanner->ToTable().ValueOrDie();
                     if (filteredBatchTable->num_rows() > 0){
-                        std::filesystem::path filteredQuadrantPath = subFolder / filterExpressions.at(i).ToString();
+                        std::filesystem::path filteredQuadrantPath = subFolder / std::to_string(i);
                         if (!std::filesystem::exists(filteredQuadrantPath)) {
                             std::filesystem::create_directory(filteredQuadrantPath);
                         }
@@ -181,7 +229,7 @@ namespace partitioning {
 
         // Merge into 4 quadrants
         for (int i = 0; i < filterExpressions.size(); ++i) {
-            std::filesystem::path quadrantPartsPath = subFolder / filterExpressions.at(i).ToString();
+            std::filesystem::path quadrantPartsPath = subFolder / std::to_string(i);
             if (std::filesystem::exists(quadrantPartsPath)) {
                 std::string rootPath;
                 ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(quadrantPartsPath, &rootPath));
