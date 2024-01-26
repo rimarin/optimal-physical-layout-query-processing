@@ -11,7 +11,6 @@ namespace storage {
     // Write to disk a table, given its pointer and the output path
     arrow::Status DataWriter::WriteTableToDisk(std::shared_ptr<arrow::Table>& table,
                                                std::filesystem::path &outputPath) {
-        std::cout << "[DataWriter] Starting to write table to file " << outputPath << std::endl;
         // Prepare the output file
         std::shared_ptr<arrow::io::FileOutputStream> outfile;
         ARROW_ASSIGN_OR_RAISE(outfile, arrow::io::FileOutputStream::Open(outputPath.string()));
