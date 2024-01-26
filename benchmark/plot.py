@@ -23,6 +23,8 @@ df = df[df.latency_avg != 0]
 df['used_partitions'] = df[['used_partitions', 'total_partitions']].min(axis=1)
 # Set a fixed (optimal) partition size
 # df = df[df['partition_size'] == 50000]
+# Convert latency to milliseconds
+df['latency_avg'] = df['latency_avg'] * 1000
 
 # Compute additional information
 df['scan_ratio'] = (df['used_partitions'] / df['total_partitions']) * 100
@@ -114,7 +116,7 @@ for i, dataset in enumerate(DATASETS):
                            title=f'[{dataset}] Impact of the partition size on the {metric}')
         for trace in range(len(sub_plot["data"])):
             impact_partition_size.add_trace(sub_plot["data"][trace], row=y + 1, col=i + 1)
-            impact_partition_size.update_yaxes(title_text=metric, row=y + 1, col=1)
+            impact_partition_size.update_yaxes(title_text=metric, type="log", row=y + 1, col=1)
     # Figure 3: latency by dataset for all schemes with increasing selectivity: line plot
     for y, metric in enumerate(metrics):
         sub_plot = px.line(df_group_by_selectivity,
@@ -131,7 +133,7 @@ for i, dataset in enumerate(DATASETS):
                 ),
                 bargap=0
             ))
-            impact_selectivity.update_yaxes(title_text=metric, row=y + 1, col=1)
+            impact_selectivity.update_yaxes(title_text=metric, type="log", row=y + 1, col=1)
     # Figure 4: latency by dataset for all schemes with dataset size: line plot
     for y, metric in enumerate(metrics):
         sub_plot = px.line(df_group_by_num_rows,
@@ -140,7 +142,7 @@ for i, dataset in enumerate(DATASETS):
                            title=f'[{dataset}] Impact of the dataset size on the {metric}')
         for trace in range(len(sub_plot["data"])):
             impact_dataset_size.add_trace(sub_plot["data"][trace], row=y + 1, col=i + 1)
-            impact_dataset_size.update_yaxes(title_text=metric, row=y + 1, col=1)
+            impact_dataset_size.update_yaxes(title_text=metric, type="log", row=y + 1, col=1)
     # Figure 5: latency by dataset for all schemes with increasing partitioning columns: line plot
     for y, metric in enumerate(metrics):
         sub_plot = px.line(df_group_by_num_cols,
@@ -150,7 +152,7 @@ for i, dataset in enumerate(DATASETS):
                            title=f'[{dataset}] Impact of the number of partitioning columns on the {metric}')
         for trace in range(len(sub_plot["data"])):
             impact_num_columns.add_trace(sub_plot["data"][trace], row=y + 1, col=i + 1)
-            impact_num_columns.update_yaxes(title_text=metric, row=y + 1, col=1)
+            impact_num_columns.update_yaxes(title_text=metric, type="log", row=y + 1, col=1)
     # Figure 5: latency by dataset for all schemes with increasing column match ratio: line plot
     for y, metric in enumerate(metrics):
         sub_plot = px.line(df_group_by_col_ratio,
@@ -160,7 +162,7 @@ for i, dataset in enumerate(DATASETS):
                            title=f'[{dataset}] Impact of the column match on the {metric}')
         for trace in range(len(sub_plot["data"])):
             impact_column_match.add_trace(sub_plot["data"][trace], row=y + 1, col=i + 1)
-            impact_column_match.update_yaxes(title_text=metric, row=y + 1, col=1)
+            impact_column_match.update_yaxes(title_text=metric, type="log", row=y + 1, col=1)
 
 
 def export_images():
