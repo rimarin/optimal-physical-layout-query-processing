@@ -6,7 +6,7 @@ from config import BenchmarkConfig
 from instance import BenchmarkInstance
 from result import BenchmarkResult
 from settings import RESULTS_FILE, PARTITIONINGS, PARTITION_SIZES, DATASETS, LOG_TO_CONSOLE, LOG_TO_FILE, \
-    RESULTS_FOLDER
+    RESULTS_FOLDER, NUM_COLUMNS
 
 
 def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
@@ -71,7 +71,7 @@ def run_benchmarks(datasets: list, partitionings: list, partition_sizes: list):
         try:
             benchmark = BenchmarkInstance.get_benchmark(dataset)
             query_files = BenchmarkInstance.get_query_files(benchmark)
-            partitioning_columns_groups = benchmark.get_partitioning_columns()
+            partitioning_columns_groups = benchmark.get_partitioning_columns(NUM_COLUMNS)
         except Exception as e:
             logger.error(f"Error while preparing benchmark instance for dataset name {dataset} - " + str(e))
             continue

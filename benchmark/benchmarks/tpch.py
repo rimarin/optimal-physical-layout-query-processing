@@ -17,19 +17,23 @@ class BenchmarkTPCH(Benchmark):
         return f'tpch-sf{self.scale}'
 
     @staticmethod
-    def get_partitioning_columns():
-        return [
-            ["c_custkey", "o_orderkey"],
-            ["c_custkey", "o_orderkey", "o_orderdate"],
-            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate"],
-            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey"],
-            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey"],
-            ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey"],
-        #    ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate"],
-        #    ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate", "l_receiptdate"],
-        #    ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate", "l_receiptdate", "p_size"],
-        #    ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate", "l_receiptdate", "p_size", "p_partkey"]
-        ]
+    def get_partitioning_columns(num_columns=None):
+        columns_map = {
+            2: ["c_custkey", "o_orderkey"],
+            3: ["c_custkey", "o_orderkey", "o_orderdate"],
+            4: ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate"],
+            5: ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey"],
+            6: ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey"],
+            7: ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey"],
+            8: ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate"],
+        #   9: ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate", "l_receiptdate"],
+        #   10: ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate", "l_receiptdate", "p_size"],
+        #   11: ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate", "l_receiptdate", "p_size", "p_partkey"]
+        }
+        if num_columns is None:
+            return list(columns_map.values())
+        else:
+            return [columns_map.get(num_columns, [])]
 
     @staticmethod
     def get_query_columns(query_number):

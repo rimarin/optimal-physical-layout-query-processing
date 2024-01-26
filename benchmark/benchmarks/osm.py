@@ -18,15 +18,19 @@ class BenchmarkOSM(Benchmark):
         return 'osm'
 
     @staticmethod
-    def get_partitioning_columns():
-        return [
-            ["min_lon", "max_lon"],
-            ["min_lon", "max_lon", "min_lat"],
-            ["min_lon", "max_lon", "min_lat", "max_lat"],
-            ["min_lon", "max_lon", "min_lat", "max_lat", "created_at"],
-            ["min_lon", "max_lon", "min_lat", "max_lat", "created_at", "version"],
-            ["min_lon", "max_lon", "min_lat", "max_lat", "created_at", "version", "id"]
-        ]
+    def get_partitioning_columns(num_columns=None):
+        columns_map = {
+            2: ["min_lon", "max_lon"],
+            3: ["min_lon", "max_lon", "min_lat"],
+            4: ["min_lon", "max_lon", "min_lat", "max_lat"],
+            5: ["min_lon", "max_lon", "min_lat", "max_lat", "created_at"],
+            6: ["min_lon", "max_lon", "min_lat", "max_lat", "created_at", "version"],
+            7: ["min_lon", "max_lon", "min_lat", "max_lat", "created_at", "version", "id"]
+        }
+        if num_columns is None:
+            return list(columns_map.values())
+        else:
+            return [columns_map.get(num_columns, [])]
 
     @staticmethod
     def get_query_columns(query_number):

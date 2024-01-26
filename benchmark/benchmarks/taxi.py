@@ -21,15 +21,19 @@ class BenchmarkTaxi(Benchmark):
         return 'taxi'
 
     @staticmethod
-    def get_partitioning_columns():
-        return [
-            ["PULocationID", "DOLocationID"],
-            ["PULocationID", "DOLocationID", "tpep_pickup_datetime"],
-            ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime"],
-            ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime", "passenger_count"],
-            ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime", "passenger_count", "fare_amount"],
-            ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime", "passenger_count", "fare_amount", "trip_distance"]
-        ]
+    def get_partitioning_columns(num_columns=None):
+        columns_map = {
+            2: ["PULocationID", "DOLocationID"],
+            3: ["PULocationID", "DOLocationID", "tpep_pickup_datetime"],
+            4: ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime"],
+            5: ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime", "passenger_count"],
+            6: ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime", "passenger_count", "fare_amount"],
+            7: ["PULocationID", "DOLocationID", "tpep_pickup_datetime", "tpep_dropoff_datetime", "passenger_count", "fare_amount", "trip_distance"]
+        }
+        if num_columns is None:
+            return list(columns_map.values())
+        else:
+            return [columns_map.get(num_columns, [])]
 
     @staticmethod
     def get_query_columns(query_number):
