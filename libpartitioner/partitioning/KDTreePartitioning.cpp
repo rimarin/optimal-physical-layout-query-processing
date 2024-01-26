@@ -125,7 +125,6 @@ namespace partitioning {
             };
 
             // Filter a batch by the median values
-            // TODO: maybe date cast could necessary, see GridFile
             for (int i = 0; i < filterExpressions.size(); ++i) {
                 options->filter = filterExpressions.at(i);
                 auto builder = arrow::dataset::ScannerBuilder(batchDataset, options);
