@@ -21,6 +21,8 @@ df.columns = df.columns.str.strip()
 # Drop invalid data (measured latency is 0)
 df = df[df.latency_avg != 0]
 df['used_partitions'] = df[['used_partitions', 'total_partitions']].min(axis=1)
+# Set a fixed (optimal) partition size
+# df = df[df['partition_size'] == 50000]
 
 # Compute additional information
 df['scan_ratio'] = (df['used_partitions'] / df['total_partitions']) * 100
@@ -45,99 +47,120 @@ effects = ['selectivity', 'partition_size', 'num_partitioning_columns']
 metrics = ['latency_avg', 'scan_ratio']
 
 # Figure 1: latency by dataset for all schemes: bar plot
-plotGeneralLatency = make_subplots(rows=1, cols=len(DATASETS), column_titles=DATASETS,
-                                   x_title='Scheme', y_title='Average query time (s)')
-plotGeneralLatency.update_layout(title='Latency By Scheme')
+impact_scheme = make_subplots(rows=2, cols=len(DATASETS), column_titles=DATASETS,
+                              x_title='Scheme', shared_yaxes=True, shared_xaxes=True)
+impact_scheme.update_layout(title='Impact of partitioning scheme')
 # Figure 2: latency by dataset for all schemes with increasing partition size: line plot
-plotLatencyVsPartitionSize = make_subplots(rows=1, cols=len(DATASETS), column_titles=DATASETS,
-                                           x_title='Partition size', y_title='Average query time (s)')
-plotLatencyVsPartitionSize.update_layout(title='Latency vs Partition Size')
+impact_partition_size = make_subplots(rows=2, cols=len(DATASETS), column_titles=DATASETS,
+                                      x_title='Partition size', shared_yaxes=True, shared_xaxes=True)
+impact_partition_size.update_layout(title='Impact of partition size')
 # Figure 3: latency by dataset for all schemes with increasing selectivity: line plot
-plotLatencyVsSelectivity = make_subplots(rows=1, cols=len(DATASETS), column_titles=DATASETS,
-                                         x_title='Selectivity', y_title='Average query time (s)')
-plotLatencyVsSelectivity.update_layout(title='Latency vs Selectivity')
+impact_selectivity = make_subplots(rows=2, cols=len(DATASETS), column_titles=DATASETS,
+                                   x_title='Selectivity', shared_yaxes=True, shared_xaxes=True)
+impact_selectivity.update_layout(title='Impact of selectivity')
 # Figure 4: latency by dataset for all schemes with dataset size: line plot
-plotLatencyVsDatasetSize = make_subplots(rows=1, cols=len(DATASETS), column_titles=DATASETS,
-                                         x_title='Dataset size', y_title='Average query time (s)')
-plotLatencyVsDatasetSize.update_layout(title='Latency vs Dataset Size')
+impact_dataset_size = make_subplots(rows=2, cols=len(DATASETS), column_titles=DATASETS,
+                                    x_title='Dataset size', shared_yaxes=True, shared_xaxes=True)
+impact_dataset_size.update_layout(title='Impact of dataset size')
 # Figure 5: latency by dataset for all schemes with increasing partitioning columns: line plot
-plotLatencyVsNumColumns = make_subplots(rows=1, cols=len(DATASETS), column_titles=DATASETS,
-                                        x_title='Number of partitioning columns', y_title='Average query time (s)')
-plotLatencyVsNumColumns.update_layout(title='Latency vs Number of Partitioning Columns')
+impact_num_columns = make_subplots(rows=2, cols=len(DATASETS), column_titles=DATASETS,
+                                   x_title='Number of partitioning columns', shared_yaxes=True, shared_xaxes=True)
+impact_num_columns.update_layout(title='Impact of number of partitioning columns')
 # Figure 6: latency by dataset for all schemes with increasing partitioning columns: line plot
-plotLatencyVsColumnMatch = make_subplots(rows=1, cols=len(DATASETS), column_titles=DATASETS,
-                                         x_title='Ratio matching columns (partitioning columns / predicate columns) '
-                                                 'of partitioning columns', y_title='Average query time (s)')
-plotLatencyVsColumnMatch.update_layout(title='Latency vs Column Match Ratio')
+impact_column_match = make_subplots(rows=2, cols=len(DATASETS), column_titles=DATASETS,
+                                    x_title='Ratio matching columns (partitioning columns / predicate columns) '
+                                            'of partitioning columns', shared_yaxes=True, shared_xaxes=True)
+impact_column_match.update_layout(title='Impact of column match ratio')
 
 # TODO
 # Figure X: latency by dataset for all schemes at selectivity = 0.001
 # Figure X: latency by dataset for all schemes at selectivity = 0.01
 # Figure X: latency by dataset for all schemes at selectivity = 0.1
 
-plots = [plotGeneralLatency, plotLatencyVsPartitionSize, plotLatencyVsSelectivity, plotLatencyVsDatasetSize,
-         plotLatencyVsNumColumns, plotLatencyVsColumnMatch]
+plots = [impact_scheme, impact_partition_size, impact_selectivity, impact_dataset_size,
+         impact_num_columns, impact_column_match]
+
+aggregates = {}
+for metric in metrics:
+    aggregates[metric] = 'mean'
 
 for i, dataset in enumerate(DATASETS):
     df_dataset = df[df['dataset'] == f'{dataset}']
-    df_group_by_partitioning = df_dataset.groupby(['partitioning']).agg({'latency_avg': 'mean'}).reset_index()
+    df_group_by_partitioning = df_dataset.groupby(['partitioning']).agg(aggregates).reset_index()
     df_group_by_partition_size = df_dataset.groupby(['partition_size', 'partitioning']).agg(
-        {'latency_avg': 'mean'}).reset_index()
+        aggregates).reset_index()
     df_group_by_selectivity = df_dataset.groupby(['selectivity', 'partitioning']).agg(
-        {'latency_avg': 'mean'}).reset_index()
-    df_group_by_num_rows = df_dataset.groupby(['num_rows', 'partitioning']).agg({'latency_avg': 'mean'}).reset_index()
+        aggregates).reset_index()
+    df_group_by_num_rows = df_dataset.groupby(['num_rows', 'partitioning']).agg(aggregates).reset_index()
     df_group_by_num_cols = df_dataset.groupby(['num_partitioning_columns', 'partitioning']).agg(
-        {'latency_avg': 'mean'}).reset_index()
+        aggregates).reset_index()
     df_group_by_col_ratio = df_dataset.groupby(['column_match_ratio', 'partitioning']).agg(
-        {'latency_avg': 'mean'}).reset_index()
+        aggregates).reset_index()
     # Figure 1: latency by dataset for all schemes: bar plot
-    plotLatency = px.histogram(df_dataset, x="partitioning", y="latency_avg", color="partitioning",
-                               barmode="group", histfunc='avg', labels=PARTITIONINGS,
-                               title=f'[{dataset}] Impact of the partitioning scheme on the query latency')
-    for trace in range(len(plotLatency["data"])):
-        plotGeneralLatency.add_trace(plotLatency["data"][trace], row=1, col=i + 1)
-
+    for y, metric in enumerate(metrics):
+        sub_plot = px.histogram(df_dataset, x="partitioning", y=metric, color="partitioning",
+                                barmode="group", histfunc='avg', labels=PARTITIONINGS,
+                                category_orders={'partitioning': sorted(df_dataset['partitioning'].unique())},
+                                title=f'[{dataset}] Impact of the partitioning scheme on the {metric}').update_layout(
+            yaxis_title=metric)
+        for trace in range(len(sub_plot["data"])):
+            impact_scheme.add_trace(sub_plot["data"][trace], row=y + 1, col=i + 1)
+            impact_scheme.update_yaxes(title_text=metric, row=y + 1, col=1)
     # Figure 2: latency by dataset for all schemes with increasing partition size: line plot
-    plotPartitionSize = px.line(df_group_by_partition_size,
-                                x="partition_size", y="latency_avg", color="partitioning", markers=True,
-                                title=f'[{dataset}] Impact of the partition size on the query latency')
-    for trace in range(len(plotPartitionSize["data"])):
-        plotLatencyVsPartitionSize.add_trace(plotPartitionSize["data"][trace], row=1, col=i + 1)
+    for y, metric in enumerate(metrics):
+        sub_plot = px.line(df_group_by_partition_size,
+                           x="partition_size", y=metric, color="partitioning", markers=True, labels=PARTITIONINGS,
+                           category_orders={'partitioning': sorted(df_dataset['partitioning'].unique())},
+                           title=f'[{dataset}] Impact of the partition size on the {metric}')
+        for trace in range(len(sub_plot["data"])):
+            impact_partition_size.add_trace(sub_plot["data"][trace], row=y + 1, col=i + 1)
+            impact_partition_size.update_yaxes(title_text=metric, row=y + 1, col=1)
     # Figure 3: latency by dataset for all schemes with increasing selectivity: line plot
-    plotSelectivity = px.line(df_group_by_selectivity,
-                              x="selectivity", y="latency_avg", color="partitioning", markers=True,
-                              title=f'[{dataset}] Impact of the selectivity on the query latency')
-    for trace in range(len(plotSelectivity["data"])):
-        plotLatencyVsSelectivity.add_trace(plotSelectivity["data"][trace], row=1, col=i + 1)
-        plotSelectivity.update_layout(dict(
-            xaxis=dict(
-                tickmode='array',
-                tickvals=selectivity_groups,
-                ticktext=[str(selectivity) for selectivity in selectivity_groups]
-            ),
-            bargap=0
-        ))
+    for y, metric in enumerate(metrics):
+        sub_plot = px.line(df_group_by_selectivity,
+                           x="selectivity", y=metric, color="partitioning", markers=True, labels=PARTITIONINGS,
+                           category_orders={'partitioning': sorted(df_dataset['partitioning'].unique())},
+                           title=f'[{dataset}] Impact of the selectivity on the {metric}')
+        for trace in range(len(sub_plot["data"])):
+            impact_selectivity.add_trace(sub_plot["data"][trace], row=y + 1, col=i + 1)
+            sub_plot.update_layout(dict(
+                xaxis=dict(
+                    tickmode='array',
+                    tickvals=selectivity_groups,
+                    ticktext=[str(selectivity) for selectivity in selectivity_groups]
+                ),
+                bargap=0
+            ))
+            impact_selectivity.update_yaxes(title_text=metric, row=y + 1, col=1)
     # Figure 4: latency by dataset for all schemes with dataset size: line plot
-    plotDatasetSize = px.line(df_group_by_num_rows,
-                              x="num_rows", y="latency_avg", color="partitioning",
-                              markers=True,
-                              title=f'[{dataset}] Impact of the dataset size on the query latency')
-    for trace in range(len(plotDatasetSize["data"])):
-        plotLatencyVsDatasetSize.add_trace(plotDatasetSize["data"][trace], row=1, col=i + 1)
+    for y, metric in enumerate(metrics):
+        sub_plot = px.line(df_group_by_num_rows,
+                           x="num_rows", y=metric, color="partitioning", markers=True, labels=PARTITIONINGS,
+                           category_orders={'partitioning': sorted(df_dataset['partitioning'].unique())},
+                           title=f'[{dataset}] Impact of the dataset size on the {metric}')
+        for trace in range(len(sub_plot["data"])):
+            impact_dataset_size.add_trace(sub_plot["data"][trace], row=y + 1, col=i + 1)
+            impact_dataset_size.update_yaxes(title_text=metric, row=y + 1, col=1)
     # Figure 5: latency by dataset for all schemes with increasing partitioning columns: line plot
-    plotNumColumns = px.line(df_group_by_num_cols,
-                             x="num_partitioning_columns", y="latency_avg", color="partitioning",
-                             markers=True,
-                             title=f'[{dataset}] Impact of the number of partitioning columns on the query latency')
-    for trace in range(len(plotNumColumns["data"])):
-        plotLatencyVsNumColumns.add_trace(plotNumColumns["data"][trace], row=1, col=i + 1)
+    for y, metric in enumerate(metrics):
+        sub_plot = px.line(df_group_by_num_cols,
+                           x="num_partitioning_columns", y=metric, color="partitioning",
+                           markers=True, labels=PARTITIONINGS,
+                           category_orders={'partitioning': sorted(df_dataset['partitioning'].unique())},
+                           title=f'[{dataset}] Impact of the number of partitioning columns on the {metric}')
+        for trace in range(len(sub_plot["data"])):
+            impact_num_columns.add_trace(sub_plot["data"][trace], row=y + 1, col=i + 1)
+            impact_num_columns.update_yaxes(title_text=metric, row=y + 1, col=1)
     # Figure 5: latency by dataset for all schemes with increasing column match ratio: line plot
-    plotColumnRatio = px.line(df_group_by_col_ratio,
-                              x="column_match_ratio", y="latency_avg", color="partitioning",
-                              markers=True,
-                              title=f'[{dataset}] Impact of the column match on the query latency')
-    for trace in range(len(plotNumColumns["data"])):
-        plotLatencyVsColumnMatch.add_trace(plotColumnRatio["data"][trace], row=1, col=i + 1)
+    for y, metric in enumerate(metrics):
+        sub_plot = px.line(df_group_by_col_ratio,
+                           x="column_match_ratio", y=metric, color="partitioning",
+                           markers=True, labels=PARTITIONINGS,
+                           category_orders={'partitioning': sorted(df_dataset['partitioning'].unique())},
+                           title=f'[{dataset}] Impact of the column match on the {metric}')
+        for trace in range(len(sub_plot["data"])):
+            impact_column_match.add_trace(sub_plot["data"][trace], row=y + 1, col=i + 1)
+            impact_column_match.update_yaxes(title_text=metric, row=y + 1, col=1)
 
 
 def export_images():
