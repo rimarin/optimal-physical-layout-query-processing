@@ -71,6 +71,7 @@ namespace partitioning {
         }
 
         std::vector<arrow::Expression> filterExpressions;
+
         // Load and sort batches
         while (true) {
 
@@ -83,52 +84,68 @@ namespace partitioning {
 
             auto batchRows = recordBatch->num_rows();
             std::cout << "[KDTreePartitioning] Batch has " << batchRows << " rows" << std::endl;
-            // If it makes sense to divide into >= and < than median
-            if (batchRows > partitionSize){
-                // Define filters for median split
-                auto batchTable = arrow::Table::FromRecordBatches({recordBatch}).ValueOrDie();
-                std::shared_ptr<arrow::dataset::Dataset> batchDataset = std::make_shared<arrow::dataset::InMemoryDataset>(batchTable);
-                auto options = std::make_shared<arrow::dataset::ScanOptions>();
-                filterExpressions = {
-                        // Greater or equal than median
-                        arrow::compute::greater_equal(
-                                arrow::compute::field_ref(columnName),
-                                arrow::compute::literal(median)
-                        ),
-                        // Less than median
-                        arrow::compute::less(
-                                arrow::compute::field_ref(columnName),
-                                arrow::compute::literal(median)
-                        )
-                };
-                // Filter a batch by the median values
-                // TODO: maybe date cast could necessary, see GridFile
-                for (int i = 0; i < filterExpressions.size(); ++i) {
-                    options->filter = filterExpressions.at(i);
-                    auto builder = arrow::dataset::ScannerBuilder(batchDataset, options);
-                    auto scanner = builder.Finish().ValueOrDie();
-                    std::shared_ptr<arrow::Table> filteredBatchTable = scanner->ToTable().ValueOrDie();
-                    std::cout << "[KDTreePartitioning] Filtered batch table has " << filteredBatchTable->num_rows() << " rows" << std::endl;
-                    if (filteredBatchTable->num_rows() > 0){
-                        std::filesystem::path filteredFragmentPath = subFolder / filterExpressions.at(i).ToString();
-                        if (!std::filesystem::exists(filteredFragmentPath)) {
-                            std::filesystem::create_directory(filteredFragmentPath);
-                        }
-                        std::filesystem::path filteredBatchPath = filteredFragmentPath / (std::to_string(batchId) + fileExtension);
-                        // Write out filtered batch
-                        ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTableToDisk(filteredBatchTable, filteredBatchPath));
-                        std::cout << "[KDTreePartitioning] Exported fragment " << std::to_string(i) << " for batch " << batchId << std::endl;
+
+            // Define filters for median split
+            auto batchTable = arrow::Table::FromRecordBatches({recordBatch}).ValueOrDie();
+            std::shared_ptr<arrow::dataset::Dataset> batchDataset = std::make_shared<arrow::dataset::InMemoryDataset>(batchTable);
+            auto options = std::make_shared<arrow::dataset::ScanOptions>();
+
+            // Possibly cast date column to int64
+            auto toInt64 = arrow::compute::CastOptions::Safe(arrow::int64());
+            arrow::Expression columnExpression;
+            auto columnXType = recordBatch->column(dataReader->getColumnIndex(columnName).ValueOrDie())->type();
+            if (arrow::is_date(columnXType->id())) {
+                columnExpression = arrow::compute::call("cast",
+                                                         {arrow::compute::field_ref(columnName)},
+                                                         toInt64);
+            }
+            else {
+                columnExpression = arrow::compute::field_ref(columnName);
+            }
+
+            // Align the median value data type
+            const auto& medianValueType = arrow::float64();
+
+            arrow::Expression medianExpression = arrow::compute::call("cast",
+                                 {arrow::compute::literal(median)},
+                                 arrow::compute::CastOptions::Safe(medianValueType)
+            );
+
+            filterExpressions = {
+                    // Greater or equal than median
+                    arrow::compute::greater_equal(
+                            columnExpression,
+                            medianExpression
+                    ),
+                    // Less than median
+                    arrow::compute::less(
+                            columnExpression,
+                            medianExpression
+                    )
+            };
+
+            // Filter a batch by the median values
+            // TODO: maybe date cast could necessary, see GridFile
+            for (int i = 0; i < filterExpressions.size(); ++i) {
+                options->filter = filterExpressions.at(i);
+                auto builder = arrow::dataset::ScannerBuilder(batchDataset, options);
+                auto scanner = builder.Finish().ValueOrDie();
+                std::shared_ptr<arrow::Table> filteredBatchTable = scanner->ToTable().ValueOrDie();
+                std::cout << "[KDTreePartitioning] Filtered batch table has " << filteredBatchTable->num_rows() << " rows" << std::endl;
+                if (filteredBatchTable->num_rows() > 0){
+                    std::filesystem::path filteredFragmentPath = subFolder / filterExpressions.at(i).ToString();
+                    if (!std::filesystem::exists(filteredFragmentPath)) {
+                        std::filesystem::create_directory(filteredFragmentPath);
                     }
+                    std::filesystem::path filteredBatchPath = filteredFragmentPath / (std::to_string(batchId) + fileExtension);
+                    // Write out filtered batch
+                    ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTableToDisk(filteredBatchTable, filteredBatchPath));
+                    std::cout << "[KDTreePartitioning] Exported fragment " << std::to_string(i) << " for batch " << batchId << std::endl;
                 }
-                // Otherwise, the record batch size can already fit in partition
-            } else{
-                auto batchTable = arrow::Table::FromRecordBatches({recordBatch}).ValueOrDie();
-                std::filesystem::path filteredBatchPath = subFolder / "(All)" / (std::to_string(batchId) + fileExtension);
-                ARROW_RETURN_NOT_OK(storage::DataWriter::WriteTableToDisk(batchTable, filteredBatchPath));
-                std::cout << "[KDTreePartitioning] Exported entire fragment for batch " << batchId << std::endl;
             }
             batchId += 1;
         }
+
 
         // Merge the fragments of the same group but from different batches
         for (int i = 0; i < filterExpressions.size(); ++i) {
