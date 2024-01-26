@@ -38,12 +38,12 @@ class BenchmarkResult:
         return (f'{self.config.dataset};{self.num_rows};{self.config.partitioning};{self.config.time_to_partition};'
                 f'q{self.query_str};{self.benchmark.get_query_selectivity(self.query_str)};'
                 f'{self.config.partitioning_columns};{len(self.config.partitioning_columns)};{self.used_columns};'
-                f'{self.latencies};{self.latency_avg};{self.latency_std};{self.config.partition_size};'
-                f'{self.average_partition_size};{self.used_partitions};{self.total_partitions};'
-                f'{datetime.datetime.now()}\n')
+                f'{len(self.used_columns)};{self.latencies};{self.latency_avg};{self.latency_std};'
+                f'{self.config.partition_size};{self.average_partition_size};{self.used_partitions};'
+                f'{self.total_partitions};{datetime.datetime.now()}\n')
 
     @staticmethod
     def format_header():
         return ('dataset;num_rows;partitioning;time_to_partition;query;selectivity;partitioning_columns;'
-                'num_partitioning_columns;used_columns;latencies;latency_avg;latency_std;partition_size;'
-                'partition_size_mb;used_partitions;total_partitions;timestamp\n')
+                'num_partitioning_columns;used_columns;num_used_columns;latencies;latency_avg;latency_std;'
+                'partition_size;partition_size_mb;used_partitions;total_partitions;timestamp\n')
