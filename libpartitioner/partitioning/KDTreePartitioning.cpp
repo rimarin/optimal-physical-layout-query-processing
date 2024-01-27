@@ -145,7 +145,6 @@ namespace partitioning {
             batchId += 1;
         }
 
-
         // Merge the fragments of the same group but from different batches
         for (int i = 0; i < filterExpressions.size(); ++i) {
             std::filesystem::path fragmentPartsPath = subFolder / filterExpressions.at(i).ToString();
