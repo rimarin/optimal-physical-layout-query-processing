@@ -266,6 +266,8 @@ namespace external {
                         partitionIndex += 1;
                         std::cout << "[External Merge] Exported " << numRowsRead << " out of " << totalNumRows << std::endl;
                     }
+                    std::ignore = rowBatches.empty();
+                    mergedTable.reset();
                 }
                 std::cout << "[External Merge] Completed, scanned " << numRowsRead << " in total" << std::endl;
                 assert(numRowsRead == totalNumRows);
@@ -276,6 +278,7 @@ namespace external {
                         std::filesystem::remove(filePath);
                     }
                 }
+                std::cout << "[External Merge] Removed intermediate, sorted files" << std::endl;
             }
             return arrow::Status::OK();
         }
