@@ -62,3 +62,26 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningZOrderCurveCities) {
     ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("3" + fileExtension), "city", std::vector<std::string>({"Tallinn", "Berlin"})), arrow::Status::OK());
     ASSERT_EQ(std::filesystem::exists(folder / ("4" + fileExtension)), false);
 }
+
+
+TEST_F(TestOptimalLayoutFixture, TestPartitioningZOrderCurveTPCH){
+    GTEST_SKIP();
+    auto folder = ExperimentsConfig::zOrderCurveFolder;
+    auto dataset = getDatasetPath(ExperimentsConfig::datasetTPCH1);
+    auto partitionSize = 20000;
+    auto numTotalRows = 239917;
+    cleanUpFolder(folder);
+    std::vector<std::string> partitioningColumns = {"c_custkey", "l_orderkey"};
+    auto dataReader = std::make_shared<storage::DataReader>();
+    ASSERT_EQ(dataReader->load(dataset), arrow::Status::OK());
+    ASSERT_EQ(dataReader->getNumRows(), numTotalRows);
+    auto partitioning = partitioning::PartitioningFactory::create(partitioning::Z_ORDER_CURVE, dataReader, partitioningColumns, partitionSize, folder);
+    ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
+    std::filesystem::path partition0 = folder / "0.parquet";
+    ASSERT_EQ(dataReader->load(partition0), arrow::Status::OK());
+    auto folderResults = getFolderResults(dataReader, folder);
+    auto fileCount = folderResults.first;
+    auto partitionsTotalRows = folderResults.second;
+    ASSERT_EQ(numTotalRows, partitionsTotalRows);
+    ASSERT_EQ(fileCount, 14);
+}

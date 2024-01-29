@@ -44,3 +44,25 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFileCities){
     ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("5" + fileExtension), "city", std::vector<std::string>({"Berlin"})), arrow::Status::OK());
     ASSERT_EQ(std::filesystem::exists(folder / ("6" + fileExtension)), false);
 }
+
+TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFileTPCH){
+    GTEST_SKIP();
+    auto folder = ExperimentsConfig::gridFileFolder;
+    auto dataset = getDatasetPath(ExperimentsConfig::datasetTPCH1);
+    auto partitionSize = 20000;
+    auto numTotalRows = 239917;
+    cleanUpFolder(folder);
+    std::vector<std::string> partitioningColumns = {"c_custkey", "l_orderkey"};
+    auto dataReader = std::make_shared<storage::DataReader>();
+    ASSERT_EQ(dataReader->load(dataset), arrow::Status::OK());
+    ASSERT_EQ(dataReader->getNumRows(), numTotalRows);
+    auto partitioning = partitioning::PartitioningFactory::create(partitioning::GRID_FILE, dataReader, partitioningColumns, partitionSize, folder);
+    ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
+    std::filesystem::path partition0 = folder / ("0" + ExperimentsConfig::fileExtension);
+    ASSERT_EQ(dataReader->load(partition0), arrow::Status::OK());
+    auto folderResults = getFolderResults(dataReader, folder);
+    auto fileCount = folderResults.first;
+    auto partitionsTotalRows = folderResults.second;
+    ASSERT_EQ(numTotalRows, partitionsTotalRows);
+    ASSERT_EQ(fileCount, 16);
+}
