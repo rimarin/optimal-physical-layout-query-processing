@@ -207,7 +207,8 @@ namespace partitioning {
                 auto builder = arrow::dataset::ScannerBuilder(batchDataset, options);
                 auto scanner = builder.Finish().ValueOrDie();
                 std::shared_ptr<arrow::Table> filteredBatchTable = scanner->ToTable().ValueOrDie();
-                if (filteredBatchTable->num_rows() > 0){
+                auto filteredNumRows = filteredBatchTable->num_rows();
+                if (filteredNumRows > 0){
                     std::filesystem::path filteredQuadrantPath = subFolder / std::to_string(i);
                     if (!std::filesystem::exists(filteredQuadrantPath)) {
                         std::filesystem::create_directory(filteredQuadrantPath);
@@ -239,6 +240,20 @@ namespace partitioning {
         for (auto &file : std::filesystem::directory_iterator(subFolder)) {
             if (file.path().extension() == common::Settings::fileExtension) {
                 partitionPaths.emplace_back(file);
+            }
+        }
+
+        // Only one file to re-partition in the folder
+        if (partitionPaths.size() == 1) {
+            auto partitionPath = partitionPaths.at(0);
+            // This is another recursive call on the same file
+            // Cannot partition further, set as completed
+            auto partitionRootPath = partitionPath.parent_path().parent_path();
+            if (datasetFile.parent_path() == partitionRootPath){
+                auto basePath = datasetFile.parent_path();
+                auto renamedDatasetFile = basePath / ("completed" + datasetFile.filename().string());
+                std::filesystem::rename(datasetFile, renamedDatasetFile);
+                return arrow::Status::OK();
             }
         }
 

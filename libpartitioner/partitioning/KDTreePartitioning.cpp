@@ -132,7 +132,7 @@ namespace partitioning {
                 std::shared_ptr<arrow::Table> filteredBatchTable = scanner->ToTable().ValueOrDie();
                 std::cout << "[KDTreePartitioning] Filtered batch table has " << filteredBatchTable->num_rows() << " rows" << std::endl;
                 if (filteredBatchTable->num_rows() > 0){
-                    std::filesystem::path filteredFragmentPath = subFolder / filterExpressions.at(i).ToString();
+                    std::filesystem::path filteredFragmentPath = subFolder / std::to_string(i);
                     if (!std::filesystem::exists(filteredFragmentPath)) {
                         std::filesystem::create_directory(filteredFragmentPath);
                     }
@@ -147,7 +147,7 @@ namespace partitioning {
 
         // Merge the fragments of the same group but from different batches
         for (int i = 0; i < filterExpressions.size(); ++i) {
-            std::filesystem::path fragmentPartsPath = subFolder / filterExpressions.at(i).ToString();
+            std::filesystem::path fragmentPartsPath = subFolder / std::to_string(i);
             if (std::filesystem::exists(fragmentPartsPath)) {
                 std::string rootPath;
                 ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(fragmentPartsPath, &rootPath));
@@ -162,6 +162,20 @@ namespace partitioning {
         for (auto &file : std::filesystem::directory_iterator(subFolder)) {
             if (file.path().extension() == common::Settings::fileExtension) {
                 partitionPaths.emplace_back(file);
+            }
+        }
+
+        // Only one file to re-partition in the folder
+        if (partitionPaths.size() == 1) {
+            auto partitionPath = partitionPaths.at(0);
+            // This is another recursive call on the same file
+            // Cannot partition further, set as completed
+            auto partitionRootPath = partitionPath.parent_path().parent_path();
+            if (datasetFile.parent_path() == partitionRootPath){
+                auto basePath = datasetFile.parent_path();
+                auto renamedDatasetFile = basePath / ("completed" + datasetFile.filename().string());
+                std::filesystem::rename(datasetFile, renamedDatasetFile);
+                return arrow::Status::OK();
             }
         }
 
