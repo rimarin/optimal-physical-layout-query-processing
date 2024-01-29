@@ -29,12 +29,13 @@ Furthermore, for the benchmarking part:
 
 #### Partitioner
 
-From the main 
+From the main
 
-    cmake .
+    cmake -Bcmake-build-release
+    cd cmake-build-release
     cmake --build .
 
 ### Related Work
 
 Learned indexes: [Flood](https://dl.acm.org/doi/10.1145/3318464.3380579) [Tsunami](https://dl.acm.org/doi/10.14778/3425879.3425880)
-Storage format: ...
+Storage format: ...				
