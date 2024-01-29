@@ -45,12 +45,11 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningQuadTreeCities){
     auto partitioning = partitioning::PartitioningFactory::create(partitioning::QUAD_TREE, dataReader, partitioningColumns, partitionSize, folder);
     ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("0" + fileExtension), "city", std::vector<std::string>({"Moscow"})), arrow::Status::OK());
-    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("1" + fileExtension), "city", std::vector<std::string>({"Amsterdam"})), arrow::Status::OK());
-    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("2" + fileExtension), "city", std::vector<std::string>({"Madrid"})), arrow::Status::OK());
-    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("3" + fileExtension), "city", std::vector<std::string>({"Dublin", "Copenhagen"})), arrow::Status::OK());
-    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("4" + fileExtension), "city", std::vector<std::string>({"Tallinn", "Berlin"})), arrow::Status::OK());
-    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("5" + fileExtension), "city", std::vector<std::string>({"Oslo"})), arrow::Status::OK());
-    ASSERT_EQ(std::filesystem::exists(folder / ("6" + fileExtension)), false);
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("1" + fileExtension), "city", std::vector<std::string>({"Amsterdam", "Madrid"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("2" + fileExtension), "city", std::vector<std::string>({"Dublin", "Copenhagen"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("3" + fileExtension), "city", std::vector<std::string>({"Tallinn", "Berlin"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("4" + fileExtension), "city", std::vector<std::string>({"Oslo"})), arrow::Status::OK());
+    ASSERT_EQ(std::filesystem::exists(folder / ("5" + fileExtension)), false);
 }
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningQuadTreeTPCH){
@@ -94,5 +93,5 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningQuadTreeTaxi){
     auto fileCount = folderResults.first;
     auto partitionsTotalRows = folderResults.second;
     ASSERT_EQ(numTotalRows, partitionsTotalRows);
-    ASSERT_EQ(fileCount, 1286);
+    ASSERT_EQ(fileCount, 1300);
 }

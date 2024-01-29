@@ -19,8 +19,14 @@ namespace partitioning {
         // Initialize the reader, slice size and column index
         auto datasetFile = folder / ("0" + fileExtension);
 
+        // Read the metadata from the indexing columns
+        std::string columnX = columns.at(0);
+        std::pair<double_t, double_t> columnStatsX = dataReader->getColumnStats(columnX).ValueOrDie();
+        std::string columnY = columns.at(1);
+        std::pair<double_t, double_t> columnStatsY = dataReader->getColumnStats(columnY).ValueOrDie();
+
         // Call the recursive quadrant slicing method
-        std::ignore = partitionQuadrants(datasetFile, 0);
+        std::ignore = partitionQuadrants(datasetFile, columnStatsX, columnStatsY, 0);
 
         // Finalize the files
         deleteIntermediateFiles();
@@ -31,6 +37,8 @@ namespace partitioning {
     }
 
     arrow::Status QuadTreePartitioning::partitionQuadrants(std::filesystem::path &datasetFile,
+                                                           std::pair<double_t, double_t> columnStatsX,
+                                                           std::pair<double_t, double_t> columnStatsY,
                                                            uint32_t depth){
 
         // Base case: created a quadrant of size = partition size
@@ -61,9 +69,7 @@ namespace partitioning {
 
         // Read the metadata from the indexing columns
         std::string columnX = columns.at(columnIndexX);
-        std::pair<double_t, double_t> columnStatsX = dataReader->getColumnStats(columnX).ValueOrDie();
         std::string columnY = columns.at(columnIndexY);
-        std::pair<double_t, double_t> columnStatsY = dataReader->getColumnStats(columnY).ValueOrDie();
         // Compute the mean from the min-max statistics
         double meanDimX = (columnStatsX.first + columnStatsX.second) / 2;
         double meanDimY = (columnStatsY.first + columnStatsY.second) / 2;
@@ -77,8 +83,8 @@ namespace partitioning {
 
         // Extract partition id from the file name
         std::string filename = datasetFile.filename();
-        size_t lastIndex = filename.find_last_of('.');
-        std::string partitionId = filename.substr(0, lastIndex);
+        size_t quadrantId = filename.find_last_of('.');
+        std::string partitionId = filename.substr(0, quadrantId);
 
         // Generate new sub folder (with this partition id) for this processing iteration
         auto baseFolder = datasetFile.parent_path();
@@ -257,14 +263,45 @@ namespace partitioning {
             }
         }
 
+        // Read the metadata from the indexing columns
+        std::map<int, std::pair<std::pair<double_t, double_t>, std::pair<double_t, double_t>>> newColumnStats = {
+                // NW
+                {0, std::make_pair(std::make_pair(columnStatsX.first, meanDimX),
+                                   std::make_pair(meanDimY, columnStatsY.second))},
+                // NE
+                {1, std::make_pair(std::make_pair(meanDimX, columnStatsX.second),
+                                   std::make_pair(meanDimY, columnStatsY.second))},
+                // SW
+                {2, std::make_pair(std::make_pair(columnStatsX.first, meanDimX),
+                                   std::make_pair(columnStatsY.first, meanDimY))},
+                // SE
+                {3, std::make_pair(std::make_pair(meanDimX, columnStatsX.second),
+                                   std::make_pair(columnStatsY.first, meanDimY))}
+        };
+
         // Recursively split the files in the folder
-        for (auto &partitionPath: partitionPaths){
+        for (int i = 0; i < partitionPaths.size(); ++i) {
+            auto partitionPath = partitionPaths.at(i);
             // Only for files still to be processed
             bool isValidFile = partitionPath.extension() == common::Settings::fileExtension;
             bool isAlreadyCompleted = isFileCompleted(partitionPath);
             if (isValidFile && !isAlreadyCompleted) {
                 std::filesystem::path partitionFile = partitionPath;
-                std::ignore = partitionQuadrants(partitionFile, depth + 1);
+                std::string filename = partitionFile.filename();
+                size_t fileIndex = filename.find_last_of('.');
+                int quadrantId = std::stoi(filename.substr(0, fileIndex));
+                auto newColumnStatsX = newColumnStats[quadrantId].first;
+                auto newColumnStatsY = newColumnStats[quadrantId].second;
+                // If we cannot split further
+                if (newColumnStatsX.first == newColumnStatsX.second ||
+                    newColumnStatsY.first == newColumnStatsY.second){
+                    auto basePath = partitionFile.parent_path();
+                    auto renamedPartitionFile = basePath / ("completed" + partitionFile.filename().string());
+                    std::filesystem::rename(partitionFile, renamedPartitionFile);
+                    std::cout << "[QuadTreePartitioning] Exporting partition that cannot be split further" << std::endl;
+                    return arrow::Status::OK();
+                }
+                std::ignore = partitionQuadrants(partitionFile, newColumnStatsX, newColumnStatsY, depth + 1);
             }
         }
         return arrow::Status::OK();

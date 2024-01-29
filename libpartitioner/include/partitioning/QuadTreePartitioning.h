@@ -38,6 +38,8 @@ namespace partitioning {
         arrow::Status partition() override;
     private:
         arrow::Status partitionQuadrants(std::filesystem::path &datasetFile,
+                                         std::pair<double_t, double_t> columnStatsX,
+                                         std::pair<double_t, double_t> columnStatsY,
                                          uint32_t depth);
         partitioning::PartitioningType type = TREE;
     };
