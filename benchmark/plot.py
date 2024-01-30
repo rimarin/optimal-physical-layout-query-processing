@@ -49,7 +49,7 @@ effects = ['selectivity', 'partition_size', 'num_partitioning_columns']
 metrics = ['latency_avg', 'scan_ratio']
 
 # Figure 1: latency by dataset for all schemes: bar plot
-impact_scheme = make_subplots(rows=2, cols=len(DATASETS), column_titles=DATASETS,
+impact_scheme = make_subplots(rows=2, cols=1, column_titles=DATASETS,
                               x_title='Scheme', shared_yaxes=True, shared_xaxes=True)
 impact_scheme.update_layout(title='Impact of partitioning scheme')
 # Figure 2: latency by dataset for all schemes with increasing partition size: line plot
@@ -86,6 +86,37 @@ aggregates = {}
 for metric in metrics:
     aggregates[metric] = 'mean'
 
+df_scheme = df.groupby(['partitioning', 'dataset']).agg(aggregates).reset_index()
+for y, metric in enumerate(metrics):
+    sub_plot = px.bar(df_scheme, x="dataset", y=metric, color="partitioning",
+                      labels=PARTITIONINGS, barmode='group',
+                      category_orders={'partitioning': sorted(df['partitioning'].unique())},
+                      title=f'[{df}] Impact of the partitioning scheme on the {metric}').update_layout(
+        yaxis_title=metric)
+    for trace in range(len(sub_plot["data"])):
+        impact_scheme.add_trace(sub_plot["data"][trace], row=y + 1, col=1)
+        impact_scheme.update_yaxes(title_text=metric, type="log", row=y + 1, col=1)
+
+for metric in metrics:
+    sub_plot = px.bar(data_frame=df_scheme, x="dataset", y="latency_avg", barmode='group',
+        title='Annual In-State Tuition vs Out-of-state Tuition', color='partitioning',
+    )
+    for trace in range(len(sub_plot["data"])):
+        impact_scheme.add_trace(sub_plot["data"][trace], row=y + 1, col=1)
+        impact_scheme.update_yaxes(title_text=metric, type="log", row=y + 1, col=1)
+        # impact_scheme.show()
+
+"""
+for y, metric in enumerate(metrics):
+    sub_plot = px.bar(df_scheme, x="dataset", y=metric, barmode='group',# labels=PARTITIONINGS,
+                    #  category_orders={'partitioning': sorted(df_scheme['partitioning'].unique())},
+                      title=f'Impact of the partitioning scheme on the {metric}').update_layout(
+        yaxis_title=metric)
+    for trace in range(len(sub_plot["data"])):
+        impact_scheme.add_trace(sub_plot["data"][trace], row=y + 1, col=1)
+        impact_scheme.update_yaxes(title_text=metric, type="log", row=y + 1, col=1)
+"""
+
 for i, dataset in enumerate(DATASETS):
     df_dataset = df[df['dataset'] == f'{dataset}']
     df_group_by_partitioning = df_dataset.groupby(['partitioning']).agg(aggregates).reset_index()
@@ -99,6 +130,7 @@ for i, dataset in enumerate(DATASETS):
     df_group_by_col_ratio = df_dataset.groupby(['column_match_ratio', 'partitioning']).agg(
         aggregates).reset_index()
     # Figure 1: latency by dataset for all schemes: bar plot
+    """
     for y, metric in enumerate(metrics):
         sub_plot = px.histogram(df_dataset, x="partitioning", y=metric, color="partitioning",
                                 barmode="group", histfunc='avg', labels=PARTITIONINGS,
@@ -107,7 +139,8 @@ for i, dataset in enumerate(DATASETS):
             yaxis_title=metric)
         for trace in range(len(sub_plot["data"])):
             impact_scheme.add_trace(sub_plot["data"][trace], row=y + 1, col=i + 1)
-            impact_scheme.update_yaxes(title_text=metric, row=y + 1, col=1)
+            impact_scheme.update_yaxes(title_text=metric, type="log", row=y + 1, col=1)
+    """
     # Figure 2: latency by dataset for all schemes with increasing partition size: line plot
     for y, metric in enumerate(metrics):
         sub_plot = px.line(df_group_by_partition_size,
@@ -174,7 +207,7 @@ def export_images():
             if (trace.name in names) else names.add(trace.name))
         title = plot.layout.title.text
         image_path = os.path.join(PLOTS_FOLDER, f"{title}.png")
-        plot.write_image(image_path, scale=3, width=1500, height=500)
+        plot.write_image(image_path, scale=3, width=1500, height=1000)
 
 
 if __name__ == '__main__':
