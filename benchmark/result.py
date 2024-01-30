@@ -1,6 +1,7 @@
 import datetime
 import statistics
 
+from settings import DATASET_SCALED
 from storage_manager import StorageManager
 
 
@@ -36,7 +37,7 @@ class BenchmarkResult:
         except Exception as e:
             self.used_columns = []
         return (f'{self.config.dataset};{self.num_rows};{self.config.partitioning};{self.config.time_to_partition};'
-                f'q{self.query_str};{self.benchmark.get_query_selectivity(self.query_str)};'
+                f'q{self.query_str};{self.benchmark.get_query_selectivity(self.query_str, DATASET_SCALED)};'
                 f'{self.config.partitioning_columns};{len(self.config.partitioning_columns)};{self.used_columns};'
                 f'{len(self.used_columns)};{self.latencies};{self.latency_avg};{self.latency_std};'
                 f'{self.config.partition_size};{self.average_partition_size};{self.used_partitions};'
