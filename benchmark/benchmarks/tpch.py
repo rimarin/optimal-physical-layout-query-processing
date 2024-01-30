@@ -52,7 +52,7 @@ class BenchmarkTPCH(Benchmark):
         return query_to_cols.get(query_number, [])
 
     @staticmethod
-    def get_query_selectivity(query):
+    def get_query_selectivity(query, scaled=False):
         query_to_selectivity = {
             "3a": 0.2397,
             "5a": 0.001,
@@ -62,6 +62,17 @@ class BenchmarkTPCH(Benchmark):
             "14a": 0.0002,
             "19a": 0.0002
         }
+        query_to_selectivity_scaled = {
+            "3a": 0.4745,
+            "5a": 0.0002,
+            "6a": 0.000042,
+            "10a": 1.8014,
+            "12a": 0.0001,
+            "14a": 0.000042,
+            "19a": 0.000042
+        }
+        if scaled:
+            return query_to_selectivity_scaled.get(query, 0)
         return query_to_selectivity.get(query, 0)
 
     def get_schema(self):

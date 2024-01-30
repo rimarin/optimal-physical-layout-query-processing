@@ -47,7 +47,7 @@ class BenchmarkOSM(Benchmark):
         return query_to_cols.get(query_number, [])
 
     @staticmethod
-    def get_query_selectivity(query):
+    def get_query_selectivity(query, scaled=False):
         query_to_selectivity = {
             "1a": 0.0033,
             "1b": 0.1094,
@@ -106,6 +106,66 @@ class BenchmarkOSM(Benchmark):
             "7g": 0.1047,
             "7h": 0.1744
         }
+        query_to_selectivity_scaled = {
+            "1a": 0.0066,
+            "1b": 0.0662,
+            "1c": 0.1990,
+            "1d": 0.5068,
+            "1e": 0.9519,
+            "1f": 1.2087,
+            "1g": 2.3514,
+            "1h": 4.8667,
+            "2a": 0.0097,
+            "2b": 0.0454,
+            "2c": 0.2343,
+            "2d": 0.5315,
+            "2e": 0.8670,
+            "2f": 1.0423,
+            "2g": 2.6761,
+            "2h": 4.9822,
+            "3a": 0.0012,
+            "3b": 0.0030,
+            "3c": 0.0055,
+            "3d": 0.0205,
+            "3e": 0.1722,
+            "3f": 1.0675,
+            "3g": 2.5257,
+            "3h": 4.8367,
+            "4a": 0.1049,
+            "4b": 0.1502,
+            "4c": 0.2676,
+            "4d": 0.3396,
+            "4e": 0.7307,
+            "4f": 1.0403,
+            "4g": 2.5458,
+            "4h": 4.8973,
+            "5a": 0.0063,
+            "5b": 0.0195,
+            "5c": 0.0530,
+            "5d": 0.0769,
+            "5e": 0.2045,
+            "5f": 0.5954,
+            "5g": 2.5701,
+            "5h": 3.9266,
+            "6a": 0.0016,
+            "6b": 0.0021,
+            "6c": 0.0031,
+            "6d": 0.0083,
+            "6e": 0.0132,
+            "6f": 0.0388,
+            "6g": 0.0403,
+            "6h": 0.1705,
+            "7a": 0.0014,
+            "7b": 0.0020,
+            "7c": 0.0054,
+            "7d": 0.0116,
+            "7e": 0.0194,
+            "7f": 0.0346,
+            "7g": 0.1857,
+            "7h": 0.3238
+        }
+        if scaled:
+            return query_to_selectivity_scaled.get(query, 0)
         return query_to_selectivity.get(query, 0)
 
     def get_schema(self):

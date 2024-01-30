@@ -52,7 +52,7 @@ class BenchmarkTaxi(Benchmark):
         return query_to_cols.get(query_number, [])
 
     @staticmethod
-    def get_query_selectivity(query):
+    def get_query_selectivity(query, scaled=False):
         query_to_selectivity = {
             "1a": 0.0027,
             "1b": 0.0251,
@@ -111,6 +111,26 @@ class BenchmarkTaxi(Benchmark):
             "7g": 0.7751,
             "7h": 2.2899
         }
+        query_to_selectivity_scaled = {
+            "1a": 0.0019,
+            "1b": 0.0246,
+            "1c": 0.1733,
+            "1d": 0.8217,
+            "1e": 1.0819,
+            "1f": 2.2285,
+            "1g": 3.6278,
+            "1h": 4.9007,
+            "2a": 0.0025,
+            "2b": 0.0606,
+            "2c": 0.1709,
+            "2d": 0.5399,
+            "2e": 0.7789,
+            "2f": 1.0238,
+            "2g": 2.0985,
+            "2h": 4.0018
+        }
+        if scaled:
+            return query_to_selectivity_scaled.get(query, 0)
         return query_to_selectivity.get(query, 0)
 
     def get_schema(self):
