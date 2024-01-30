@@ -33,7 +33,10 @@ class BenchmarkTaxi(Benchmark):
         if num_columns is None:
             return list(columns_map.values())
         else:
-            return [columns_map.get(num_columns, [])]
+            columns = []
+            for col_id in num_columns:
+                columns.append(columns_map.get(col_id, []))
+            return columns
 
     @staticmethod
     def get_query_columns(query_number):

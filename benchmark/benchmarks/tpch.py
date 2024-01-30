@@ -24,16 +24,15 @@ class BenchmarkTPCH(Benchmark):
             4: ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate"],
             5: ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey"],
             6: ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey"],
-            7: ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey"],
-            8: ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate"],
-        #   9: ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate", "l_receiptdate"],
-        #   10: ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate", "l_receiptdate", "p_size"],
-        #   11: ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey", "l_commitdate", "l_receiptdate", "p_size", "p_partkey"]
+            7: ["c_custkey", "o_orderkey", "o_orderdate", "l_shipdate", "s_suppkey", "n_nationkey", "r_regionkey"]
         }
         if num_columns is None:
             return list(columns_map.values())
         else:
-            return [columns_map.get(num_columns, [])]
+            columns = []
+            for col_id in num_columns:
+                columns.append(columns_map.get(col_id, []))
+            return columns
 
     @staticmethod
     def get_query_columns(query_number):
