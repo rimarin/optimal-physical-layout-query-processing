@@ -108,19 +108,25 @@ namespace partitioning {
                 std::vector<arrow::Expression> filterExpressions;
                 filterExpressions.reserve(columns.size());
                 for (int i = 0; i < columns.size(); ++i) {
+                    auto toInt32 = arrow::compute::CastOptions::Safe(arrow::int32());
                     auto toInt64 = arrow::compute::CastOptions::Safe(arrow::int64());
                     arrow::Expression columnExpression;
+                    auto columnName = columns[i];
                     auto columnType = recordBatch->column(dataReader->getColumnIndex(columns[i]).ValueOrDie())->type();
                     // Also the cell coordinates need to match the size of the data type
                     const auto& cellCoordinatesType = arrow::float64();
-                    // Apply cast only when dealing with dates, otherwise it is an unnecessary overhead
-                    if (arrow::is_date(columnType->id())) {
+                    // Apply cast only when deal    ing with dates, otherwise it is an unnecessary overhead
+                    if (columnType->id() == arrow::date32()->id()) {
                         columnExpression = arrow::compute::call("cast",
-                                             {arrow::compute::field_ref(columns[i])},
-                                             toInt64);
+                                                                {arrow::compute::field_ref(columnName)},
+                                                                toInt32);
+                    } else if (columnType->id() == arrow::date64()->id()) {
+                        columnExpression = arrow::compute::call("cast",
+                                                                {arrow::compute::field_ref(columnName)},
+                                                                toInt64);
                     }
                     else {
-                        columnExpression = arrow::compute::field_ref(columns[i]);
+                        columnExpression = arrow::compute::field_ref(columnName);
                     }
                     filterExpressions.emplace_back(arrow::compute::and_(
                                 arrow::compute::greater_equal(

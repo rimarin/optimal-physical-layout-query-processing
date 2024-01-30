@@ -112,10 +112,15 @@ namespace partitioning {
             std::shared_ptr<arrow::dataset::Dataset> batchDataset = std::make_shared<arrow::dataset::InMemoryDataset>(batchTable);
             auto options = std::make_shared<arrow::dataset::ScanOptions>();
             // Possibly cast date to int64 - for column X
+            auto toInt32 = arrow::compute::CastOptions::Safe(arrow::int32());
             auto toInt64 = arrow::compute::CastOptions::Safe(arrow::int64());
             arrow::Expression columnXExpression;
             auto columnXType = recordBatch->column(dataReader->getColumnIndex(columnX).ValueOrDie())->type();
-            if (arrow::is_date(columnXType->id())) {
+            if (columnXType->id() == arrow::date32()->id()) {
+                columnXExpression = arrow::compute::call("cast",
+                                                        {arrow::compute::field_ref(columnX)},
+                                                        toInt32);
+            } else if (columnXType->id() == arrow::date64()->id()) {
                 columnXExpression = arrow::compute::call("cast",
                                                         {arrow::compute::field_ref(columnX)},
                                                         toInt64);
@@ -126,7 +131,11 @@ namespace partitioning {
             // Possibly cast date to int64 - for column Y
             arrow::Expression columnYExpression;
             auto columnYType = recordBatch->column(dataReader->getColumnIndex(columnY).ValueOrDie())->type();
-            if (arrow::is_date(columnYType->id())) {
+            if (columnYType->id() == arrow::date32()->id()) {
+                columnYExpression = arrow::compute::call("cast",
+                                                         {arrow::compute::field_ref(columnY)},
+                                                         toInt32);
+            } else if (columnYType->id() == arrow::date64()->id()) {
                 columnYExpression = arrow::compute::call("cast",
                                                          {arrow::compute::field_ref(columnY)},
                                                          toInt64);

@@ -91,13 +91,18 @@ namespace partitioning {
             auto options = std::make_shared<arrow::dataset::ScanOptions>();
 
             // Possibly cast date column to int64
+            auto toInt32 = arrow::compute::CastOptions::Safe(arrow::int32());
             auto toInt64 = arrow::compute::CastOptions::Safe(arrow::int64());
             arrow::Expression columnExpression;
             auto columnXType = recordBatch->column(dataReader->getColumnIndex(columnName).ValueOrDie())->type();
-            if (arrow::is_date(columnXType->id())) {
+            if (columnXType->id() == arrow::date32()->id()) {
                 columnExpression = arrow::compute::call("cast",
                                                          {arrow::compute::field_ref(columnName)},
-                                                         toInt64);
+                                                         toInt32);
+            } else if (columnXType->id() == arrow::date64()->id()) {
+                    columnExpression = arrow::compute::call("cast",
+                                                            {arrow::compute::field_ref(columnName)},
+                                                            toInt64);
             }
             else {
                 columnExpression = arrow::compute::field_ref(columnName);
