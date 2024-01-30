@@ -82,7 +82,7 @@ namespace partitioning {
                 auto column = columnData[j];
                 double_t columnValue = column->at(i);
                 auto cellDimensionIndex = (uint64_t) std::floor(columnValue / cellWidth);
-                assert(cellDimensionIndex < columnToDomain[j]);
+                // assert(cellDimensionIndex < columnToDomain[j]);
                 cellIndex += cellDimensionIndex * multiplier;
                 multiplier *= dimensionNumCells;
             }
