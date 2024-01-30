@@ -158,15 +158,38 @@ namespace storage {
         auto numRowGroups = metadata->num_row_groups();
         std::unique_ptr<parquet::RowGroupMetaData> rowGroup = metadata->RowGroup(0);
         std::shared_ptr<parquet::Statistics> stats = (rowGroup->ColumnChunk(columnIndex))->statistics();
-        const auto *typed_stats = static_cast<const parquet::TypedStatistics<arrow::Int32Type>*>(stats.get());
+        auto hasMinMax = stats->HasMinMax();
+        if (!hasMinMax){
+            std::cout << "Warning, no min-max statistics available" << std::endl;
+        }
+        // Very weird edge case, even data types that can double according to Parquet,
+        // here are fixed len byte array and potentially interpreted as string
+        // (casting to double invalidates the stored value)
+        // See here examples:
+        // https://github.com/StarRocks/starrocks/blob/6aa1b197a4fef07ea94f839320a0e5724b36c21c/be/src/exec/pipeline/sink/iceberg_table_sink_operator.cpp#L233
+        // https://github.com/BlazingDB/blazingsql/blob/a35643d4c983334757eee96d5b9005b8b9fbd21b/engine/src/io/data_parser/metadata/parquet_metadata.cpp#L17
+        // TODO: parse the string and extract the values?
+        if (stats->physical_type() == parquet::Type::type::FIXED_LEN_BYTE_ARRAY){
+            auto convertedStats = std::static_pointer_cast<parquet::FLBAStatistics>(stats);
+            // TODO: try this as well
+            auto convertedStats2 = std::static_pointer_cast<parquet::DoubleStatistics>(stats);
+        }
+        const auto *typed_stats = static_cast<const parquet::TypedStatistics<arrow::Int32Type>*>(stats.get()); // NOLINT(*-pro-type-static-cast-downcast)
+        // TODO: sometimes min is bigger than max and viceversa, wtf is going on?
         auto minValue = typed_stats->min();
         auto maxValue = typed_stats->max();
+        std::shared_ptr<arrow::Scalar> min, max;
+        PARQUET_THROW_NOT_OK(parquet::arrow::StatisticsAsScalars(*stats, &min, &max));
+        arrow::Status status;
+        auto minInt = std::dynamic_pointer_cast<arrow::Int64Scalar>(min);
         for (int i = 1; i < numRowGroups; ++i){
             rowGroup = metadata->RowGroup(i);
             stats = (rowGroup->ColumnChunk(columnIndex))->statistics();
             typed_stats = static_cast<const parquet::TypedStatistics<arrow::Int32Type>*>(stats.get());
-            minValue = std::min(minValue, typed_stats->min());
-            maxValue = std::max(maxValue, typed_stats->max());
+            auto rowGroupMin = typed_stats->min();
+            auto rowGroupMax = typed_stats->max();
+            minValue = std::min(minValue, rowGroupMin);
+            maxValue = std::max(maxValue, rowGroupMax);
         }
         return std::make_pair(minValue, maxValue);
     }
