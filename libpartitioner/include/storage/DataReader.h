@@ -9,6 +9,7 @@
 #include <arrow/ipc/api.h>
 #include <parquet/arrow/reader.h>
 #include <parquet/api/reader.h>
+#include <regex>
 
 #include "common/Settings.h"
 
@@ -35,6 +36,15 @@ class DataReader {
                                                     const std::string &partitioningScheme);
         arrow::Result<int> getColumnIndex(const std::string &columnName);
     private:
+        std::pair<double_t, double_t> getMinMax(std::shared_ptr<parquet::Statistics> stats);
+        template <typename T>
+        static std::pair<double, double> getMinMaxNumberStatistics(const std::shared_ptr<parquet::Statistics> & statistics)
+        {
+            const auto & typed_statistics = dynamic_cast<parquet::TypedStatistics<T> &>(*statistics);
+            double min = typed_statistics.min();
+            double max = typed_statistics.max();
+            return std::make_pair(min, max);
+        };
         std::filesystem::path path;
         bool batchRead = false;
         bool isFolder = false;

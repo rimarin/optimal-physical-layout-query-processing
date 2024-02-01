@@ -156,42 +156,122 @@ namespace storage {
     arrow::Result<std::pair<double_t, double_t>> DataReader::getColumnStats(const std::string &columnName){
         auto columnIndex = getColumnIndex(columnName).ValueOrDie();
         auto numRowGroups = metadata->num_row_groups();
-        std::unique_ptr<parquet::RowGroupMetaData> rowGroup = metadata->RowGroup(0);
-        std::shared_ptr<parquet::Statistics> stats = (rowGroup->ColumnChunk(columnIndex))->statistics();
+        std::unique_ptr<parquet::RowGroupMetaData> rowGroupMetaData = metadata->RowGroup(0);
+        auto columnMetaData = rowGroupMetaData->ColumnChunk(columnIndex);
+        std::shared_ptr<parquet::Statistics> stats = columnMetaData->statistics();
+        if (stats == nullptr){
+            std::cout << "[DataReader] Could not read statistics from column " << columnName;
+            return std::make_pair(0, 1);
+        }
         auto hasMinMax = stats->HasMinMax();
         if (!hasMinMax){
             std::cout << "Warning, no min-max statistics available" << std::endl;
         }
+
+        std::pair<double, double> minMax = getMinMax(stats);
+
+        // TODO: sometimes min is bigger than max and viceversa, wtf is going on?
+        auto minValue = minMax.first;
+        auto maxValue = minMax.second;
+
         // Very weird edge case, even data types that can double according to Parquet,
         // here are fixed len byte array and potentially interpreted as string
-        // (casting to double invalidates the stored value)
-        // See here examples:
+        // (casting to double invalidates the stored value). See here examples:
         // https://github.com/StarRocks/starrocks/blob/6aa1b197a4fef07ea94f839320a0e5724b36c21c/be/src/exec/pipeline/sink/iceberg_table_sink_operator.cpp#L233
         // https://github.com/BlazingDB/blazingsql/blob/a35643d4c983334757eee96d5b9005b8b9fbd21b/engine/src/io/data_parser/metadata/parquet_metadata.cpp#L17
         // TODO: parse the string and extract the values?
-        if (stats->physical_type() == parquet::Type::type::FIXED_LEN_BYTE_ARRAY){
-            auto convertedStats = std::static_pointer_cast<parquet::FLBAStatistics>(stats);
-            // TODO: try this as well
-            auto convertedStats2 = std::static_pointer_cast<parquet::DoubleStatistics>(stats);
-        }
-        const auto *typed_stats = static_cast<const parquet::TypedStatistics<arrow::Int32Type>*>(stats.get()); // NOLINT(*-pro-type-static-cast-downcast)
         // TODO: sometimes min is bigger than max and viceversa, wtf is going on?
-        auto minValue = typed_stats->min();
-        auto maxValue = typed_stats->max();
-        std::shared_ptr<arrow::Scalar> min, max;
-        PARQUET_THROW_NOT_OK(parquet::arrow::StatisticsAsScalars(*stats, &min, &max));
         arrow::Status status;
-        auto minInt = std::dynamic_pointer_cast<arrow::Int64Scalar>(min);
         for (int i = 1; i < numRowGroups; ++i){
-            rowGroup = metadata->RowGroup(i);
-            stats = (rowGroup->ColumnChunk(columnIndex))->statistics();
-            typed_stats = static_cast<const parquet::TypedStatistics<arrow::Int32Type>*>(stats.get());
-            auto rowGroupMin = typed_stats->min();
-            auto rowGroupMax = typed_stats->max();
+            rowGroupMetaData = metadata->RowGroup(i);
+            stats = (rowGroupMetaData->ColumnChunk(columnIndex))->statistics();
+            std::pair<double, double> rowGroupMinMax = getMinMax(stats);
+            auto rowGroupMin = rowGroupMinMax.first;
+            auto rowGroupMax = rowGroupMinMax.second;
             minValue = std::min(minValue, rowGroupMin);
             maxValue = std::max(maxValue, rowGroupMax);
         }
         return std::make_pair(minValue, maxValue);
+    }
+
+    // Get the min max of the correct data type, copied from:
+    // https://github.com/ClickHouse/ClickHouse/blob/554bb5668e880147c1f9fff95ebf3478d752122b/src/Processors/Formats/Impl/ParquetMetadataInputFormat.cpp#L360
+    std::pair<double_t, double_t> DataReader::getMinMax(std::shared_ptr<parquet::Statistics> stats){
+        std::pair<double_t, double_t> minMax;
+        if (stats->HasMinMax() && stats->physical_type() != parquet::Type::type::UNDEFINED)
+        {
+            switch (stats->physical_type())
+            {
+                case parquet::Type::type::FLOAT:
+                {
+                    minMax = getMinMaxNumberStatistics<parquet::FloatType>(stats);
+                    break;
+                }
+                case parquet::Type::type::DOUBLE:
+                {
+                    minMax = getMinMaxNumberStatistics<parquet::DoubleType>(stats);
+                    break;
+                }
+                case parquet::Type::type::INT32:
+                {
+                    minMax = getMinMaxNumberStatistics<parquet::Int32Type>(stats);
+                    break;
+                }
+                case parquet::Type::type::INT64:
+                {
+                    minMax = getMinMaxNumberStatistics<parquet::Int64Type>(stats);
+                    break;
+                }
+                case parquet::Type::type::INT96:
+                {
+                    const auto & int96_statistics = dynamic_cast<parquet::TypedStatistics<parquet::Int96Type> &>(*stats);
+                    auto min = parquet::Int96ToString(int96_statistics.min());
+                    auto max = parquet::Int96ToString(int96_statistics.max());
+                    break;
+                }
+                case parquet::Type::type::BOOLEAN:
+                {
+                    minMax = getMinMaxNumberStatistics<parquet::BooleanType>(stats);
+                    break;
+                }
+                case parquet::Type::type::BYTE_ARRAY:
+                {
+                    const auto & byte_array_statistics = dynamic_cast<parquet::ByteArrayStatistics &>(*stats);
+                    const auto strMin = parquet::ByteArrayToString(byte_array_statistics.min());
+                    const auto strMax = parquet::ByteArrayToString(byte_array_statistics.max());
+                    // Convert Geo(?) data type
+                    std::smatch match;
+                    if (strMin.find("POINT") != std::string::npos) {
+                        std::regex pattern(R"(POINT \((-?\d+\.\d+) (-?\d+\.\d+)\))");
+                        if (std::regex_search(strMin.begin(), strMin.end(), match, pattern)){
+                            std::cout << "match: " << match[1] << '\n';
+                        }
+                        auto minSecond = std::stod(match[2]);
+                        if (std::regex_search(strMax.begin(), strMax.end(), match, pattern)){
+                            std::cout << "match: " << match[1] << '\n';
+                        }
+                        auto maxSecond = std::stod(match[2]);
+                        auto min = std::min(minSecond, maxSecond);
+                        auto max = std::max(minSecond, maxSecond);
+                        minMax = std::make_pair(min, max);
+                    }
+                    break;
+                }
+                case parquet::Type::type::FIXED_LEN_BYTE_ARRAY:
+                {
+                    const auto & flba_statistics = dynamic_cast<parquet::FLBAStatistics &>(*stats);
+                    auto a = parquet::FixedLenByteArrayToString(flba_statistics.min(), GetTypeByteSize(stats->physical_type()));
+                    auto b = parquet::FixedLenByteArrayToString(flba_statistics.max(), GetTypeByteSize(stats->physical_type()));
+                    break;
+                }
+                case parquet::Type::type::UNDEFINED:
+                {
+                    std::cout << "[DataReader] Error, parquet type undefined";
+                    break; /// unreachable
+                }
+            }
+        }
+        return minMax;
     }
 
 } // storage
