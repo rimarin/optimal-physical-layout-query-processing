@@ -56,4 +56,6 @@ public:
     const std::vector<int32_t> tpchScaleFactors = {1, 10, 50, 60, 70, 80, 90, 100};
     static inline const std::string fileExtension = common::Settings::fileExtension;
 
+    // Optional check of correctness
+    static const bool checkCorrectness = true;
 };

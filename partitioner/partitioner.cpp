@@ -66,6 +66,7 @@ int main(int argc, char **argv) {
     // Load dataset file
     auto dataReader = std::make_shared<storage::DataReader>();
     std::ignore = dataReader->load(datasetFilePath);
+    auto datasetNumRows = dataReader->getNumRows();
 
     // Load partitioning scheme
     auto partitioningScheme = partitioning::PartitioningFactory::create(scheme, dataReader, partitioningColumns, partitionSize, outputPath);
@@ -73,6 +74,28 @@ int main(int argc, char **argv) {
     // Apply the partitioning
     if (!partitioningScheme->isFinished()){
         arrow::Status status = partitioningScheme->partition();
+    }
+
+    // Check correctness
+    if (ExperimentsConfig::checkCorrectness){
+        uint32_t fileCount = 0;
+        uint32_t partitionsTotalRows = 0;
+        for (auto &fileSystemItem: std::filesystem::directory_iterator(outputPath)) {
+            if (fileSystemItem.is_regular_file() &&
+                fileSystemItem.path().extension() == common::Settings::fileExtension) {
+                fileCount += 1;
+                auto partitionPath = fileSystemItem.path();
+                std::ignore = dataReader->load(partitionPath);
+                partitionsTotalRows += dataReader->getNumRows();
+            }
+        }
+        if (fileCount == 0){
+            std::cout << "[Partitioner] Incorrect, no files created";
+        }
+        if (datasetNumRows != partitionsTotalRows){
+            std::cout << "[Partitioner] Incorrect, number of rows do not match";
+            std::cout << "[Partitioner] Expected " << datasetNumRows << " rows and found " << partitionsTotalRows;
+        }
     }
 
     return 0;
