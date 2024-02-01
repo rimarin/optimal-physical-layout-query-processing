@@ -97,26 +97,6 @@ for y, metric in enumerate(metrics):
         impact_scheme.add_trace(sub_plot["data"][trace], row=y + 1, col=1)
         impact_scheme.update_yaxes(title_text=metric, type="log", row=y + 1, col=1)
 
-for metric in metrics:
-    sub_plot = px.bar(data_frame=df_scheme, x="dataset", y="latency_avg", barmode='group',
-        title='Annual In-State Tuition vs Out-of-state Tuition', color='partitioning',
-    )
-    for trace in range(len(sub_plot["data"])):
-        impact_scheme.add_trace(sub_plot["data"][trace], row=y + 1, col=1)
-        impact_scheme.update_yaxes(title_text=metric, type="log", row=y + 1, col=1)
-        # impact_scheme.show()
-
-"""
-for y, metric in enumerate(metrics):
-    sub_plot = px.bar(df_scheme, x="dataset", y=metric, barmode='group',# labels=PARTITIONINGS,
-                    #  category_orders={'partitioning': sorted(df_scheme['partitioning'].unique())},
-                      title=f'Impact of the partitioning scheme on the {metric}').update_layout(
-        yaxis_title=metric)
-    for trace in range(len(sub_plot["data"])):
-        impact_scheme.add_trace(sub_plot["data"][trace], row=y + 1, col=1)
-        impact_scheme.update_yaxes(title_text=metric, type="log", row=y + 1, col=1)
-"""
-
 for i, dataset in enumerate(DATASETS):
     df_dataset = df[df['dataset'] == f'{dataset}']
     df_group_by_partitioning = df_dataset.groupby(['partitioning']).agg(aggregates).reset_index()
@@ -149,7 +129,7 @@ for i, dataset in enumerate(DATASETS):
                            title=f'[{dataset}] Impact of the partition size on the {metric}')
         for trace in range(len(sub_plot["data"])):
             impact_partition_size.add_trace(sub_plot["data"][trace], row=y + 1, col=i + 1)
-            impact_partition_size.update_yaxes(title_text=metric, type="log", row=y + 1, col=1)
+            impact_partition_size.update_yaxes(title_text=metric, row=y + 1, col=1)
     # Figure 3: latency by dataset for all schemes with increasing selectivity: line plot
     for y, metric in enumerate(metrics):
         sub_plot = px.line(df_group_by_selectivity,
