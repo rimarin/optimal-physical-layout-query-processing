@@ -20,7 +20,7 @@ namespace partitioning {
         double_t minColumnDomain = std::numeric_limits<double>::max();
         for (int j = 0; j < numColumns; ++j) {
             std::pair<double_t, double_t> columnStats = dataReader->getColumnStats(columns[j]).ValueOrDie();
-            double_t domainStats = columnStats.second - columnStats.first;
+            double_t domainStats = std::max(columnStats.second - columnStats.first, 1.0);
             double_t columnDomain = domainStats * 1.1;
             columnToDomain[j] = columnDomain;
             maxColumnDomain = std::max(maxColumnDomain, columnDomain);

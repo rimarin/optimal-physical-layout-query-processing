@@ -21,6 +21,7 @@
 #include <parquet/arrow/writer.h>
 
 #include "common/Settings.h"
+#include "storage/DataWriter.h"
 
 namespace external {
     struct ExternalFileReader{
@@ -293,7 +294,9 @@ namespace external {
                 std::unique_ptr<parquet::arrow::FileWriter> writer;
                 ARROW_ASSIGN_OR_RAISE(writer, parquet::arrow::FileWriter::Open(*table->schema(),
                                                                                arrow::default_memory_pool(),
-                                                                               outFile));
+                                                                               outFile,
+                                                                               storage::DataWriter::getWriterProperties(),
+                                                                               storage::DataWriter::getArrowWriterProperties()));
                 // Write the batch and close the file
                 ARROW_RETURN_NOT_OK(writer->WriteTable(*table));
                 ARROW_RETURN_NOT_OK(writer->Close());
