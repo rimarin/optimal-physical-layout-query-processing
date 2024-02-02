@@ -95,3 +95,25 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningQuadTreeTaxi){
     ASSERT_EQ(numTotalRows, partitionsTotalRows);
     ASSERT_EQ(fileCount, 1300);
 }
+
+TEST_F(TestOptimalLayoutFixture, TestPartitioningQuadTreeOSM){
+    GTEST_SKIP();
+    auto folder = ExperimentsConfig::quadTreeFolder;
+    auto dataset = getDatasetPath(ExperimentsConfig::datasetOSM);
+    auto partitionSize = 50000;
+    auto numTotalRows = 7120245;
+    cleanUpFolder(folder);
+    std::vector<std::string> partitioningColumns = {"min_lon", "max_lon"};
+    auto dataReader = std::make_shared<storage::DataReader>();
+    ASSERT_EQ(dataReader->load(dataset), arrow::Status::OK());
+    ASSERT_EQ(dataReader->getNumRows(), numTotalRows);
+    auto partitioning = partitioning::PartitioningFactory::create(partitioning::QUAD_TREE, dataReader, partitioningColumns, partitionSize, folder);
+    ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
+    std::filesystem::path partition0 = folder / "0.parquet";
+    ASSERT_EQ(dataReader->load(partition0), arrow::Status::OK());
+    auto folderResults = getFolderResults(dataReader, folder);
+    auto fileCount = folderResults.first;
+    auto partitionsTotalRows = folderResults.second;
+    ASSERT_EQ(numTotalRows, partitionsTotalRows);
+    // ASSERT_EQ(fileCount, 1300);
+}

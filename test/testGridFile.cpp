@@ -66,3 +66,43 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFileTPCH){
     ASSERT_EQ(numTotalRows, partitionsTotalRows);
     ASSERT_EQ(fileCount, 16);
 }
+
+TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFileTaxi){
+    GTEST_SKIP();
+    auto folder = ExperimentsConfig::gridFileFolder;
+    auto dataset = getDatasetPath(ExperimentsConfig::datasetTaxi);
+    auto partitionSize = 20000;
+    auto numTotalRows = 8760687;
+    cleanUpFolder(folder);
+    std::vector<std::string> partitioningColumns = {"PULocationID", "DOLocationID"};
+    auto dataReader = std::make_shared<storage::DataReader>();
+    ASSERT_EQ(dataReader->load(dataset), arrow::Status::OK());
+    ASSERT_EQ(dataReader->getNumRows(), numTotalRows);
+    auto partitioning = partitioning::PartitioningFactory::create(partitioning::GRID_FILE, dataReader, partitioningColumns, partitionSize, folder);
+    ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
+    auto folderResults = getFolderResults(dataReader, folder);
+    auto fileCount = folderResults.first;
+    auto partitionsTotalRows = folderResults.second;
+    ASSERT_EQ(numTotalRows, partitionsTotalRows);
+    // ASSERT_EQ(fileCount, 16);
+}
+
+TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFileOSM){
+    GTEST_SKIP();
+    auto folder = ExperimentsConfig::gridFileFolder;
+    auto dataset = getDatasetPath(ExperimentsConfig::datasetOSM);
+    auto partitionSize = 50000;
+    auto numTotalRows = 7120245;
+    cleanUpFolder(folder);
+    std::vector<std::string> partitioningColumns = {"min_lon", "max_lon"};
+    auto dataReader = std::make_shared<storage::DataReader>();
+    ASSERT_EQ(dataReader->load(dataset), arrow::Status::OK());
+    ASSERT_EQ(dataReader->getNumRows(), numTotalRows);
+    auto partitioning = partitioning::PartitioningFactory::create(partitioning::GRID_FILE, dataReader, partitioningColumns, partitionSize, folder);
+    ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
+    auto folderResults = getFolderResults(dataReader, folder);
+    auto fileCount = folderResults.first;
+    auto partitionsTotalRows = folderResults.second;
+    ASSERT_EQ(numTotalRows, partitionsTotalRows);
+    // ASSERT_EQ(fileCount, 16);
+}

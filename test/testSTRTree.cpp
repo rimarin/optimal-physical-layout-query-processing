@@ -81,3 +81,25 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningSTRTreeTPCH){
     ASSERT_EQ(numTotalRows, partitionsTotalRows);
     ASSERT_EQ(fileCount, 28);
 }
+
+TEST_F(TestOptimalLayoutFixture, TestPartitioningSTRTreeTPCH10){
+    GTEST_SKIP();
+    auto folder = ExperimentsConfig::strTreeFolder;
+    auto dataset = getDatasetPath(ExperimentsConfig::datasetTPCH10);
+    auto partitionSize = 20000;
+    auto numTotalRows = 2398579;
+    cleanUpFolder(folder);
+    std::vector<std::string> partitioningColumns = {"c_custkey", "l_orderkey"};
+    auto dataReader = std::make_shared<storage::DataReader>();
+    ASSERT_EQ(dataReader->load(dataset), arrow::Status::OK());
+    ASSERT_EQ(dataReader->getNumRows(), numTotalRows);
+    auto partitioning = partitioning::PartitioningFactory::create(partitioning::STR_TREE, dataReader, partitioningColumns, partitionSize, folder);
+    ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
+    std::filesystem::path partition0 = folder / "0.parquet";
+    ASSERT_EQ(dataReader->load(partition0), arrow::Status::OK());
+    auto folderResults = getFolderResults(dataReader, folder);
+    auto fileCount = folderResults.first;
+    auto partitionsTotalRows = folderResults.second;
+    ASSERT_EQ(numTotalRows, partitionsTotalRows);
+    // ASSERT_EQ(fileCount, 28);
+}
