@@ -84,3 +84,47 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurveTPCH){
     ASSERT_EQ(numTotalRows, partitionsTotalRows);
     ASSERT_EQ(fileCount, 14);
 }
+
+TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurveTaxi){
+    GTEST_SKIP();
+    auto folder = ExperimentsConfig::hilbertCurveFolder;
+    auto dataset = getDatasetPath(ExperimentsConfig::datasetTaxi);
+    auto partitionSize = 20000;
+    auto numTotalRows = 8760687;
+    cleanUpFolder(folder);
+    std::vector<std::string> partitioningColumns = {"PULocationID", "DOLocationID"};
+    auto dataReader = std::make_shared<storage::DataReader>();
+    ASSERT_EQ(dataReader->load(dataset), arrow::Status::OK());
+    ASSERT_EQ(dataReader->getNumRows(), numTotalRows);
+    auto partitioning = partitioning::PartitioningFactory::create(partitioning::HILBERT_CURVE, dataReader, partitioningColumns, partitionSize, folder);
+    ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
+    std::filesystem::path partition0 = folder / ("0" + ExperimentsConfig::fileExtension);
+    ASSERT_EQ(dataReader->load(partition0), arrow::Status::OK());
+    auto folderResults = getFolderResults(dataReader, folder);
+    auto fileCount = folderResults.first;
+    auto partitionsTotalRows = folderResults.second;
+    ASSERT_EQ(numTotalRows, partitionsTotalRows);
+    ASSERT_EQ(fileCount, 443);
+}
+
+TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurveOSM){
+    // GTEST_SKIP();
+    auto folder = ExperimentsConfig::hilbertCurveFolder;
+    auto dataset = getDatasetPath(ExperimentsConfig::datasetOSM);
+    auto partitionSize = 50000;
+    auto numTotalRows = 7120245;
+    cleanUpFolder(folder);
+    std::vector<std::string> partitioningColumns = {"min_lon", "max_lon"};
+    auto dataReader = std::make_shared<storage::DataReader>();
+    ASSERT_EQ(dataReader->load(dataset), arrow::Status::OK());
+    ASSERT_EQ(dataReader->getNumRows(), numTotalRows);
+    auto partitioning = partitioning::PartitioningFactory::create(partitioning::HILBERT_CURVE, dataReader, partitioningColumns, partitionSize, folder);
+    ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
+    std::filesystem::path partition0 = folder / ("0" + ExperimentsConfig::fileExtension);
+    ASSERT_EQ(dataReader->load(partition0), arrow::Status::OK());
+    auto folderResults = getFolderResults(dataReader, folder);
+    auto fileCount = folderResults.first;
+    auto partitionsTotalRows = folderResults.second;
+    ASSERT_EQ(numTotalRows, partitionsTotalRows);
+    ASSERT_EQ(fileCount, 144);
+}
