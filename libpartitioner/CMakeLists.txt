@@ -46,6 +46,21 @@ target_include_directories(
         INTERFACE "$<BUILD_INTERFACE:${arrow_SOURCE_DIR}/cpp/src>"
 )
 
+FetchContent_Declare(duckdb
+        GIT_REPOSITORY https://github.com/duckdb/duckdb.git
+        GIT_TAG        main
+        OVERRIDE_FIND_PACKAGE
+)
+FetchContent_MakeAvailable(duckdb)
+FetchContent_GetProperties(duckdb)
+if(NOT duckdb_POPULATED)
+    FetchContent_Populate(duckdb)
+    add_subdirectory(${duckdb_SOURCE_DIR} ${duckdb_BINARY_DIR})
+endif()
+
+set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=address")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+
 include_directories(common/)
 include_directories(include/)
 include_directories(external/)
@@ -80,6 +95,7 @@ target_link_libraries(libpartitioner
         arrow_dataset_static
         arrow_acero_static
         parquet_static
+        duckdb
         Threads::Threads)
 
 # Specify here the include directories exported by this library

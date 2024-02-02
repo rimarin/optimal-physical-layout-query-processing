@@ -15,6 +15,9 @@ include_directories(${GTEST_INCLUDE_DIRS})
 file(GLOB SOURCES *.cpp)
 add_executable(partitioner_test ${SOURCES})
 
+set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=address")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+
 target_link_libraries(partitioner_test libpartitioner gtest gtest_main gmock_main)
 
 target_include_directories(partitioner_test
