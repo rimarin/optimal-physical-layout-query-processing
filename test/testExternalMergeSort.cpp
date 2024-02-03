@@ -59,14 +59,30 @@ TEST_F(TestOptimalLayoutFixture, TestExternalMergeSortDuckDB) {
     auto folder = ExperimentsConfig::testsFolder / "external-merge-sort";
     auto fileExtension = ExperimentsConfig::fileExtension;
     auto dataset = getDatasetPath(ExperimentsConfig::datasetCities);
+    size_t partitionSize = 2;
     cleanUpFolder(folder);
-    ASSERT_EQ(external::ExternalSort::writeSortedFile(dataset,
-                                                      "city",
-                                                      folder / ("s0" + fileExtension)), arrow::Status::OK());
+    ASSERT_EQ(external::ExternalSort::writeSortedFile(dataset, "city", folder / ("s0" + fileExtension)), arrow::Status::OK());
     auto mergeFolder = ExperimentsConfig::testsFolder / "external-merge";
-    ASSERT_EQ(external::ExternalMerge::sortMergeFiles(mergeFolder,
-                                                      "city"), arrow::Status::OK());
+    cleanUpFolder(mergeFolder);
+    arrow::Result<std::shared_ptr<arrow::Table>> citiesTable = storage::TableGenerator::GenerateCitiesTable().ValueOrDie();
+    auto part1 = citiesTable.ValueOrDie()->Slice(0, 2);
+    auto part2 = citiesTable.ValueOrDie()->Slice(2, 2);
+    auto part3 = citiesTable.ValueOrDie()->Slice(4, 2);
+    auto part4 = citiesTable.ValueOrDie()->Slice(6, 2);
+    std::filesystem::path dataset1 = mergeFolder.string() + "/0" + fileExtension;
+    std::filesystem::path dataset2 = mergeFolder.string() + "/1" + fileExtension;
+    std::filesystem::path dataset3 = mergeFolder.string() + "/2" + fileExtension;
+    std::filesystem::path dataset4 = mergeFolder.string() + "/3" + fileExtension;
+    ASSERT_EQ(storage::DataWriter::WriteTableToDisk(part1, dataset1), arrow::Status::OK());
+    ASSERT_EQ(storage::DataWriter::WriteTableToDisk(part2, dataset2), arrow::Status::OK());
+    ASSERT_EQ(storage::DataWriter::WriteTableToDisk(part3, dataset3), arrow::Status::OK());
+    ASSERT_EQ(storage::DataWriter::WriteTableToDisk(part4, dataset4), arrow::Status::OK());
+    ASSERT_EQ(external::ExternalMerge::sortMergeFiles(mergeFolder, "city", partitionSize), arrow::Status::OK());
     ASSERT_EQ(std::filesystem::exists(mergeFolder / ("m0" + fileExtension)), true);
+    ASSERT_EQ(std::filesystem::exists(mergeFolder / ("m1" + fileExtension)), true);
+    ASSERT_EQ(std::filesystem::exists(mergeFolder / ("m2" + fileExtension)), true);
+    ASSERT_EQ(std::filesystem::exists(mergeFolder / ("m3" + fileExtension)), true);
+    ASSERT_EQ(std::filesystem::exists(mergeFolder / ("m4" + fileExtension)), false);
     ASSERT_EQ(std::filesystem::exists(mergeFolder / ("0" + fileExtension)), false);
     ASSERT_EQ(std::filesystem::exists(mergeFolder / ("3" + fileExtension)), false);
 }

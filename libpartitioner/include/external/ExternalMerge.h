@@ -284,14 +284,23 @@ namespace external {
             return arrow::Status::OK();
         }
 
-        static arrow::Status sortMergeFiles(const std::filesystem::path &folder, const std::string &columnName){
+        static arrow::Status sortMergeFiles(const std::filesystem::path &folder, const std::string &columnName,
+                                            const uint32_t partitionSize){
             // Initialize DuckDB
             duckdb::DuckDB db(nullptr);
             duckdb::Connection con(db);
 
             // Load parquet files from folder into memory and sort it
             std::string loadQuery = "CREATE TABLE tbl AS SELECT * FROM read_parquet('" + folder.string() + "/*.parquet') ORDER BY " + columnName;
-            auto a = con.Query(loadQuery);
+            auto loadQueryResult = con.Query(loadQuery);
+
+            // Get total size
+            std::string sizeQuery = "SELECT COUNT(*) FROM tbl";
+            auto sizeQueryResult = con.Query(sizeQuery);
+            size_t totalSize;
+            for (const auto &row : *sizeQueryResult) {
+                totalSize = row.GetValue<int>(0);
+            }
 
             // Remove parts
             for (const auto & folderIter : std::filesystem::recursive_directory_iterator(folder))
@@ -302,9 +311,20 @@ namespace external {
                 }
             }
 
-            // Write table to disk
-            std::string exportQuery = "COPY (SELECT * FROM tbl) TO '" + folder.string() + "/m0.parquet' (FORMAT PARQUET)";
-            auto b = con.Query(exportQuery);
+            size_t index = 0;
+            size_t offset = 0;
+            while (totalSize > 0){
+                // Write table to disk, partition-sized blocks
+                std::string exportQuery = "COPY (SELECT * FROM tbl "
+                                          "      LIMIT " + std::to_string(partitionSize) +
+                                          "      OFFSET " + std::to_string(offset) + " )"
+                                          "TO '" + folder.string() + "/m" + std::to_string(index) + ".parquet' (FORMAT PARQUET)";
+                auto exportQueryResult = con.Query(exportQuery);
+                offset += partitionSize;
+                totalSize -= partitionSize;
+                index++;
+            }
+
             return arrow::Status::OK();
         }
 

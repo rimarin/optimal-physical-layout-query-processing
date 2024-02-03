@@ -63,11 +63,11 @@ namespace external {
 
             // Load parquet file into memory and sort it
             std::string loadQuery = "CREATE TABLE tbl AS SELECT * FROM read_parquet('" + inputPath.string() + "') ORDER BY " + sortColumn;
-            auto a = con.Query(loadQuery);
+            auto loadQueryResult = con.Query(loadQuery);
 
             // Write table to disk
             std::string exportQuery = "COPY (SELECT * FROM tbl) TO '" + outputPath.string() + "' (FORMAT PARQUET)";
-            auto b = con.Query(exportQuery);
+            auto exportQueryResult = con.Query(exportQuery);
             return arrow::Status::OK();
         }
     private:
