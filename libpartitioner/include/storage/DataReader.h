@@ -11,6 +11,7 @@
 #include <parquet/api/reader.h>
 #include <regex>
 
+#include "duckdb.hpp"
 #include "common/Settings.h"
 
 namespace storage {

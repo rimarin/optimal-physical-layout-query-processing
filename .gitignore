@@ -17,6 +17,7 @@ cmake-build-release
 /benchmark/results
 /benchmark/temp
 /partitioner/partitioner
+/test/external-merge
 /test/external-merge-sort
 /test/fixed-grid
 /test/grid-file
