@@ -21,10 +21,14 @@ TEST_F(TestOptimalLayoutFixture, TestExternalMergeSort){
         if (record_batch == nullptr) {
             break;
         }
-        ASSERT_EQ(external::ExternalSort::writeSorted(record_batch->Slice(2, 2), "x", folder / ("s0" + fileExtension)), arrow::Status::OK());
-        ASSERT_EQ(external::ExternalSort::writeSorted(record_batch->Slice(4, 2), "x", folder / ("s1" + fileExtension)), arrow::Status::OK());
-        ASSERT_EQ(external::ExternalSort::writeSorted(record_batch->Slice(0, 2), "x", folder / ("s2" + fileExtension)), arrow::Status::OK());
-        ASSERT_EQ(external::ExternalSort::writeSorted(record_batch->Slice(6, 2), "x", folder / ("s3" + fileExtension)), arrow::Status::OK());
+        ASSERT_EQ(external::ExternalSort::writeSortedBatch(record_batch->Slice(2, 2), "x",
+                                                           folder / ("s0" + fileExtension)), arrow::Status::OK());
+        ASSERT_EQ(external::ExternalSort::writeSortedBatch(record_batch->Slice(4, 2), "x",
+                                                           folder / ("s1" + fileExtension)), arrow::Status::OK());
+        ASSERT_EQ(external::ExternalSort::writeSortedBatch(record_batch->Slice(0, 2), "x",
+                                                           folder / ("s2" + fileExtension)), arrow::Status::OK());
+        ASSERT_EQ(external::ExternalSort::writeSortedBatch(record_batch->Slice(6, 2), "x",
+                                                           folder / ("s3" + fileExtension)), arrow::Status::OK());
     }
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("s0" + fileExtension), "x", std::vector<int32_t>({5, 35})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("s0" + fileExtension), "y", std::vector<int32_t>({45, 42})), arrow::Status::OK());
@@ -39,7 +43,7 @@ TEST_F(TestOptimalLayoutFixture, TestExternalMergeSort){
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("s3" + fileExtension), "y", std::vector<int32_t>({15, 5})), arrow::Status::OK());
 
     auto partitionSize = 8;
-    ASSERT_EQ(external::ExternalMerge::mergeFiles(folder, "x", partitionSize), arrow::Status::OK());
+    ASSERT_EQ(external::ExternalMerge::mergeFilesFromSortedBatches(folder, "x", partitionSize), arrow::Status::OK());
 
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("0" + fileExtension), "x", std::vector<int32_t>({5, 27, 35, 52, 62, 82, 85, 90})), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::Int32Array>(folder / ("0" + fileExtension), "y", std::vector<int32_t>({45, 35, 42, 10, 77, 65, 15, 5})), arrow::Status::OK());
@@ -49,4 +53,20 @@ TEST_F(TestOptimalLayoutFixture, TestExternalMergeSort){
     ASSERT_EQ(std::filesystem::exists(folder / ("1" + fileExtension)), false);
     ASSERT_EQ(std::filesystem::exists(folder / ("2" + fileExtension)), false);
     ASSERT_EQ(std::filesystem::exists(folder / ("3" + fileExtension)), false);
+}
+
+TEST_F(TestOptimalLayoutFixture, TestExternalMergeSortDuckDB) {
+    auto folder = ExperimentsConfig::testsFolder / "external-merge-sort";
+    auto fileExtension = ExperimentsConfig::fileExtension;
+    auto dataset = getDatasetPath(ExperimentsConfig::datasetCities);
+    cleanUpFolder(folder);
+    ASSERT_EQ(external::ExternalSort::writeSortedFile(dataset,
+                                                      "city",
+                                                      folder / ("s0" + fileExtension)), arrow::Status::OK());
+    auto mergeFolder = ExperimentsConfig::testsFolder / "external-merge";
+    ASSERT_EQ(external::ExternalMerge::sortMergeFiles(mergeFolder,
+                                                      "city"), arrow::Status::OK());
+    ASSERT_EQ(std::filesystem::exists(mergeFolder / ("m0" + fileExtension)), true);
+    ASSERT_EQ(std::filesystem::exists(mergeFolder / ("0" + fileExtension)), false);
+    ASSERT_EQ(std::filesystem::exists(mergeFolder / ("3" + fileExtension)), false);
 }

@@ -101,7 +101,7 @@ namespace partitioning {
 
             // Write out a sorted batch
             std::filesystem::path sortedBatchPath = subFolder / ("s" + std::to_string(batchId) + fileExtension);
-            ARROW_RETURN_NOT_OK(external::ExternalSort::writeSorted(recordBatch, columnName, sortedBatchPath));
+            ARROW_RETURN_NOT_OK(external::ExternalSort::writeSortedBatch(recordBatch, columnName, sortedBatchPath));
             std::cout << "[STRTreePartitioning] Batch " << batchId << " completed" << std::endl;
             std::cout << "[STRTreePartitioning] Imported " << totalNumRows << " out of " << numRows << " rows" << std::endl;
             batchId += 1;
@@ -112,7 +112,7 @@ namespace partitioning {
         sliceSize = std::ceil(totalNumRows / S);
 
         // Merge the files to create sorted partitions
-        ARROW_RETURN_NOT_OK(external::ExternalMerge::mergeFiles(subFolder, columnName, sliceSize));
+        ARROW_RETURN_NOT_OK(external::ExternalMerge::mergeFilesFromSortedBatches(subFolder, columnName, sliceSize));
         std::cout << "[STRTreePartitioning] Merged batches with sliceSize " << sliceSize << " and column name "
                   << columnName << std::endl;
 

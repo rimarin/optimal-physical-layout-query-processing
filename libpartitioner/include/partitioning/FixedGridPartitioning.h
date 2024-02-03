@@ -18,6 +18,7 @@
 #include <arrow/table.h>
 
 #include "common/ColumnDataConverter.h"
+#include "duckdb.hpp"
 #include "external/ExternalSort.h"
 #include "external/ExternalMerge.h"
 #include "partitioning/Partitioning.h"

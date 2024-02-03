@@ -92,12 +92,12 @@ namespace partitioning {
             }
 
             // For each partition id,
+            std::cout << "[GridFilePartitioning] Mapping columns to partition ids for the batch" << std::endl;
             uint32_t completedPartitions = 0;
             for (const auto &partitionId: uniquePartitionIds){
                 std::vector<uint32_t> partitionIds(recordBatch->num_rows(), partitionId);
                 arrow::UInt32Builder int32Builder;
                 ARROW_RETURN_NOT_OK(int32Builder.AppendValues(partitionIds));
-                std::cout << "[GridFilePartitioning] Mapped columns to partition ids" << std::endl;
                 std::shared_ptr<arrow::Array> partitionIdsArrow;
                 ARROW_ASSIGN_OR_RAISE(partitionIdsArrow, int32Builder.Finish());
                 std::shared_ptr<arrow::RecordBatch> updatedRecordBatch;

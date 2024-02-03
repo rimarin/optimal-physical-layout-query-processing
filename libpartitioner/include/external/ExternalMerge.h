@@ -52,8 +52,8 @@ namespace external {
 
     class ExternalMerge {
     public:
-        static arrow::Status mergeFiles(const std::filesystem::path &folder, const std::string &columnName,
-                                        const uint32_t batchSize){
+        static arrow::Status mergeFilesFromSortedBatches(const std::filesystem::path &folder, const std::string &columnName,
+                                                         const uint32_t batchSize){
             /*
              * External Merge Sort: merge a set of sorted files on disk
              * https://en.wikipedia.org/wiki/K-way_merge_algorithm
@@ -283,6 +283,31 @@ namespace external {
             }
             return arrow::Status::OK();
         }
+
+        static arrow::Status sortMergeFiles(const std::filesystem::path &folder, const std::string &columnName){
+            // Initialize DuckDB
+            duckdb::DuckDB db(nullptr);
+            duckdb::Connection con(db);
+
+            // Load parquet files from folder into memory and sort it
+            std::string loadQuery = "CREATE TABLE tbl AS SELECT * FROM read_parquet('" + folder.string() + "/*.parquet') ORDER BY " + columnName;
+            auto a = con.Query(loadQuery);
+
+            // Remove parts
+            for (const auto & folderIter : std::filesystem::recursive_directory_iterator(folder))
+            {
+                if (folderIter.path().extension() == ".parquet")
+                {
+                    std::filesystem::remove(folderIter.path());
+                }
+            }
+
+            // Write table to disk
+            std::string exportQuery = "COPY (SELECT * FROM tbl) TO '" + folder.string() + "/m0.parquet' (FORMAT PARQUET)";
+            auto b = con.Query(exportQuery);
+            return arrow::Status::OK();
+        }
+
     private:
         static arrow::Status exportTableToDisk(const std::shared_ptr<arrow::Table> &table,
                                                const std::filesystem::path &outputPath){
@@ -335,6 +360,7 @@ namespace external {
             }
             return currentRecordBatch;
         }
+
     };
 }
 

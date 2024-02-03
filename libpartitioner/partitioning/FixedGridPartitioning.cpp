@@ -53,7 +53,7 @@ namespace partitioning {
         assert(totalNumRows == numRows);
 
         // Merge the files to create globally sorted partitions
-        ARROW_RETURN_NOT_OK(external::ExternalMerge::mergeFiles(folder, "cell_idx", partitionSize));
+        ARROW_RETURN_NOT_OK(external::ExternalMerge::mergeFilesFromSortedBatches(folder, "cell_idx", partitionSize));
         std::cout << "[FixedGridPartitioning] Partitioning of " << batchId << " batches completed" << std::endl;
         return arrow::Status::OK();
     }
@@ -100,7 +100,7 @@ namespace partitioning {
 
         // Write out a sorted batch
         std::filesystem::path sortedBatchPath = folder / ("s" + std::to_string(batchId) + fileExtension);
-        ARROW_RETURN_NOT_OK(external::ExternalSort::writeSorted(updatedRecordBatch, "cell_idx", sortedBatchPath));
+        ARROW_RETURN_NOT_OK(external::ExternalSort::writeSortedBatch(updatedRecordBatch, "cell_idx", sortedBatchPath));
         return arrow::Status::OK();
     }
 

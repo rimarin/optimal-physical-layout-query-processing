@@ -24,9 +24,9 @@ namespace external {
 
     class ExternalSort {
     public:
-        static arrow::Status writeSorted(const std::shared_ptr<arrow::RecordBatch> &recordBatch,
-                                         const std::string &sortColumn,
-                                         const std::filesystem::path &outputPath){
+        static arrow::Status writeSortedBatch(const std::shared_ptr<arrow::RecordBatch> &recordBatch,
+                                              const std::string &sortColumn,
+                                              const std::filesystem::path &outputPath){
             /*
              * Helper method to sort a RecordBatch by a certain column and export it to a Parquet file
              */
@@ -52,6 +52,22 @@ namespace external {
             ARROW_RETURN_NOT_OK(writer->WriteRecordBatch(*sorted.record_batch()));
             ARROW_RETURN_NOT_OK(writer->Close());
             std::cout << "[ExternalSort] Completed, written sorted file to " << outputPath << std::endl;
+            return arrow::Status::OK();
+        }
+        static arrow::Status writeSortedFile(const std::filesystem::path &inputPath,
+                                             const std::string &sortColumn,
+                                             const std::filesystem::path &outputPath) {
+            // Initialize DuckDB
+            duckdb::DuckDB db(nullptr);
+            duckdb::Connection con(db);
+
+            // Load parquet file into memory and sort it
+            std::string loadQuery = "CREATE TABLE tbl AS SELECT * FROM read_parquet('" + inputPath.string() + "') ORDER BY " + sortColumn;
+            auto a = con.Query(loadQuery);
+
+            // Write table to disk
+            std::string exportQuery = "COPY (SELECT * FROM tbl) TO '" + outputPath.string() + "' (FORMAT PARQUET)";
+            auto b = con.Query(exportQuery);
             return arrow::Status::OK();
         }
     private:
