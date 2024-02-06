@@ -70,7 +70,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFileTaxi){
     // GTEST_SKIP();
     auto folder = ExperimentsConfig::gridFileFolder;
     auto dataset = getDatasetPath(ExperimentsConfig::datasetTaxi);
-    auto partitionSize = 50000;
+    auto partitionSize = 100000;
     auto numTotalRows = 8760687;
     cleanUpFolder(folder);
     std::vector<std::string> partitioningColumns = {"PULocationID", "DOLocationID"};

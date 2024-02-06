@@ -37,8 +37,9 @@ namespace partitioning {
         arrow::Status partition() override;
     private:
         partitioning::PartitioningType type = GRID;
-        void computeLinearScales(std::vector<std::shared_ptr<common::Point>> &allRows, uint32_t initialCoord,
-                                 std::vector<std::pair<double, double>> scaleRangeIndexes);
+        void computeLinearScales(std::filesystem::path &partitionFile,
+                                 const uint32_t depth,
+                                 const std::vector<std::pair<double, double>> &dimensionRanges);
         std::vector<std::vector<double>> linearScales;
         size_t cellCapacity;
         std::vector<std::pair<uint32_t, uint32_t>> rowIndexToPartitionId;
