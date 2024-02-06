@@ -31,6 +31,9 @@ namespace partitioning {
         void setDataReader(const std::shared_ptr<storage::DataReader> &reader);
         void setPartitionSize(size_t rowsPerPartition);
         bool isFinished();
+        // DuckDB config
+        static inline const std::string memoryLimit = "4GB";
+        static inline const std::string tempDirectory = "/tmp";
     private:
         bool canSkipPartitioning();
         partitioning::PartitioningType type = OTHER;

@@ -21,6 +21,7 @@
 #include <parquet/arrow/writer.h>
 
 #include "common/Settings.h"
+#include "partitioning/Partitioning.h"
 #include "storage/DataWriter.h"
 
 namespace external {
@@ -285,9 +286,17 @@ namespace external {
         }
 
         static arrow::Status sortMergeFiles(const std::filesystem::path &folder, const std::string &columnName,
-                                            const uint32_t partitionSize){
+                                            const int32_t partitionSize){
+            if (partitionSize <= 0){
+                std::cout << "Cannot sort merge, invalid partition size" << std::endl;
+                return arrow::Status::Invalid("Invalid partition size");
+            }
+
             // Initialize DuckDB
-            duckdb::DuckDB db(nullptr);
+            duckdb::DBConfig config;
+            config.SetOption("memory_limit", partitioning::MultiDimensionalPartitioning::memoryLimit);
+            config.SetOption("temp_directory", partitioning::MultiDimensionalPartitioning::tempDirectory);
+            duckdb::DuckDB db(":memory:", &config);
             duckdb::Connection con(db);
 
             // Load parquet files from folder into memory and sort it
@@ -321,6 +330,9 @@ namespace external {
                                           "TO '" + folder.string() + "/m" + std::to_string(index) + ".parquet' (FORMAT PARQUET)";
                 auto exportQueryResult = con.Query(exportQuery);
                 offset += partitionSize;
+                if (totalSize < partitionSize){
+                     break;
+                }
                 totalSize -= partitionSize;
                 index++;
             }
