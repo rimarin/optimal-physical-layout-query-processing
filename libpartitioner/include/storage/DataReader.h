@@ -22,10 +22,7 @@ class DataReader {
         virtual ~DataReader() = default;
         arrow::Status load(std::filesystem::path &filePath, bool useBatchRead = false);
         std::filesystem::path getReaderPath();
-        arrow::Result<std::shared_ptr<arrow::Table>> readTable();
         arrow::Result<std::shared_ptr<::arrow::RecordBatchReader>> getBatchReader();
-        static arrow::Result<std::vector<std::shared_ptr<arrow::Array>>> getColumnsOld(const std::shared_ptr<arrow::Table> &table,
-                                                                                       const std::vector<std::string> &columns);
         arrow::Result<std::vector<std::shared_ptr<arrow::ChunkedArray>>> getColumns(const std::vector<std::string> &columns);
         arrow::Result<std::shared_ptr<arrow::ChunkedArray>> getColumn(const std::string &columnName);
         void displayFileProperties();
@@ -36,16 +33,10 @@ class DataReader {
         static std::filesystem::path getDatasetPath(const std::filesystem::path &folder, const std::string &datasetName,
                                                     const std::string &partitioningScheme);
         arrow::Result<int> getColumnIndex(const std::string &columnName);
+        arrow::Result<double_t> getMedian(const std::string &columnName);
+        arrow::Status rangeFilter(const std::string &columnName, const std::filesystem::path &destinationFile,
+                                  const std::pair<double, double> range);
     private:
-        std::pair<double_t, double_t> getMinMax(std::shared_ptr<parquet::Statistics> stats);
-        template <typename T>
-        static std::pair<double, double> getMinMaxNumberStatistics(const std::shared_ptr<parquet::Statistics> & statistics)
-        {
-            const auto & typed_statistics = dynamic_cast<parquet::TypedStatistics<T> &>(*statistics);
-            double min = typed_statistics.min();
-            double max = typed_statistics.max();
-            return std::make_pair(min, max);
-        };
         std::filesystem::path path;
         bool batchRead = false;
         bool isFolder = false;

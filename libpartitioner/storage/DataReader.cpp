@@ -60,6 +60,7 @@ namespace storage {
     }
 
     uint32_t DataReader::getNumRows() {
+        // TODO: maybe replace with DuckDB query metadata
         return metadata->num_rows();
     }
 
@@ -81,13 +82,6 @@ namespace storage {
         return table;
     }
 
-    arrow::Result<std::shared_ptr<arrow::Table>> DataReader::readTable() {
-        std::shared_ptr<arrow::Table> table;
-        ARROW_RETURN_NOT_OK(reader->ReadTable(&table));
-        std::cout << "[DataReader] Read entire table" << std::endl;
-        return table;
-    }
-
     std::filesystem::path DataReader::getDatasetPath(const std::filesystem::path &folder, const std::string &datasetName,
                                          const std::string &partitioningScheme){
         return folder / datasetName / partitioningScheme / (datasetName + common::Settings::fileExtension);
@@ -100,30 +94,6 @@ namespace storage {
         ARROW_RETURN_NOT_OK(reader->GetRecordBatchReader(&recordBatchReader));
         std::cout << "[DataReader] Obtained record batch reader" << std::endl;
         return recordBatchReader;
-    }
-
-    arrow::Result<std::vector<std::shared_ptr<arrow::Array>>>
-    DataReader::getColumnsOld(const std::shared_ptr<arrow::Table> &table, const std::vector<std::string> &columns) {
-        if (table == nullptr){
-            throw std::invalid_argument("Cannot getColumns from empty table");
-        }
-        std::vector<arrow::compute::InputType> inputTypes;
-        std::vector<std::shared_ptr<arrow::Array>> columnData;
-        for (const auto &column: columns){
-            // Infer the data types of the columns
-            auto columnByName = table->schema()->GetFieldByName(column);
-            if (columnByName == nullptr){
-                throw std::invalid_argument("Column with name <" + column + "> could not be loaded, check the column name");
-            }
-            auto columnType = columnByName->type();
-            std::cout << "Reading column <" << column << "> of type " << columnType->ToString() << std::endl;
-            inputTypes.emplace_back(columnType);
-            // Extract column data by getting the chunks and casting them to an arrow array
-            auto chunkedColumn = table->GetColumnByName(column);
-            auto chunk = chunkedColumn->chunk(0);
-            columnData.emplace_back(chunk);
-        }
-        return columnData;
     }
 
     arrow::Result<std::vector<std::shared_ptr<arrow::ChunkedArray>>> DataReader::getColumns(const std::vector<std::string> &columns){
@@ -178,6 +148,64 @@ namespace storage {
         double maxValue = *std::max_element(std::begin(maxValues), std::end(maxValues));
 
         return std::make_pair(minValue, maxValue);
+    }
+
+    arrow::Result<double_t> DataReader::getMedian(const std::string &columnName){
+
+        duckdb::DuckDB db(nullptr);
+        duckdb::Connection con(db);
+
+        std::string datasetFilePath = getReaderPath();
+
+        // Load parquet file into memory and sort it
+        std::string loadQuery = "CREATE TABLE tbl AS "
+                                "SELECT * FROM read_parquet('" + datasetFilePath + "') "
+                                "ORDER BY '" + columnName + "'";
+        auto loadQueryResult = con.Query(loadQuery);
+
+        // Extract median rows
+        auto numRows = getNumRows();
+        auto limit = (numRows % 2 == 0) ? 2 : 1;
+
+        std::string limitQuery = "SELECT AVG(" + columnName + ") "
+                                 "FROM tbl "
+                                 "LIMIT " + std::to_string(limit) +
+                                 "OFFSET " + std::to_string(numRows / 2) + " )";
+
+        auto limitQueryResult = con.Query(limitQuery);
+
+        double medianValue;
+
+        for (const auto &row : *limitQueryResult) {
+            medianValue = row.GetValue<double>(0);
+        }
+
+        return medianValue;
+    }
+
+    arrow::Status DataReader::rangeFilter(const std::string &columnName,
+                                          const std::filesystem::path &destinationFile,
+                                          const std::pair<double, double> range){
+
+        duckdb::DuckDB db(nullptr);
+        duckdb::Connection con(db);
+
+        std::string datasetFilePath = getReaderPath();
+
+        // Load parquet file into memory and sort it
+        std::string loadQuery = "CREATE TABLE tbl AS "
+                                "SELECT * FROM read_parquet('" + datasetFilePath + "')";
+        auto loadQueryResult = con.Query(loadQuery);
+
+        // Apply filter
+        std::string filterQuery = "COPY (SELECT * "
+                                  "      FROM tbl "
+                                  "      WHERE " + columnName + " >= " + std::to_string(range.first) + " AND "
+                                                 + columnName + " <= " + std::to_string(range.second) + ") "
+                                  "TO '" + destinationFile.string() + ".parquet' (FORMAT PARQUET)";;
+        auto filterQueryResult = con.Query(filterQuery);
+
+        return arrow::Status::OK();
     }
 
 } // storage
