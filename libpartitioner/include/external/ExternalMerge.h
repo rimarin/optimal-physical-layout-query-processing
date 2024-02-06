@@ -302,6 +302,7 @@ namespace external {
             // Load parquet files from folder into memory and sort it
             std::string loadQuery = "CREATE TABLE tbl AS SELECT * FROM read_parquet('" + folder.string() + "/*.parquet') ORDER BY " + columnName;
             auto loadQueryResult = con.Query(loadQuery);
+            std::cout << "Loaded table into memory for folder " << folder.string() << std::endl;
 
             // Get total size
             std::string sizeQuery = "SELECT COUNT(*) FROM tbl";
@@ -324,11 +325,13 @@ namespace external {
             size_t offset = 0;
             while (totalSize > 0){
                 // Write table to disk, partition-sized blocks
+                std::string exportedFile = folder.string() + "/m" + std::to_string(index) + ".parquet";
                 std::string exportQuery = "COPY (SELECT * FROM tbl "
                                           "      LIMIT " + std::to_string(partitionSize) +
                                           "      OFFSET " + std::to_string(offset) + " )"
-                                          "TO '" + folder.string() + "/m" + std::to_string(index) + ".parquet' (FORMAT PARQUET)";
+                                          "TO '" + exportedFile + "' (FORMAT PARQUET)";
                 auto exportQueryResult = con.Query(exportQuery);
+                std::cout << "Written to disk " << exportedFile << std::endl;
                 offset += partitionSize;
                 if (totalSize < partitionSize){
                      break;

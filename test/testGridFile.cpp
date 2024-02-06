@@ -67,10 +67,10 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFileTPCH){
 }
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFileTaxi){
-    // GTEST_SKIP();
+    GTEST_SKIP();
     auto folder = ExperimentsConfig::gridFileFolder;
     auto dataset = getDatasetPath(ExperimentsConfig::datasetTaxi);
-    auto partitionSize = 100000;
+    auto partitionSize = 500000;
     auto numTotalRows = 8760687;
     cleanUpFolder(folder);
     std::vector<std::string> partitioningColumns = {"PULocationID", "DOLocationID"};
@@ -83,14 +83,14 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFileTaxi){
     auto fileCount = folderResults.first;
     auto partitionsTotalRows = folderResults.second;
     ASSERT_EQ(numTotalRows, partitionsTotalRows);
-    // ASSERT_EQ(fileCount, 16);
+    ASSERT_EQ(fileCount, 31);
 }
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFileOSM){
     GTEST_SKIP();
     auto folder = ExperimentsConfig::gridFileFolder;
     auto dataset = getDatasetPath(ExperimentsConfig::datasetOSM);
-    auto partitionSize = 50000;
+    auto partitionSize = 500000;
     auto numTotalRows = 7120245;
     cleanUpFolder(folder);
     std::vector<std::string> partitioningColumns = {"min_lon", "max_lon"};
