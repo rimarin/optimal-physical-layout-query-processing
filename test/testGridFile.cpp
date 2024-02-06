@@ -37,12 +37,11 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFileCities){
     auto partitioning = partitioning::PartitioningFactory::create(partitioning::GRID_FILE, dataReader, partitioningColumns, partitionSize, folder);
     ASSERT_EQ(partitioning->partition(), arrow::Status::OK());
     ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("0" + fileExtension), "city", std::vector<std::string>({"Oslo"})), arrow::Status::OK());
-    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("1" + fileExtension), "city", std::vector<std::string>({"Moscow"})), arrow::Status::OK());
-    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("2" + fileExtension), "city", std::vector<std::string>({"Amsterdam", "Madrid"})), arrow::Status::OK());
-    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("3" + fileExtension), "city", std::vector<std::string>({"Dublin", "Copenhagen"})), arrow::Status::OK());
-    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("4" + fileExtension), "city", std::vector<std::string>({"Tallinn"})), arrow::Status::OK());
-    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("5" + fileExtension), "city", std::vector<std::string>({"Berlin"})), arrow::Status::OK());
-    ASSERT_EQ(std::filesystem::exists(folder / ("6" + fileExtension)), false);
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("1" + fileExtension), "city", std::vector<std::string>({"Dublin", "Copenhagen"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("2" + fileExtension), "city", std::vector<std::string>({"Moscow"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("3" + fileExtension), "city", std::vector<std::string>({"Amsterdam", "Madrid"})), arrow::Status::OK());
+    ASSERT_EQ(checkPartition<arrow::StringArray>(folder / ("4" + fileExtension), "city", std::vector<std::string>({"Tallinn", "Berlin"})), arrow::Status::OK());
+    ASSERT_EQ(std::filesystem::exists(folder / ("5" + fileExtension)), false);
 }
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFileTPCH){
@@ -68,10 +67,10 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFileTPCH){
 }
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningGridFileTaxi){
-    GTEST_SKIP();
+    // GTEST_SKIP();
     auto folder = ExperimentsConfig::gridFileFolder;
     auto dataset = getDatasetPath(ExperimentsConfig::datasetTaxi);
-    auto partitionSize = 20000;
+    auto partitionSize = 50000;
     auto numTotalRows = 8760687;
     cleanUpFolder(folder);
     std::vector<std::string> partitioningColumns = {"PULocationID", "DOLocationID"};
