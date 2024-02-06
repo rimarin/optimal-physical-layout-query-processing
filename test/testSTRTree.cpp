@@ -79,14 +79,14 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningSTRTreeTPCH){
     auto fileCount = folderResults.first;
     auto partitionsTotalRows = folderResults.second;
     ASSERT_EQ(numTotalRows, partitionsTotalRows);
-    ASSERT_EQ(fileCount, 28);
+    ASSERT_EQ(fileCount, 21);
 }
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningSTRTreeTPCH10){
-    GTEST_SKIP();
+    // GTEST_SKIP();
     auto folder = ExperimentsConfig::strTreeFolder;
     auto dataset = getDatasetPath(ExperimentsConfig::datasetTPCH10);
-    auto partitionSize = 20000;
+    auto partitionSize = 100000;
     auto numTotalRows = 2398579;
     cleanUpFolder(folder);
     std::vector<std::string> partitioningColumns = {"c_custkey", "l_orderkey"};

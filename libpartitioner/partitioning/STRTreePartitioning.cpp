@@ -65,13 +65,9 @@ namespace partitioning {
             return arrow::Status::OK();
         }
 
-        // Read the table in batches
-        uint32_t batchId = 0;
-        uint32_t totalNumRows = 0;
-
         // Update readers for current file
         std::ignore = dataReader->load(datasetFile);
-        auto currentBatchReader = dataReader->getBatchReader().ValueOrDie();
+        auto numRows = dataReader->getNumRows();
 
         // Extract partition id from the file name
         std::string filename = datasetFile.filename();
@@ -84,35 +80,20 @@ namespace partitioning {
         if (!std::filesystem::exists(subFolder)) {
             std::filesystem::create_directory(subFolder);
         }
+        // Copy current file to sub folder, where it will be split
+        std::filesystem::path source = dataReader->getReaderPath();
+        std::filesystem::path destination = subFolder / "0.parquet";
+        std::filesystem::copy(source, destination, std::filesystem::copy_options::overwrite_existing);
 
         // Determine column index
         columnIndex = columnIndex % k;
         std::string columnName = columns.at(columnIndex);
 
-        // Load and sort batches
-        while (true) {
-
-            // Try to load a new batch, when possible
-            std::shared_ptr<arrow::RecordBatch> recordBatch;
-            ARROW_RETURN_NOT_OK(currentBatchReader->ReadNext(&recordBatch));
-            if (recordBatch == nullptr) {
-                break;
-            }
-
-            // Write out a sorted batch
-            std::filesystem::path sortedBatchPath = subFolder / ("s" + std::to_string(batchId) + fileExtension);
-            ARROW_RETURN_NOT_OK(external::ExternalSort::writeSortedBatch(recordBatch, columnName, sortedBatchPath));
-            std::cout << "[STRTreePartitioning] Batch " << batchId << " completed" << std::endl;
-            std::cout << "[STRTreePartitioning] Imported " << totalNumRows << " out of " << numRows << " rows" << std::endl;
-            batchId += 1;
-            totalNumRows += recordBatch->num_rows();
-        }
-
         // Update the slice size and the column index
-        sliceSize = std::ceil(totalNumRows / S);
+        sliceSize = std::max(std::ceil(numRows / S), (double) 1);
 
-        // Merge the files to create sorted partitions
-        ARROW_RETURN_NOT_OK(external::ExternalMerge::mergeFilesFromSortedBatches(subFolder, columnName, sliceSize));
+        // Sort-merge the files to create sorted partitions
+        ARROW_RETURN_NOT_OK(external::ExternalMerge::sortMergeFiles(subFolder, columnName, sliceSize));
         std::cout << "[STRTreePartitioning] Merged batches with sliceSize " << sliceSize << " and column name "
                   << columnName << std::endl;
 
