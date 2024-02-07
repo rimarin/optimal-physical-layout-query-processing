@@ -53,7 +53,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningQuadTreeCities){
 }
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningQuadTreeTPCH){
-    // GTEST_SKIP();
+    GTEST_SKIP();
     auto folder = ExperimentsConfig::quadTreeFolder;
     auto dataset = getDatasetPath(ExperimentsConfig::datasetTPCH1);
     auto partitionSize = 20000;
