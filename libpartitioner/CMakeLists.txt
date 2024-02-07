@@ -58,8 +58,11 @@ if(NOT duckdb_POPULATED)
     add_subdirectory(${duckdb_SOURCE_DIR} ${duckdb_BINARY_DIR})
 endif()
 
-set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=address")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+target_compile_options(duckdb PRIVATE -fsanitize=address)
+target_link_options(duckdb PRIVATE -fsanitize=address)
+
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 
 include_directories(common/)
 include_directories(include/)
