@@ -80,7 +80,6 @@ namespace structures
 
         int interleaveBits(coord_t* X, int b, int n) // Position, #bits, dimension
         {
-            unsigned int codex = 0, codey = 0, codez = 0;
             unsigned int code[n];
 
             for (int i = 0; i < n; ++i) {
@@ -93,9 +92,6 @@ namespace structures
                 for (int j = 0; j < n; j++){
                     code[j] |= (unsigned int)(X[j] & andbit) << i;
                 }
-                codex |= (unsigned int)(X[0] & andbit) << i;
-                codey |= (unsigned int)(X[1] & andbit) << i;
-                codez |= (unsigned int)(X[2] & andbit) << i;
             }
 
             unsigned int result = 0;
