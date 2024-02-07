@@ -17,7 +17,6 @@ namespace partitioning {
 
         // Initialize the reader, slice size and column index
         auto datasetFile = folder / ("0" + fileExtension);
-        size_t sliceSize = numRows;
         uint32_t columnIndex = 0;
 
         // Call the recursive partitioning method
