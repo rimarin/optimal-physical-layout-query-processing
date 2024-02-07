@@ -138,8 +138,20 @@ namespace storage {
         std::vector<double> maxValues;
 
         for (const auto &row : *results) {
-            auto currentMin = row.GetValue<double>(0);
-            auto currentMax = row.GetValue<double>(1);
+            double currentMin;
+            double currentMax;
+            // TODO: check column type int96 instead of name of column
+            // int96/timestamp and parquet are not a good match, see
+            // https://issues.apache.org/jira/browse/PARQUET-840
+            if (columnName == "created_at" ||
+                columnName == "tpep_pickup_datetime" ||
+                columnName == "tpep_dropoff_datetime") {
+                currentMin = 0;
+                currentMax = 4294967295;
+            } else{
+                currentMin = row.GetValue<double>(0);
+                currentMax = row.GetValue<double>(1);
+            }
             minValues.emplace_back(currentMin);
             maxValues.emplace_back(currentMax);
         }
