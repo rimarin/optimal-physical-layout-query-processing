@@ -48,9 +48,12 @@ target_include_directories(
 
 FetchContent_Declare(duckdb
         GIT_REPOSITORY https://github.com/duckdb/duckdb.git
-        GIT_TAG        main
+        GIT_TAG        v0.9.2
         OVERRIDE_FIND_PACKAGE
 )
+set(ENABLE_SANITIZER
+        OFF
+        CACHE INTERNAL "Disable ASAN")
 FetchContent_MakeAvailable(duckdb)
 FetchContent_GetProperties(duckdb)
 if(NOT duckdb_POPULATED)
