@@ -325,7 +325,7 @@ namespace external {
             size_t offset = 0;
             while (totalSize > 0){
                 // Write table to disk, partition-sized blocks
-                std::string exportedFile = folder.string() + "/m" + std::to_string(index) + ".parquet";
+                std::string exportedFile = folder.string() + "/" + std::to_string(index) + ".parquet";
                 std::string exportQuery = "COPY (SELECT * FROM tbl "
                                           "      LIMIT " + std::to_string(partitionSize) +
                                           "      OFFSET " + std::to_string(offset) + " )"

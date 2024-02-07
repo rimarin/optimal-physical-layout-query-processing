@@ -78,11 +78,11 @@ TEST_F(TestOptimalLayoutFixture, TestExternalMergeSortDuckDB) {
     ASSERT_EQ(storage::DataWriter::WriteTableToDisk(part3, dataset3), arrow::Status::OK());
     ASSERT_EQ(storage::DataWriter::WriteTableToDisk(part4, dataset4), arrow::Status::OK());
     ASSERT_EQ(external::ExternalMerge::sortMergeFiles(mergeFolder, "city", partitionSize), arrow::Status::OK());
-    ASSERT_EQ(std::filesystem::exists(mergeFolder / ("m0" + fileExtension)), true);
-    ASSERT_EQ(std::filesystem::exists(mergeFolder / ("m1" + fileExtension)), true);
-    ASSERT_EQ(std::filesystem::exists(mergeFolder / ("m2" + fileExtension)), true);
-    ASSERT_EQ(std::filesystem::exists(mergeFolder / ("m3" + fileExtension)), true);
-    ASSERT_EQ(std::filesystem::exists(mergeFolder / ("m4" + fileExtension)), false);
-    ASSERT_EQ(std::filesystem::exists(mergeFolder / ("0" + fileExtension)), false);
-    ASSERT_EQ(std::filesystem::exists(mergeFolder / ("3" + fileExtension)), false);
+    ASSERT_EQ(std::filesystem::exists(mergeFolder / ("0" + fileExtension)), true);
+    ASSERT_EQ(std::filesystem::exists(mergeFolder / ("1" + fileExtension)), true);
+    ASSERT_EQ(std::filesystem::exists(mergeFolder / ("2" + fileExtension)), true);
+    ASSERT_EQ(std::filesystem::exists(mergeFolder / ("3" + fileExtension)), true);
+    ASSERT_EQ(std::filesystem::exists(mergeFolder / ("4" + fileExtension)), false);
+    ASSERT_EQ(std::filesystem::exists(mergeFolder / ("5" + fileExtension)), false);
+    ASSERT_EQ(std::filesystem::exists(mergeFolder / ("6" + fileExtension)), false);
 }

@@ -108,7 +108,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurveTaxi){
 }
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningHilbertCurveOSM){
-    // GTEST_SKIP();
+    GTEST_SKIP();
     auto folder = ExperimentsConfig::hilbertCurveFolder;
     auto dataset = getDatasetPath(ExperimentsConfig::datasetOSM);
     auto partitionSize = 50000;

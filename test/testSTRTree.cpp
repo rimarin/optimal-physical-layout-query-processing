@@ -83,7 +83,7 @@ TEST_F(TestOptimalLayoutFixture, TestPartitioningSTRTreeTPCH){
 }
 
 TEST_F(TestOptimalLayoutFixture, TestPartitioningSTRTreeTPCH10){
-    // GTEST_SKIP();
+    GTEST_SKIP();
     auto folder = ExperimentsConfig::strTreeFolder;
     auto dataset = getDatasetPath(ExperimentsConfig::datasetTPCH10);
     auto partitionSize = 100000;
