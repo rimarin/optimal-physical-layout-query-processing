@@ -48,7 +48,7 @@ target_include_directories(
 
 FetchContent_Declare(duckdb
         GIT_REPOSITORY https://github.com/duckdb/duckdb.git
-        GIT_TAG        v0.9.2
+        GIT_TAG        main
         OVERRIDE_FIND_PACKAGE
 )
 set(ENABLE_SANITIZER
@@ -60,12 +60,6 @@ if(NOT duckdb_POPULATED)
     FetchContent_Populate(duckdb)
     add_subdirectory(${duckdb_SOURCE_DIR} ${duckdb_BINARY_DIR})
 endif()
-
-target_compile_options(duckdb PRIVATE -fsanitize=address)
-target_link_options(duckdb PRIVATE -fsanitize=address)
-
-set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
-set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 
 include_directories(common/)
 include_directories(include/)
