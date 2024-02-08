@@ -329,7 +329,7 @@ namespace external {
                 std::string exportQuery = "COPY (SELECT * FROM tbl "
                                           "      LIMIT " + std::to_string(partitionSize) +
                                           "      OFFSET " + std::to_string(offset) + " )"
-                                          "TO '" + exportedFile + "' (FORMAT PARQUET)";
+                                          "TO '" + exportedFile + "' (FORMAT PARQUET, COMPRESSION SNAPPY, ROW_GROUP_SIZE 100000)";
                 auto exportQueryResult = con.Query(exportQuery);
                 std::cout << "Written to disk " << exportedFile << std::endl;
                 offset += partitionSize;

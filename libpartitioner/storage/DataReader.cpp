@@ -214,7 +214,7 @@ namespace storage {
                                   "      FROM tbl "
                                   "      WHERE " + columnName + " >= " + std::to_string(range.first) + " AND "
                                                  + columnName + " <= " + std::to_string(range.second) + ") "
-                                  "TO '" + destinationFile.string() + ".parquet' (FORMAT PARQUET)";;
+                                  "TO '" + destinationFile.string() + ".parquet' (FORMAT PARQUET, COMPRESSION SNAPPY, ROW_GROUP_SIZE 131072)";;
         auto filterQueryResult = con.Query(filterQuery);
 
         return arrow::Status::OK();

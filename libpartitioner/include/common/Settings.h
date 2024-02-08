@@ -8,8 +8,8 @@ namespace common {
     struct Settings{
         inline static const std::string fileExtension = ".parquet";
         inline static const std::string libraryName = "Optimal Layout Partitioner";
-        inline static const size_t batchSize = 64 * 1024;
-        // Matching row group size and batch size, = 65536
+        inline static const size_t batchSize = 64 * 1024 * 2;
+        // Matching row group size and batch size = 131072
         inline static const int64_t rowGroupSize = batchSize;
         inline static const size_t bufferSize = 4096 * 4;
         inline static const parquet::ParquetVersion::type version = parquet::ParquetVersion::PARQUET_2_6;

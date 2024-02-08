@@ -55,6 +55,9 @@ namespace partitioning {
         // Merge the files to create globally sorted partitions
         ARROW_RETURN_NOT_OK(external::ExternalMerge::mergeFilesFromSortedBatches(folder, "cell_idx", partitionSize));
         std::cout << "[FixedGridPartitioning] Partitioning of " << batchId << " batches completed" << std::endl;
+
+        deleteSubfolders();
+
         return arrow::Status::OK();
     }
 

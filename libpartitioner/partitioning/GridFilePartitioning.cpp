@@ -110,7 +110,7 @@ namespace partitioning {
                                   "      FROM tbl "
                                   "      WHERE " + columnName + " >= " + std::to_string(minValue) + " AND "
                                                  + columnName + " <= " + std::to_string(midValue) + ") "
-                                  "TO '" + destinationFile1.string() + "' (FORMAT PARQUET)";
+                                  "TO '" + destinationFile1.string() + "' (FORMAT PARQUET, COMPRESSION SNAPPY, ROW_GROUP_SIZE 131072)";
         auto filterQueryResult1 = con.Query(filterQuery1);
 
         auto dimensionRanges2 = dimensionRanges;
@@ -121,7 +121,7 @@ namespace partitioning {
                                    "      FROM tbl "
                                    "      WHERE " + columnName + " > " + std::to_string(midValue) + " AND "
                                                   + columnName + " <= " + std::to_string(maxValue) + ") "
-                                   "TO '" + destinationFile2.string() + "' (FORMAT PARQUET)";
+                                   "TO '" + destinationFile2.string() + "' (FORMAT PARQUET, COMPRESSION SNAPPY, ROW_GROUP_SIZE 131072)";
         auto filterQueryResult2 = con.Query(filterQuery2);
 
         computeLinearScales(destinationFile1, depth + 1, dimensionRanges1);
