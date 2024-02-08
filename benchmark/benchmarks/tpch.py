@@ -109,7 +109,8 @@ class BenchmarkTPCH(Benchmark):
 
         # Export the entire table to a parquet file
         database_file = os.path.join(self.get_dataset_folder(), 'tpch.parquet')
-        duckdb.sql(f'COPY (SELECT * FROM lineitem_denorm) TO \'{database_file}\' (FORMAT PARQUET)')
+        duckdb.sql(f'COPY (SELECT * FROM lineitem_denorm) TO \'{database_file}\''
+                   f'(FORMAT PARQUET, COMPRESSION SNAPPY, ROW_GROUP_SIZE 100000)')
         self.total_rows = len(duckdb.sql(f'SELECT * FROM lineitem_denorm'))
 
     def generate_queries(self):
