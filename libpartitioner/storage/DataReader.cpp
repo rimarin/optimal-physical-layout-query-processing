@@ -1,11 +1,12 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
+#include <time.h>
 
 #include <arrow/compute/kernel.h>
 #include <arrow/filesystem/localfs.h>
-#include <arrow/io/api.h>
 
+#include <arrow/io/api.h>
 #include <parquet/arrow/reader.h>
 #include "storage/DataReader.h"
 
@@ -143,12 +144,26 @@ namespace storage {
             // TODO: check column type int96 instead of name of column
             // int96/timestamp and parquet are not a good match, see
             // https://issues.apache.org/jira/browse/PARQUET-840
-            if (columnName == "created_at" ||
-                columnName == "tpep_pickup_datetime" ||
+            if (columnName == "tpep_pickup_datetime" ||
                 columnName == "tpep_dropoff_datetime") {
+
+                std::string sMin{row.GetValue<std::string>(0)};
+                std::string sMax{row.GetValue<std::string>(1)};
+                std::tm tMin{};
+                std::tm tMax{};
+                std::istringstream ssMin(sMin);
+                std::istringstream ssMax(sMax);
+
+                ssMin >> std::get_time(&tMin, "%Y-%m-%d %H:%M:%S");
+                ssMax >> std::get_time(&tMax, "%Y-%m-%d %H:%M:%S");
+
+                currentMin = mktime(&tMin);
+                currentMax = mktime(&tMax);
+            } else if (columnName == "created_at"){
                 currentMin = 0;
                 currentMax = 4294967295;
-            } else{
+            }
+            else{
                 currentMin = row.GetValue<double>(0);
                 currentMax = row.GetValue<double>(1);
             }
