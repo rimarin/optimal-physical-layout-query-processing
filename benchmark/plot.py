@@ -48,6 +48,10 @@ df_selectivity = df.groupby(['selectivity', 'partitioning']).agg({'latency_avg':
 effects = ['selectivity', 'partition_size', 'num_partitioning_columns']
 metrics = ['latency_avg', 'scan_ratio']
 
+aggregates = {}
+for metric in metrics:
+    aggregates[metric] = 'mean'
+
 # Figure 1: latency by dataset for all schemes: bar plot
 impact_scheme = make_subplots(rows=2, cols=1, column_titles=DATASETS,
                               x_title='Scheme', shared_yaxes=True, shared_xaxes=True)
@@ -73,18 +77,27 @@ impact_column_match = make_subplots(rows=2, cols=len(DATASETS), column_titles=DA
                                     x_title='Ratio matching columns (partitioning columns / predicate columns) '
                                             'of partitioning columns', shared_yaxes=True, shared_xaxes=True)
 impact_column_match.update_layout(title='Impact of column match ratio')
-
-# TODO
-# Figure X: latency by dataset for all schemes at selectivity = 0.001
-# Figure X: latency by dataset for all schemes at selectivity = 0.01
-# Figure X: latency by dataset for all schemes at selectivity = 0.1
+# Figure 7: latency by dataset for all schemes with workload type: bar plot
+impact_workload = make_subplots(rows=2, cols=len(DATASETS), column_titles=DATASETS,
+                                x_title='Workload type', shared_yaxes=True, shared_xaxes=True)
+impact_workload.update_layout(title='Impact of workload type')
+# Figure 8: latency by dataset for column combinations
+df['used_columns'] = df['used_columns'].apply(tuple)
+df['partitioning_columns'] = df['partitioning_columns'].apply(tuple)
+df_group_by_columns = df.groupby(['dataset', 'partitioning', 'num_used_columns', 'num_partitioning_columns']).agg(
+    aggregates).reset_index()
+impact_columns_latency = px.bar(df_group_by_columns, x="dataset", y="latency_avg", facet_col="num_partitioning_columns",
+                                facet_row="num_used_columns", color="partitioning", labels=PARTITIONINGS,
+                                barmode='group', category_orders={'partitioning': sorted(df['partitioning'].unique())},
+                                title=f'Impact of the columns combination on latency')
+impact_columns_scan_ratio = px.bar(df_group_by_columns, x="dataset", y="scan_ratio", facet_col="num_partitioning_columns",
+                                   facet_row="num_used_columns", color="partitioning", labels=PARTITIONINGS,
+                                   barmode='group',
+                                   category_orders={'partitioning': sorted(df['partitioning'].unique())},
+                                   title=f'Impact of the columns combination on scan ratio')
 
 plots = [impact_scheme, impact_partition_size, impact_selectivity, impact_dataset_size,
-         impact_num_columns, impact_column_match]
-
-aggregates = {}
-for metric in metrics:
-    aggregates[metric] = 'mean'
+         impact_num_columns, impact_column_match, impact_workload, impact_columns_latency, impact_columns_scan_ratio]
 
 # Figure 1: latency by dataset for all schemes: bar plot
 df_scheme = df.groupby(['partitioning', 'dataset']).agg(aggregates).reset_index()
