@@ -22,12 +22,18 @@ df.columns = df.columns.str.strip()
 df = df[df.latency_avg != 0]
 df['used_partitions'] = df[['used_partitions', 'total_partitions']].min(axis=1)
 # Set a fixed (optimal) partition size
-# df = df[df['partition_size'] == 50000]
+# df = df[df['partition_size'] == 100000]
 # Convert latency to milliseconds
 df['latency_avg'] = df['latency_avg'] * 1000
 
 # Compute additional information
 df['scan_ratio'] = (df['used_partitions'] / df['total_partitions']) * 100
+
+# Compute workload type
+df['workload_type'] = pd.Series(index=df.index)
+df.loc[df['num_used_columns'] > df['num_partitioning_columns'], 'workload_type'] = "A"
+df.loc[df['num_used_columns'] == df['num_partitioning_columns'], 'workload_type'] = "B"
+df.loc[df['num_used_columns'] < df['num_partitioning_columns'], 'workload_type'] = "C"
 
 df['column_match'] = [list(set(a).intersection(set(b)))
                       for a, b in zip(df['partitioning_columns'], df['used_columns'])]
@@ -179,6 +185,17 @@ for i, dataset in enumerate(DATASETS):
         for trace in range(len(sub_plot["data"])):
             impact_column_match.add_trace(sub_plot["data"][trace], row=y + 1, col=i + 1)
             impact_column_match.update_yaxes(title_text=metric, type="log", row=y + 1, col=1)
+    # Figure 7: latency by dataset for all schemes with workload type: bar plot
+    df_group_by_workload = df.groupby(['workload_type', 'partitioning', 'dataset']).agg(aggregates).reset_index()
+    for y, metric in enumerate(metrics):
+        sub_plot = px.bar(df_group_by_workload, x="workload_type", y=metric, color="partitioning",
+                          labels=PARTITIONINGS, barmode='group',
+                          category_orders={'partitioning': sorted(df['partitioning'].unique())},
+                          title=f'[{df}] Impact of the workload type on the {metric}').update_layout(
+            yaxis_title=metric)
+        for trace in range(len(sub_plot["data"])):
+            impact_workload.add_trace(sub_plot["data"][trace], row=y + 1, col=i + 1)
+            impact_workload.update_yaxes(title_text=metric, type="log", row=y + 1, col=i + 1)
 
 
 def export_images():
