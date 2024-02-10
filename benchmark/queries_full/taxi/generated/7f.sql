@@ -1,6 +1,6 @@
 -- Q7
 SELECT *
-FROM read_parquet('/home/brancaleone/Projects/optimal-physical-layout-query-processing/benchmark/datasets/taxi/trips*.parquet') where PULocationID > 59.29564685122759 AND PULocationID < 227.73011873227443 AND
+FROM read_parquet('/home/brancaleone/Projects/optimal-physical-layout-query-processing/benchmark/datasets/taxi/*.parquet') where PULocationID > 59.29564685122759 AND PULocationID < 227.73011873227443 AND
       DOLocationID > 154.88493382864584 AND DOLocationID < 242.14159475970317
 AND tpep_pickup_datetime > '2018050109:36:13' AND
     tpep_pickup_datetime < '2019100110:48:08' AND
