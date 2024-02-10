@@ -96,6 +96,9 @@ int main(int argc, char **argv) {
             std::cout << "[Partitioner] Incorrect, number of rows do not match";
             std::cout << "[Partitioner] Expected " << datasetNumRows << " rows and found " << partitionsTotalRows;
         }
+        else{
+            std::cout << "[Partitioner] Good, at the least the number of rows match";
+        }
     }
 
     return 0;
