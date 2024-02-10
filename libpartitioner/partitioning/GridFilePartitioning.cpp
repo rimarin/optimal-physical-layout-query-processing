@@ -59,6 +59,7 @@ namespace partitioning {
                                                    const std::vector<std::pair<double, double>> &dimensionRanges) {
 
         // Base case: reached partition size
+        std::cout << "Computing linear scales, depth " << depth << std::endl;
         std::ignore = dataReader->load(partitionFile);
         auto currentNumRows = dataReader->getNumRows();;
         if (currentNumRows <= cellCapacity){
@@ -84,9 +85,16 @@ namespace partitioning {
         // Find mid-point
         uint32_t columnIndex = depth % numColumns;
         std::string columnName = columns.at(columnIndex);
-        double minValue = dimensionRanges.at(columnIndex).first;
-        double maxValue = dimensionRanges.at(columnIndex).second;
-        double midValue = (maxValue + minValue) / 2;
+        double minValue;
+        double maxValue;
+        double midValue;
+        auto dimensionRanges1 = dimensionRanges;
+        auto dimensionRanges2 = dimensionRanges;
+        std::cout << "[GridFilePartitioning] Preparing split on column " << columnName << std::endl;
+        minValue = dimensionRanges.at(columnIndex).first;
+        maxValue = dimensionRanges.at(columnIndex).second;
+        midValue = (maxValue + minValue) / 2;
+        std::cout << "[GridFilePartitioning] Splitting left branch on mid value " << midValue << std::endl;
 
         // Split and recurse
         // Setup DuckDB
@@ -102,25 +110,70 @@ namespace partitioning {
         auto loadQueryResult = con.Query(loadQuery);
 
         // Apply filter
-        auto dimensionRanges1 = dimensionRanges;
+        std::string whereClause;
+        auto destinationFile1 = subFolder / ("0" + fileExtension);
+        minValue = dimensionRanges.at(columnIndex).first;
+        maxValue = dimensionRanges.at(columnIndex).second;
+        midValue = (maxValue + minValue) / 2;
         dimensionRanges1.at(columnIndex).first = minValue;
         dimensionRanges1.at(columnIndex).second = midValue;
-        auto destinationFile1 = subFolder / ("0" + fileExtension);
+        // TODO: refactor this horrible patch
+        if (columnName == "tpep_pickup_datetime" ||
+            columnName == "tpep_dropoff_datetime" ||
+            columnName == "created_at"){
+            time_t minValueT = (int) minValue;
+            time(&minValueT);
+            std::stringstream ssMin;
+            ssMin << minValueT;
+            std::string minValueTS = ssMin.str();
+
+            time_t midValueT = (int) midValue;
+            time(&midValueT);
+            std::stringstream ssMid;
+            ssMid << midValueT;
+            std::string midValueTS = ssMid.str();
+            whereClause = "      WHERE " + columnName + " >= " + minValueTS + " AND "
+                                         + columnName + " <= " + midValueTS + ") ";
+        }
+        else{
+            whereClause = "      WHERE " + columnName + " >= " + std::to_string(minValue) + " AND "
+                                         + columnName + " <= " + std::to_string(midValue) + ") ";
+        }
         std::string filterQuery1 = "COPY (SELECT * "
-                                  "      FROM tbl "
-                                  "      WHERE " + columnName + " >= " + std::to_string(minValue) + " AND "
-                                                 + columnName + " <= " + std::to_string(midValue) + ") "
-                                  "TO '" + destinationFile1.string() + "' (FORMAT PARQUET, COMPRESSION SNAPPY, ROW_GROUP_SIZE 131072)";
+                                   "      FROM tbl " + whereClause +
+                                   "TO '" + destinationFile1.string() + "' (FORMAT PARQUET, COMPRESSION SNAPPY, ROW_GROUP_SIZE 131072)";
         auto filterQueryResult1 = con.Query(filterQuery1);
 
-        auto dimensionRanges2 = dimensionRanges;
+        auto destinationFile2 = subFolder / ("1" + fileExtension);
+        minValue = dimensionRanges.at(columnIndex).first;
+        maxValue = dimensionRanges.at(columnIndex).second;
+        midValue = (maxValue + minValue) / 2;
         dimensionRanges2.at(columnIndex).first = midValue;
         dimensionRanges2.at(columnIndex).second = maxValue;
-        auto destinationFile2 = subFolder / ("1" + fileExtension);
+        // TODO: refactor this horrible patch
+        if (columnName == "tpep_pickup_datetime" ||
+                     columnName == "tpep_dropoff_datetime" ||
+                     columnName == "created_at"){
+            time_t midValueT = (int) midValue;
+            time(&midValueT);
+            std::stringstream ssMid;
+            ssMid << midValueT;
+            std::string midValueTS = ssMid.str();
+
+            time_t maxValueT = (int) maxValue;
+            time(&maxValueT);
+            std::stringstream ssMax;
+            ssMax << maxValueT;
+            std::string maxValueTS = ssMax.str();
+            whereClause = "      WHERE " + columnName + " > " + midValueTS + " AND "
+                                         + columnName + " <= " + maxValueTS + ") ";
+        }
+        else{
+            whereClause = "      WHERE " + columnName + " > " + std::to_string(midValue) + " AND "
+                                         + columnName + " <= " + std::to_string(maxValue) + ") ";
+        }
         std::string filterQuery2 = "COPY (SELECT * "
-                                   "      FROM tbl "
-                                   "      WHERE " + columnName + " > " + std::to_string(midValue) + " AND "
-                                                  + columnName + " <= " + std::to_string(maxValue) + ") "
+                                   "      FROM tbl " + whereClause +
                                    "TO '" + destinationFile2.string() + "' (FORMAT PARQUET, COMPRESSION SNAPPY, ROW_GROUP_SIZE 131072)";
         auto filterQueryResult2 = con.Query(filterQuery2);
 

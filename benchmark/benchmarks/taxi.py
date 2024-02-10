@@ -166,7 +166,7 @@ class BenchmarkTaxi(Benchmark):
 
         for year in years:
             for month in months:
-                filename = os.path.join(self.get_dataset_folder(), f'trips_{year}-{month}.parquet')
+                filename = os.path.join(self.get_dataset_folder(), f'{year}-{month}.parquet')
                 with open(filename, 'wb') as out_file:
                     url = f'https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_{year}-{month}.parquet'
                     print(f'Requesting file: {url}')
