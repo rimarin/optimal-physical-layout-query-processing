@@ -120,7 +120,8 @@ namespace partitioning {
                 columnXExpression = arrow::compute::call("cast",
                                                         {arrow::compute::field_ref(columnX)},
                                                         toInt32);
-            } else if (columnXType->id() == arrow::date64()->id()) {
+            } else if (columnXType->id() == arrow::date64()->id() ||
+                       columnXType->id() == arrow::timestamp(arrow::TimeUnit::MILLI)->id()){
                 columnXExpression = arrow::compute::call("cast",
                                                         {arrow::compute::field_ref(columnX)},
                                                         toInt64);
@@ -135,7 +136,8 @@ namespace partitioning {
                 columnYExpression = arrow::compute::call("cast",
                                                          {arrow::compute::field_ref(columnY)},
                                                          toInt32);
-            } else if (columnYType->id() == arrow::date64()->id()) {
+            } else if (columnYType->id() == arrow::date64()->id() ||
+                       columnYType->id() == arrow::timestamp(arrow::TimeUnit::MILLI)->id()) {
                 columnYExpression = arrow::compute::call("cast",
                                                          {arrow::compute::field_ref(columnY)},
                                                          toInt64);

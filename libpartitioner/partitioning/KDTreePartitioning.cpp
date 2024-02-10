@@ -98,10 +98,11 @@ namespace partitioning {
                 columnExpression = arrow::compute::call("cast",
                                                          {arrow::compute::field_ref(columnName)},
                                                          toInt32);
-            } else if (columnXType->id() == arrow::date64()->id()) {
-                    columnExpression = arrow::compute::call("cast",
-                                                            {arrow::compute::field_ref(columnName)},
-                                                            toInt64);
+            } else if (columnXType->id() == arrow::date64()->id() ||
+                       columnXType->id() == arrow::timestamp(arrow::TimeUnit::MILLI)->id()){
+                columnExpression = arrow::compute::call("cast",
+                                                        {arrow::compute::field_ref(columnName)},
+                                                        toInt64);
             }
             else {
                 columnExpression = arrow::compute::field_ref(columnName);
