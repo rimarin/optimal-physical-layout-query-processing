@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <chrono>
 
 #include "partitioning/GridFilePartitioning.h"
 
@@ -61,7 +62,23 @@ namespace partitioning {
         // Base case: reached partition size
         std::cout << "Computing linear scales, depth " << depth << std::endl;
         std::ignore = dataReader->load(partitionFile);
-        auto currentNumRows = dataReader->getNumRows();;
+        auto currentNumRows = dataReader->getNumRows();
+        if (currentNumRows == 0){
+            return;
+        }
+        if (depth > 150){
+            while(!std::filesystem::exists(partitionFile)){
+                if (partitionFile.parent_path() == "/"){
+                    return;
+                }
+                partitionFile = partitionFile.parent_path().parent_path() / partitionFile.filename().string();
+            }
+            // Rename the processed slice file
+            auto basePath = partitionFile.parent_path();
+            auto renamedDatasetFile = basePath / ("completed" + partitionFile.filename().string());
+            std::filesystem::rename(partitionFile, renamedDatasetFile);
+            return;
+        }
         if (currentNumRows <= cellCapacity){
             // Rename the processed slice file
             auto basePath = partitionFile.parent_path();
@@ -123,13 +140,11 @@ namespace partitioning {
                                              "o_orderdate", "l_shipdate"};
         if (timeColumns.find(columnName) != timeColumns.end()){
 
-            // std::time_t minValueT2 = std::mktime(&minValue);
-
             std::string minValueTS = getTimestamp(minValue);
             std::string midValueTS = getTimestamp(midValue);
 
-            whereClause = "      WHERE " + columnName + " >= " + minValueTS + " AND "
-                                         + columnName + " <= " + midValueTS + ") ";
+            whereClause = "      WHERE " + columnName + " >= '" + minValueTS + "' AND "
+                                         + columnName + " <= '" + midValueTS + "') ";
         }
         else{
             whereClause = "      WHERE " + columnName + " >= " + std::to_string(minValue) + " AND "
@@ -149,8 +164,8 @@ namespace partitioning {
         if (timeColumns.find(columnName) != timeColumns.end()){
             std::string midValueTS = getTimestamp(midValue);
             std::string maxValueTS = getTimestamp(maxValue);
-            whereClause = "      WHERE " + columnName + " > " + midValueTS + " AND "
-                                         + columnName + " <= " + maxValueTS + ") ";
+            whereClause = "      WHERE " + columnName + " > '" + midValueTS + "' AND "
+                                         + columnName + " <= '" + maxValueTS + "') ";
         }
         else{
             whereClause = "      WHERE " + columnName + " > " + std::to_string(midValue) + " AND "
@@ -166,12 +181,13 @@ namespace partitioning {
     }
 
     std::string GridFilePartitioning::getTimestamp(double value) {
-        std::time_t valueT = value;
-        time(&valueT);
-        std::stringstream ss;
-        ss << valueT;
-        std::string valueTS = ss.str();
-        return valueTS;
+        time_t timeValue = std::chrono::system_clock::to_time_t(std::chrono::system_clock::time_point(
+                    std::chrono::duration_cast<std::chrono::seconds>(std::chrono::duration<double>(value))));
+        struct tm tmValue = *gmtime(&timeValue);
+        char buffer[20];
+        strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &tmValue);
+        std::string valueTimestamp1(buffer);
+        return valueTimestamp1;
     }
 
 }
