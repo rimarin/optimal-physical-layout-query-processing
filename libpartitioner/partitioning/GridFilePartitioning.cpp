@@ -67,6 +67,7 @@ namespace partitioning {
             return;
         }
         if (depth > 150){
+            std::cout << "[GridFilePartitioning] Have to stop, we reached excessive depth" << std::endl;
             while(!std::filesystem::exists(partitionFile)){
                 if (partitionFile.parent_path() == "/"){
                     return;
