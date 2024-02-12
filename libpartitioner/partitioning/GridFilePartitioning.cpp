@@ -118,20 +118,16 @@ namespace partitioning {
         dimensionRanges1.at(columnIndex).first = minValue;
         dimensionRanges1.at(columnIndex).second = midValue;
         // TODO: refactor this horrible patch
-        if (columnName == "tpep_pickup_datetime" ||
-            columnName == "tpep_dropoff_datetime" ||
-            columnName == "created_at"){
-            time_t minValueT = (int) minValue;
-            time(&minValueT);
-            std::stringstream ssMin;
-            ssMin << minValueT;
-            std::string minValueTS = ssMin.str();
+        std::set<std::string> timeColumns = {"tpep_pickup_datetime", "tpep_dropoff_datetime",
+                                             "created_at",
+                                             "o_orderdate", "l_shipdate"};
+        if (timeColumns.find(columnName) != timeColumns.end()){
 
-            time_t midValueT = (int) midValue;
-            time(&midValueT);
-            std::stringstream ssMid;
-            ssMid << midValueT;
-            std::string midValueTS = ssMid.str();
+            // std::time_t minValueT2 = std::mktime(&minValue);
+
+            std::string minValueTS = getTimestamp(minValue);
+            std::string midValueTS = getTimestamp(midValue);
+
             whereClause = "      WHERE " + columnName + " >= " + minValueTS + " AND "
                                          + columnName + " <= " + midValueTS + ") ";
         }
@@ -150,21 +146,9 @@ namespace partitioning {
         midValue = (maxValue + minValue) / 2;
         dimensionRanges2.at(columnIndex).first = midValue;
         dimensionRanges2.at(columnIndex).second = maxValue;
-        // TODO: refactor this horrible patch
-        if (columnName == "tpep_pickup_datetime" ||
-                     columnName == "tpep_dropoff_datetime" ||
-                     columnName == "created_at"){
-            time_t midValueT = (int) midValue;
-            time(&midValueT);
-            std::stringstream ssMid;
-            ssMid << midValueT;
-            std::string midValueTS = ssMid.str();
-
-            time_t maxValueT = (int) maxValue;
-            time(&maxValueT);
-            std::stringstream ssMax;
-            ssMax << maxValueT;
-            std::string maxValueTS = ssMax.str();
+        if (timeColumns.find(columnName) != timeColumns.end()){
+            std::string midValueTS = getTimestamp(midValue);
+            std::string maxValueTS = getTimestamp(maxValue);
             whereClause = "      WHERE " + columnName + " > " + midValueTS + " AND "
                                          + columnName + " <= " + maxValueTS + ") ";
         }
@@ -179,6 +163,15 @@ namespace partitioning {
 
         computeLinearScales(destinationFile1, depth + 1, dimensionRanges1);
         computeLinearScales(destinationFile2, depth + 1, dimensionRanges2);
+    }
+
+    std::string GridFilePartitioning::getTimestamp(double value) {
+        std::time_t valueT = value;
+        time(&valueT);
+        std::stringstream ss;
+        ss << valueT;
+        std::string valueTS = ss.str();
+        return valueTS;
     }
 
 }

@@ -43,6 +43,7 @@ namespace partitioning {
         std::vector<std::vector<double>> linearScales;
         size_t cellCapacity;
         std::vector<std::pair<uint32_t, uint32_t>> rowIndexToPartitionId;
+        std::string getTimestamp(double value);
     };
 }
 
