@@ -144,9 +144,10 @@ namespace storage {
             // TODO: check column type int96 instead of name of column
             // int96/timestamp and parquet are not a good match, see
             // https://issues.apache.org/jira/browse/PARQUET-840
-            if (columnName == "tpep_pickup_datetime" ||
-                columnName == "tpep_dropoff_datetime") {
-
+            std::set<std::string> timeColumns = {"tpep_pickup_datetime", "tpep_dropoff_datetime",
+                                                 "created_at",
+                                                 "o_orderdate", "l_shipdate"};
+            if (timeColumns.find(columnName) != timeColumns.end()){
                 std::string sMin{row.GetValue<std::string>(0)};
                 std::string sMax{row.GetValue<std::string>(1)};
                 std::tm tMin{};
@@ -159,9 +160,6 @@ namespace storage {
 
                 currentMin = mktime(&tMin);
                 currentMax = mktime(&tMax);
-            } else if (columnName == "created_at"){
-                currentMin = 0;
-                currentMax = 4294967295;
             }
             else{
                 currentMin = row.GetValue<double>(0);
