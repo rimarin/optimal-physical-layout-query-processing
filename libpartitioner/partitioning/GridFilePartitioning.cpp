@@ -180,6 +180,7 @@ namespace partitioning {
         computeLinearScales(destinationFile2, depth + 1, dimensionRanges2);
     }
 
+    // Trick from https://stackoverflow.com/questions/31000677/convert-double-to-struct-tm
     std::string GridFilePartitioning::getTimestamp(double value) {
         time_t timeValue = std::chrono::system_clock::to_time_t(std::chrono::system_clock::time_point(
                     std::chrono::duration_cast<std::chrono::seconds>(std::chrono::duration<double>(value))));
