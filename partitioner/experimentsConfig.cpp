@@ -1,16 +1,9 @@
+#include <filesystem>
 #include <set>
 #include <string>
+#include <vector>
 
-#include "storage/DataReader.h"
-#include "partitioning/FixedGridPartitioning.h"
-#include "partitioning/GridFilePartitioning.h"
-#include "partitioning/HilbertCurvePartitioning.h"
-#include "partitioning/KDTreePartitioning.h"
-#include "partitioning/NoPartitioning.h"
-#include "partitioning/QuadTreePartitioning.h"
-#include "partitioning/STRTreePartitioning.h"
-#include "partitioning/ZOrderCurvePartitioning.h"
-
+#include "common/Settings.h"
 
 class ExperimentsConfig {
 public:

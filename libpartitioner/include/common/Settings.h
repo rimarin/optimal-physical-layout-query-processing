@@ -1,6 +1,15 @@
 #ifndef COMMON_SETTINGS_H
 #define COMMON_SETTINGS_H
 
+#include <arrow/api.h>
+#include <arrow/compute/api.h>
+#include <arrow/dataset/api.h>
+#include <arrow/io/api.h>
+#include <arrow/result.h>
+#include <arrow/status.h>
+#include <arrow/table.h>
+#include <iostream>
+#include <parquet/arrow/writer.h>
 #include <vector>
 
 namespace common {
