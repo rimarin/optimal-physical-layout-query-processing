@@ -1,7 +1,7 @@
+#include <ctime>
 #include <filesystem>
 #include <iostream>
 #include <string>
-#include <time.h>
 
 #include <arrow/compute/kernel.h>
 #include <arrow/filesystem/localfs.h>
@@ -150,16 +150,18 @@ namespace storage {
             if (timeColumns.find(columnName) != timeColumns.end()){
                 std::string sMin{row.GetValue<std::string>(0)};
                 std::string sMax{row.GetValue<std::string>(1)};
-                std::tm tMin{};
-                std::tm tMax{};
+                std::tm tmMin{};
+                std::tm tmMax{};
                 std::istringstream ssMin(sMin);
                 std::istringstream ssMax(sMax);
 
-                ssMin >> std::get_time(&tMin, "%Y-%m-%d %H:%M:%S");
-                ssMax >> std::get_time(&tMax, "%Y-%m-%d %H:%M:%S");
+                ssMin >> std::get_time(&tmMin, "%Y-%m-%d %H:%M:%S");
+                ssMax >> std::get_time(&tmMax, "%Y-%m-%d %H:%M:%S");
 
-                currentMin = mktime(&tMin);
-                currentMax = mktime(&tMax);
+                auto tMin = mktime(&tmMin);
+                auto tMax = mktime(&tmMax);
+                currentMin = static_cast<double>(tMin);
+                currentMax = static_cast<double>(tMax);
             }
             else{
                 currentMin = row.GetValue<double>(0);
