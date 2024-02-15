@@ -46,20 +46,23 @@ target_include_directories(
         INTERFACE "$<BUILD_INTERFACE:${arrow_SOURCE_DIR}/cpp/src>"
 )
 
-FetchContent_Declare(duckdb
-        GIT_REPOSITORY https://github.com/duckdb/duckdb.git
-        GIT_TAG        main
-        OVERRIDE_FIND_PACKAGE
-)
+set(DUCKDB_DIR "/data/ssd/riccardo.marin/libduckdb-linux-amd64")
+
+find_library(DUCKDB_LIB NAMES duckdb PATHS ${DUCKDB_DIR} NO_CMAKE_SYSTEM_PATH)
+
+if(NOT DUCKDB_LIB)
+    message(FATAL_ERROR "libduckdb not found. Please check the DUCKDB_DIR variable.")
+else()
+    message(STATUS "libduckdb found at ${DUCKDB_LIB}")
+endif()
+
 set(ENABLE_SANITIZER
         OFF
         CACHE INTERNAL "Disable ASAN")
-FetchContent_MakeAvailable(duckdb)
-FetchContent_GetProperties(duckdb)
-if(NOT duckdb_POPULATED)
-    FetchContent_Populate(duckdb)
-    add_subdirectory(${duckdb_SOURCE_DIR} ${duckdb_BINARY_DIR})
-endif()
+
+add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+
+include_directories(${DUCKDB_DIR}/include)
 
 include_directories(common/)
 include_directories(include/)
@@ -95,11 +98,13 @@ target_link_libraries(libpartitioner
         arrow_dataset_static
         arrow_acero_static
         parquet_static
-        duckdb
+        ${DUCKDB_LIB}
         Threads::Threads)
 
 # Specify here the include directories exported by this library
 target_include_directories(libpartitioner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} include)
+
+target_include_directories(libpartitioner PRIVATE ${DUCKDB_DIR} include)
 
 # Fix from: https://github.com/apache/arrow/issues/28378#issuecomment-1378020927
 if(ARROW_USE_XSIMD)
