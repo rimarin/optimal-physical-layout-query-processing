@@ -22,7 +22,10 @@ class Benchmark(abc.ABC):
         pass
 
     def get_dataset_folder(self, partitioning=NO_PARTITION):
-        return os.path.abspath(os.path.join(self.DATASETS_FOLDER, self.get_name(), partitioning))
+        dataset_folder = os.path.abspath(os.path.join(self.DATASETS_FOLDER, self.get_name(), partitioning))
+        if not os.path.exists(dataset_folder):
+            os.makedirs(dataset_folder)
+        return dataset_folder
 
     def get_num_total_partitions(self, partitioning=NO_PARTITION):
         return len([f for f in os.listdir(self.get_dataset_folder(partitioning)) if f.endswith(DATA_FORMAT)])
