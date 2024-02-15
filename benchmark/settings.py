@@ -1,7 +1,8 @@
 import os
 
-TPCH_SF1 = 'tpch-sf1'
 TPCH_SF10 = 'tpch-sf10'
+TPCH_SF50 = 'tpch-sf50'
+TPCH_SF100 = 'tpch-sf100'
 OSM = 'osm'
 TAXI = 'taxi'
 DATASETS = [TPCH_SF10, TAXI, OSM]
@@ -19,7 +20,7 @@ PARTITIONINGS = [FIXED_GRID, GRID_FILE, KD_TREE, QUAD_TREE, STR_TREE, HILBERT_CU
 PARTITION_SIZES = [50000]
 NUM_COLUMNS = [2, 3, 4, 5, 6, 7]
 
-DATASET_SCALED = True
+DATASET_SCALED = False
 DATA_FORMAT = '.parquet'
 RESULTS_FOLDER = 'results'
 RESULTS_FILE = os.path.join(RESULTS_FOLDER, 'results.csv')
