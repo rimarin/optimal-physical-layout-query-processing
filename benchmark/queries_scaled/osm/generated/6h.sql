@@ -1,8 +1,8 @@
 -- Q6
 SELECT *
-FROM read_parquet('/home/brancaleone/Projects/optimal-physical-layout-query-processing/benchmark/datasets/osm/*.parquet') where min_lon > 9.497337245576176 AND min_lon < 95.71801842452254 AND
-      max_lon > -104.7220049013859 AND max_lon < 170.43951041513498 AND
-      min_lat > -82.3884030062193 AND min_lat < 73.93095975785843 AND
-      max_lat > -17.35499057103864 AND max_lat < 27.28220371003445 AND
-      created_at > '2008061413:14:33' AND created_at < '2016081308:40:28' AND
-      version > 1.8921423114918732 AND version < 2.9487224736628193
+FROM read_parquet('/home/brancaleone/Projects/optimal-physical-layout-query-processing/benchmark/datasets/osm/no-partition/*.parquet') where min_lon > -109.73493277174246 AND min_lon < -9.559115051385817 AND
+      max_lon > -101.38038250477547 AND max_lon < -54.30370166690501 AND
+      min_lat > 28.98472510763679 AND min_lat < 62.33426545881673 AND
+      max_lat > -67.10645716806359 AND max_lat < 79.84181037660153 AND
+      created_at > '2011061901:40:41' AND created_at < '2013011700:19:33' AND
+      version > 1.357804534004353 AND version < 7.693362021350995
