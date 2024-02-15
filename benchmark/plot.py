@@ -19,7 +19,9 @@ df = pd.read_csv(RESULTS_FILE, sep=';', on_bad_lines='skip',
                  })
 df.columns = df.columns.str.strip()
 # Drop invalid data (measured latency is 0)
-df = df[df.latency_avg != 0]
+df = df[df['latency_avg'] != 0]
+# Drop failed or incorrect partitioning. 1 partition could be possible only for very high partition sizes
+df = df[(df['total_partitions'] != 0) & ~((df['total_partitions'] == 1) & (df['partition_size'] < 250000))]
 df['used_partitions'] = df[['used_partitions', 'total_partitions']].min(axis=1)
 # Set a fixed (optimal) partition size
 # df = df[df['partition_size'] == 100000]
