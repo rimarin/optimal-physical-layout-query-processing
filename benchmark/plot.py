@@ -53,6 +53,9 @@ df_selectivity = df.groupby(['selectivity', 'partitioning']).agg({'latency_avg':
 
 # -- Define plots
 
+# https://colorbrewer2.org/#type=qualitative&scheme=Set1&n=8
+partitioning_colors = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', '#a65628', '#f781bf']
+
 effects = ['selectivity', 'partition_size', 'num_partitioning_columns']
 metrics = ['latency_avg', 'scan_ratio']
 
@@ -94,13 +97,15 @@ df['used_columns'] = df['used_columns'].apply(tuple)
 df['partitioning_columns'] = df['partitioning_columns'].apply(tuple)
 df_group_by_columns = df.groupby(['dataset', 'partitioning', 'num_used_columns', 'num_partitioning_columns']).agg(
     aggregates).reset_index()
+df_group_by_columns = df_group_by_columns.sort_values('num_partitioning_columns', ascending=True)
 impact_columns_latency = px.bar(df_group_by_columns, x="dataset", y="latency_avg", facet_col="num_partitioning_columns",
                                 facet_row="num_used_columns", color="partitioning", labels=PARTITIONINGS,
+                                color_discrete_sequence=partitioning_colors,
                                 barmode='group', category_orders={'partitioning': sorted(df['partitioning'].unique())},
                                 title=f'Impact of the columns combination on latency')
 impact_columns_scan_ratio = px.bar(df_group_by_columns, x="dataset", y="scan_ratio", facet_col="num_partitioning_columns",
                                    facet_row="num_used_columns", color="partitioning", labels=PARTITIONINGS,
-                                   barmode='group',
+                                   barmode='group', color_discrete_sequence=partitioning_colors,
                                    category_orders={'partitioning': sorted(df['partitioning'].unique())},
                                    title=f'Impact of the columns combination on scan ratio')
 
@@ -112,6 +117,7 @@ df_scheme = df.groupby(['partitioning', 'dataset']).agg(aggregates).reset_index(
 for y, metric in enumerate(metrics):
     sub_plot = px.bar(df_scheme, x="dataset", y=metric, color="partitioning",
                       labels=PARTITIONINGS, barmode='group',
+                      color_discrete_sequence=partitioning_colors,
                       category_orders={'partitioning': sorted(df['partitioning'].unique())},
                       title=f'[{df}] Impact of the partitioning scheme on the {metric}').update_layout(
         yaxis_title=metric)
@@ -137,6 +143,7 @@ for i, dataset in enumerate(DATASETS):
         sub_plot = px.line(df_group_by_partition_size,
                            x="partition_size", y=metric, color="partitioning", markers=True, labels=PARTITIONINGS,
                            category_orders={'partitioning': sorted(df_dataset['partitioning'].unique())},
+                           color_discrete_sequence=partitioning_colors,
                            title=f'[{dataset}] Impact of the partition size on the {metric}')
         for trace in range(len(sub_plot["data"])):
             impact_partition_size.add_trace(sub_plot["data"][trace], row=y + 1, col=i + 1)
@@ -145,6 +152,7 @@ for i, dataset in enumerate(DATASETS):
     for y, metric in enumerate(metrics):
         sub_plot = px.line(df_group_by_selectivity,
                            x="selectivity", y=metric, color="partitioning", markers=True, labels=PARTITIONINGS,
+                           color_discrete_sequence=partitioning_colors,
                            category_orders={'partitioning': sorted(df_dataset['partitioning'].unique())},
                            title=f'[{dataset}] Impact of the selectivity on the {metric}')
         for trace in range(len(sub_plot["data"])):
@@ -162,6 +170,7 @@ for i, dataset in enumerate(DATASETS):
     for y, metric in enumerate(metrics):
         sub_plot = px.line(df_group_by_num_rows,
                            x="num_rows", y=metric, color="partitioning", markers=True, labels=PARTITIONINGS,
+                           color_discrete_sequence=partitioning_colors,
                            category_orders={'partitioning': sorted(df_dataset['partitioning'].unique())},
                            title=f'[{dataset}] Impact of the dataset size on the {metric}')
         for trace in range(len(sub_plot["data"])):
@@ -171,7 +180,7 @@ for i, dataset in enumerate(DATASETS):
     for y, metric in enumerate(metrics):
         sub_plot = px.line(df_group_by_num_cols,
                            x="num_partitioning_columns", y=metric, color="partitioning",
-                           markers=True, labels=PARTITIONINGS,
+                           markers=True, labels=PARTITIONINGS, color_discrete_sequence=partitioning_colors,
                            category_orders={'partitioning': sorted(df_dataset['partitioning'].unique())},
                            title=f'[{dataset}] Impact of the number of partitioning columns on the {metric}')
         for trace in range(len(sub_plot["data"])):
@@ -181,7 +190,7 @@ for i, dataset in enumerate(DATASETS):
     for y, metric in enumerate(metrics):
         sub_plot = px.line(df_group_by_col_ratio,
                            x="column_match_ratio", y=metric, color="partitioning",
-                           markers=True, labels=PARTITIONINGS,
+                           markers=True, labels=PARTITIONINGS, color_discrete_sequence=partitioning_colors,
                            category_orders={'partitioning': sorted(df_dataset['partitioning'].unique())},
                            title=f'[{dataset}] Impact of the column match on the {metric}')
         for trace in range(len(sub_plot["data"])):
@@ -191,7 +200,7 @@ for i, dataset in enumerate(DATASETS):
     df_group_by_workload = df.groupby(['workload_type', 'partitioning', 'dataset']).agg(aggregates).reset_index()
     for y, metric in enumerate(metrics):
         sub_plot = px.bar(df_group_by_workload, x="workload_type", y=metric, color="partitioning",
-                          labels=PARTITIONINGS, barmode='group',
+                          labels=PARTITIONINGS, barmode='group', color_discrete_sequence=partitioning_colors,
                           category_orders={'partitioning': sorted(df['partitioning'].unique())},
                           title=f'[{df}] Impact of the workload type on the {metric}').update_layout(
             yaxis_title=metric)
