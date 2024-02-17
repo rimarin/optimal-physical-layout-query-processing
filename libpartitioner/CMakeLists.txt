@@ -46,7 +46,8 @@ target_include_directories(
         INTERFACE "$<BUILD_INTERFACE:${arrow_SOURCE_DIR}/cpp/src>"
 )
 
-set(DUCKDB_DIR "/data/ssd/riccardo.marin/libduckdb-linux-amd64")
+# set(DUCKDB_DIR "/data/ssd/riccardo.marin/libduckdb-linux-amd64")
+set(DUCKDB_DIR "/home/vpandey-ldap/libduckdb-linux-amd64")
 
 find_library(DUCKDB_LIB NAMES duckdb PATHS ${DUCKDB_DIR} NO_CMAKE_SYSTEM_PATH)
 
