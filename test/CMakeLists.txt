@@ -10,7 +10,8 @@ FetchContent_MakeAvailable(googletest)
 add_library(GTest::GTest INTERFACE IMPORTED)
 target_link_libraries(GTest::GTest INTERFACE gtest_main)
 
-set(DUCKDB_DIR "/data/ssd/riccardo.marin/libduckdb-linux-amd64")
+# set(DUCKDB_DIR "/data/ssd/riccardo.marin/libduckdb-linux-amd64")
+set(DUCKDB_DIR "/home/vpandey-ldap/libduckdb-linux-amd64")
 
 find_library(DUCKDB_LIB NAMES duckdb PATHS ${DUCKDB_DIR} NO_CMAKE_SYSTEM_PATH)
 

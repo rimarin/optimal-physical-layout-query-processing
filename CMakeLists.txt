@@ -7,9 +7,8 @@ enable_testing()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE Debug)
 
-#add_library(partitioner STATIC ${SOURCES})
-
-set(DUCKDB_DIR "/data/ssd/riccardo.marin/libduckdb-linux-amd64")
+# set(DUCKDB_DIR "/data/ssd/riccardo.marin/libduckdb-linux-amd64")
+set(DUCKDB_DIR "/home/vpandey-ldap/libduckdb-linux-amd64")
 
 find_library(DUCKDB_LIB NAMES duckdb PATHS ${DUCKDB_DIR} NO_CMAKE_SYSTEM_PATH)
 
