@@ -17,7 +17,10 @@ public:
     static inline const std::string datasetTaxi = "taxi";
     static inline const std::string datasetTPCH1 = "tpch-sf1";
     static inline const std::string datasetTPCH10 = "tpch-sf10";
-    static inline const std::set<std::string> realDatasets = {datasetOSM, datasetTaxi, datasetTPCH1, datasetTPCH10};
+    static inline const std::string datasetTPCH50 = "tpch-sf50";
+    static inline const std::string datasetTPCH100 = "tpch-sf100";
+    static inline const std::set<std::string> realDatasets = {datasetOSM, datasetTaxi, datasetTPCH1, datasetTPCH10,
+                                                              datasetTPCH50, datasetTPCH100};
 
     // Partitioning schemes names
     static inline const std::string noPartition = "no-partition";
