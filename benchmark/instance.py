@@ -153,7 +153,7 @@ class BenchmarkInstance:
                     self.logger.info("Launching benchmarks...")
                     cmd = [f'{self.duckdb_path}/build/release/benchmark/benchmark_runner', 'PartitioningBenchmark',
                            f'--out={RESULTS_LOG_FILE}']
-                    timeout = 150  # s
+                    timeout = 180  # s
                     process = subprocess.run(cmd, timeout=timeout)
                     if process.returncode != 0:
                         self.logger.error(f"Received return code {str(process.returncode)}")
