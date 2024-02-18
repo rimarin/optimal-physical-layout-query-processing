@@ -26,12 +26,21 @@ include(FetchContent)
 
 FetchContent_Declare(Arrow
         GIT_REPOSITORY https://github.com/apache/arrow.git
-        GIT_TAG        main
+        GIT_TAG        apache-arrow-15.0.0
         GIT_SHALLOW    TRUE SOURCE_SUBDIR cpp
         OVERRIDE_FIND_PACKAGE
 )
 
-FetchContent_MakeAvailable(Arrow)
+FetchContent_GetProperties(Arrow)
+if(NOT arrow_POPULATED)
+    FetchContent_Populate(Arrow)
+
+    message("SRC; ${arrow_SOURCE_DIR}/cpp/")
+    message("BIN: ${arrow_BINARY_DIR}")
+
+    add_subdirectory(${arrow_SOURCE_DIR}/cpp ${arrow_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
+# FetchContent_MakeAvailable(Arrow)
 
 # HACK: Stolen from
 # https://github.com/rapidsai/cudf/blob/branch-23.08/cpp/cmake/thirdparty/get_arrow.cmake#LL236C1-L238C8
@@ -46,7 +55,6 @@ target_include_directories(
         INTERFACE "$<BUILD_INTERFACE:${arrow_SOURCE_DIR}/cpp/src>"
 )
 
-# set(DUCKDB_DIR "/data/ssd/riccardo.marin/libduckdb-linux-amd64")
 set(DUCKDB_DIR "/home/vpandey-ldap/libduckdb-linux-amd64")
 
 find_library(DUCKDB_LIB NAMES duckdb PATHS ${DUCKDB_DIR} NO_CMAKE_SYSTEM_PATH)

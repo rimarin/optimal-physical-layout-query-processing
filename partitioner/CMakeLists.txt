@@ -1,6 +1,6 @@
 set(PARTITIONER_SOURCES
-    experimentsConfig.cpp
-    partitioner.cpp
+        experimentsConfig.cpp
+        partitioner.cpp
 )
 
 add_executable(partitioner ${PARTITIONER_SOURCES})

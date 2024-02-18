@@ -27,5 +27,5 @@ add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 include_directories(${DUCKDB_DIR}/include)
 
 add_subdirectory(libpartitioner)
-add_subdirectory(test)
 add_subdirectory(partitioner)
+add_subdirectory(test)
