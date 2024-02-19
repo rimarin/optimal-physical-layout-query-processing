@@ -2,7 +2,7 @@ import abc
 import duckdb
 import os
 
-from settings import DATA_FORMAT, NO_PARTITION, DATASET_SCALED, SCALED
+from settings import DATA_FORMAT, NO_PARTITION
 
 
 class Benchmark(abc.ABC):
@@ -22,8 +22,6 @@ class Benchmark(abc.ABC):
         pass
 
     def get_dataset_folder(self, partitioning=NO_PARTITION):
-        if DATASET_SCALED:
-            partitioning = SCALED
         dataset_folder = os.path.abspath(os.path.join(self.DATASETS_FOLDER, self.get_name(), partitioning))
         if not os.path.exists(dataset_folder):
             os.makedirs(dataset_folder)
