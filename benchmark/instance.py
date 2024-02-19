@@ -43,6 +43,7 @@ class BenchmarkInstance:
             self.logger.info(f'Partitioner took {time_to_partition} seconds')
             if process.returncode != 0:
                 self.logger.error(f'Received return code {str(process.returncode)}')
+                self.logger.error(f'Error details: {str(process.stderr)}')
         except Exception as e:
             self.logger.error(f'Partitioning failed: {str(e)}')
 
