@@ -180,7 +180,11 @@ namespace partitioning {
     void MultiDimensionalPartitioning::deleteIntermediateFiles() {
         for (const auto &file : std::filesystem::recursive_directory_iterator(folder)) {
             if (file.is_regular_file() && !isFileCompleted(file)) {
-                std::filesystem::remove(file.path());
+                try {
+                    std::filesystem::remove(file.path());
+                } catch (std::exception& e) {
+                    std::cout << "ERROR - Actually could not remove file " << file.path().string() << std::endl;
+                }
             }
         }
     }
@@ -210,7 +214,11 @@ namespace partitioning {
     void MultiDimensionalPartitioning::deleteSubfolders() {
         for (auto &fileSystemItem : std::filesystem::directory_iterator(folder)) {
             if (fileSystemItem.is_directory()) {
-                std::filesystem::remove_all(fileSystemItem.path());
+                try {
+                    std::filesystem::remove_all(fileSystemItem.path());
+                } catch (std::exception& e) {
+                    std::cout << "ERROR - Actually could not remove some files in  " << fileSystemItem.path().string() << std::endl;
+                }
             }
         }
     }

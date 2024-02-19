@@ -82,8 +82,12 @@ namespace storage {
         // Delete all the folders and their content once the merged tables are ready
         for (const auto &partitionId: partitionIds){
             std::filesystem::path subPartitionsFolder = basePath / std::to_string(partitionId);
-            auto numDeleted = std::filesystem::remove_all(subPartitionsFolder);
-            std::cout   << "[DataWriter] Cleaned up folder " << subPartitionsFolder << " with " << numDeleted << " partition fragments" << std::endl;
+            try {
+                auto numDeleted = std::filesystem::remove_all(subPartitionsFolder);
+                std::cout << "[DataWriter] Cleaned up folder " << subPartitionsFolder << " with " << numDeleted << " partition fragments" << std::endl;
+            } catch (std::exception& e) {
+                std::cout << "ERROR: Actually could not remove some files in  " << subPartitionsFolder.string() << std::endl;
+            }
         }
         return arrow::Status::OK();
     }
@@ -127,7 +131,11 @@ namespace storage {
             {
                 if (folderIter.path().extension() == common::Settings::fileExtension)
                 {
-                    std::filesystem::remove(folderIter.path());
+                    try {
+                        std::filesystem::remove(folderIter.path());
+                    } catch (std::exception& e) {
+                        std::cout << "ERROR - Actually could not remove file " << folderIter.path().string() << std::endl;
+                    }
                 }
             }
         }

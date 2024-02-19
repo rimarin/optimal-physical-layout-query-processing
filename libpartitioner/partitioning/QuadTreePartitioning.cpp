@@ -247,8 +247,12 @@ namespace partitioning {
                 std::string rootPath;
                 ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(quadrantPartsPath, &rootPath));
                 ARROW_RETURN_NOT_OK(storage::DataWriter::mergeBatchesInFolder(fs, rootPath));
-                std::filesystem::remove_all(quadrantPartsPath);
-                std::cout << "[QuadTreePartitioning] Merged batches into 4 quadrants" << std::endl;
+                try {
+                    std::filesystem::remove_all(quadrantPartsPath);
+                    std::cout << "[QuadTreePartitioning] Merged batches into 4 quadrants" << std::endl;
+                } catch (std::exception& e) {
+                    std::cout << "ERROR: Actually could not files in  " << quadrantPartsPath.string() << std::endl;
+                }
             }
         }
 

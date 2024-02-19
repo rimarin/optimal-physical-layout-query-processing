@@ -157,7 +157,11 @@ namespace partitioning {
                 std::string rootPath;
                 ARROW_ASSIGN_OR_RAISE(auto fs, arrow::fs::FileSystemFromUriOrPath(fragmentPartsPath, &rootPath));
                 ARROW_RETURN_NOT_OK(storage::DataWriter::mergeBatchesInFolder(fs, rootPath));
-                std::filesystem::remove_all(fragmentPartsPath);
+                try {
+                    std::filesystem::remove_all(fragmentPartsPath);
+                } catch (std::exception& e) {
+                    std::cout << "Actually could not remove some files in  " << fragmentPartsPath.string() << std::endl;
+                }
                 std::cout << "[KDTreePartitioning] Merged into fragments" << std::endl;
             }
         }

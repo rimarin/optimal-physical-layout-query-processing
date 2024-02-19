@@ -37,7 +37,11 @@ public:
             {
                 if (folderIter.path().extension() == ExperimentsConfig::fileExtension)
                 {
-                    std::filesystem::remove(folderIter.path());
+                    try {
+                        std::filesystem::remove(folderIter.path());
+                    } catch (std::exception& e) {
+                        std::cout << "ERROR - Actually could not remove file " << folderIter.path().string() << std::endl;
+                    }
                 }
             }
         }
