@@ -2,7 +2,7 @@ import abc
 import duckdb
 import os
 
-from settings import DATA_FORMAT, NO_PARTITION
+from settings import DATA_FORMAT, NO_PARTITION, DATASET_SCALED, SCALED
 
 
 class Benchmark(abc.ABC):
@@ -22,12 +22,14 @@ class Benchmark(abc.ABC):
         pass
 
     def get_dataset_folder(self, partitioning=NO_PARTITION):
+        if DATASET_SCALED:
+            partitioning = SCALED
         dataset_folder = os.path.abspath(os.path.join(self.DATASETS_FOLDER, self.get_name(), partitioning))
         if not os.path.exists(dataset_folder):
             os.makedirs(dataset_folder)
         return dataset_folder
 
-    def get_num_total_partitions(self, partitioning=NO_PARTITION):
+    def get_num_total_partitions(self, partitioning):
         return len([f for f in os.listdir(self.get_dataset_folder(partitioning)) if f.endswith(DATA_FORMAT)])
 
     def get_files_pattern(self):
