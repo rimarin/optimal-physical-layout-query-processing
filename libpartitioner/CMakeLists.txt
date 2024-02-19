@@ -35,9 +35,6 @@ FetchContent_GetProperties(Arrow)
 if(NOT arrow_POPULATED)
     FetchContent_Populate(Arrow)
 
-    message("SRC; ${arrow_SOURCE_DIR}/cpp/")
-    message("BIN: ${arrow_BINARY_DIR}")
-
     add_subdirectory(${arrow_SOURCE_DIR}/cpp ${arrow_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 # FetchContent_MakeAvailable(Arrow)
