@@ -5,5 +5,5 @@ FROM read_parquet('/home/brancaleone/Projects/optimal-physical-layout-query-proc
       min_lat > -84.67817311054327 AND min_lat < 18.335453888384194 AND
       max_lat > -39.945009423314886 AND max_lat < 64.70980052330168 AND
       created_at > '2021113018:12:03' AND created_at < '2022122121:18:51' AND
-      version > 3.2146049183207634 AND version < 9.869395167106623 AND
-      id > 3093096877.698008 AND id < 9766716863.675241
+      version > 3 AND version < 10 AND
+      id > 3093096877 AND id < 9766716863
