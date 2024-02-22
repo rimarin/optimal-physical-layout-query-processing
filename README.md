@@ -27,15 +27,23 @@ Furthermore, for the benchmarking part:
 
 ### Installation
 
-#### Partitioner
+#### DuckDB Build
 
-From the main
+    git clone https://github.com/rimarin/duckdb
+    git pull origin benchmark
+    BUILD_BENCHMARK=1 make
+
+#### Partitioner Build
 
     cmake -Bcmake-build-release
     cd cmake-build-release
     cmake --build .
+    
+#### Benchmarks runner
+Adjust the settings in the file settings.py
+
+    python3 runner.py
 
 ### Related Work
 
-Learned indexes: [Flood](https://dl.acm.org/doi/10.1145/3318464.3380579) [Tsunami](https://dl.acm.org/doi/10.14778/3425879.3425880)
-Storage format: ...				
+Learned indexes: [Flood](https://dl.acm.org/doi/10.1145/3318464.3380579) [Tsunami](https://dl.acm.org/doi/10.14778/3425879.3425880)		
