@@ -6,7 +6,8 @@ from storage_manager import StorageManager
 
 
 class BenchmarkResult:
-    def __init__(self, benchmark_instance, latencies, used_partitions, average_partition_size):
+    def __init__(self, benchmark_instance, latencies, average_partition_size, fetched_partitions, fetched_row_groups,
+                 fetched_rows):
         self.instance = benchmark_instance
         self.benchmark = benchmark_instance.benchmark
         self.config = benchmark_instance.config
@@ -20,7 +21,9 @@ class BenchmarkResult:
         else:
             self.latency_avg = 0
             self.latency_std = 0
-        self.used_partitions = used_partitions
+        self.fetched_partitions = fetched_partitions
+        self.fetched_row_groups = fetched_row_groups
+        self.fetched_rows = fetched_rows
         self.average_partition_size = average_partition_size
         self.query_str = f'{str(self.instance.query_number)}{self.instance.query_variant}'
 
@@ -40,11 +43,13 @@ class BenchmarkResult:
                 f'q{self.query_str};{self.benchmark.get_query_selectivity(self.query_str, DATASET_SCALED)};'
                 f'{self.config.partitioning_columns};{len(self.config.partitioning_columns)};{self.used_columns};'
                 f'{len(self.used_columns)};{self.latencies};{self.latency_avg};{self.latency_std};'
-                f'{self.config.partition_size};{self.average_partition_size};{self.used_partitions};'
+                f'{self.config.partition_size};{self.average_partition_size};{self.fetched_rows};'
+                f'{self.fetched_row_groups};{self.fetched_partitions};'
                 f'{self.total_partitions};{datetime.datetime.now()}\n')
 
     @staticmethod
     def format_header():
         return ('dataset;num_rows;partitioning;time_to_partition;query;selectivity;partitioning_columns;'
                 'num_partitioning_columns;used_columns;num_used_columns;latencies;latency_avg;latency_std;'
-                'partition_size;partition_size_mb;used_partitions;total_partitions;timestamp\n')
+                'partition_size;partition_size_mb;fetched_rows;fetched_row_groups;fetched_partitions;'
+                'total_partitions;timestamp\n')

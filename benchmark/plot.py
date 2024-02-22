@@ -22,14 +22,14 @@ df.columns = df.columns.str.strip()
 df = df[df['latency_avg'] != 0]
 # Drop failed or incorrect partitioning. 1 partition could be possible only for very high partition sizes
 df = df[(df['total_partitions'] != 0) & ~((df['total_partitions'] == 1) & (df['partition_size'] < 250000))]
-df['used_partitions'] = df[['used_partitions', 'total_partitions']].min(axis=1)
+df['fetched_partitions'] = df[['fetched_partitions', 'total_partitions']].min(axis=1)
 # Set a fixed (optimal) partition size
 # df = df[df['partition_size'] == 100000]
 # Convert latency to milliseconds
 df['latency_avg'] = df['latency_avg'] * 1000
 
 # Compute additional information
-df['scan_ratio'] = (df['used_partitions'] / df['total_partitions']) * 100
+df['scan_ratio'] = (df['fetched_partitions'] / df['total_partitions']) * 100
 
 # Compute workload type
 df['workload_type'] = pd.Series(index=df.index)

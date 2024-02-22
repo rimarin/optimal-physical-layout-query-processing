@@ -28,6 +28,8 @@ RESULTS_FOLDER = 'results'
 RESULTS_FILE = os.path.join(RESULTS_FOLDER, 'results.csv')
 RESULTS_LOG_FILE = 'results.log'
 PARTITIONS_LOG_FILE = 'partitions.log'
+ROW_GROUPS_LOG_FILE = 'row_groups.log'
+ROWS_LOG_FILE = 'rows.log'
 
 LOG_TO_CONSOLE = True
 LOG_TO_FILE = True

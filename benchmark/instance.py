@@ -10,7 +10,7 @@ from benchmarks.tpch import BenchmarkTPCH
 from config import BenchmarkConfig
 from exceptions import BenchmarkRunnerException
 from result import BenchmarkResult
-from settings import DATA_FORMAT, PARTITIONS_LOG_FILE, RESULTS_LOG_FILE
+from settings import DATA_FORMAT, PARTITIONS_LOG_FILE, RESULTS_LOG_FILE, ROW_GROUPS_LOG_FILE, ROWS_LOG_FILE
 from storage_manager import StorageManager
 
 
@@ -188,15 +188,15 @@ class BenchmarkInstance:
                 self.logger.error(f"Results log file does not exist: {results_file_path}")
             return parsed_latencies
 
-        def parse_num_used_partitions():
-            parsed_used_partitions = 0
+        def parse_num_from_file(filename):
+            parsed_num = 0
             try:
-                num_partitions_filename = os.path.join(self.duckdb_path, PARTITIONS_LOG_FILE)
-                with open(num_partitions_filename, 'r') as num_partitions_file:
-                    parsed_used_partitions = int(num_partitions_file.read())
+                filepath = os.path.join(self.duckdb_path, filename)
+                with open(filepath, 'r') as file:
+                    parsed_num = int(file.read())
             except Exception as e:
-                self.logger.error(f"Could not load number of used partitions from the log file - {str(e)}")
-            return parsed_used_partitions
+                self.logger.error(f"Could not load number from file {filename} - {str(e)}")
+            return parsed_num
 
         def get_partition_size():
             avg_partition_size = 0
@@ -219,9 +219,12 @@ class BenchmarkInstance:
 
         launch_duckdb_benchmark()
         latencies = parse_benchmark_results()
-        used_partitions = parse_num_used_partitions()
+        fetched_partitions = parse_num_from_file(PARTITIONS_LOG_FILE)
+        fetched_row_groups = parse_num_from_file(ROW_GROUPS_LOG_FILE)
+        fetched_rows = parse_num_from_file(ROWS_LOG_FILE)
         average_partition_size = get_partition_size()
-        self.result = BenchmarkResult(self, latencies, used_partitions, average_partition_size)
+        self.result = BenchmarkResult(self, latencies, average_partition_size, fetched_partitions, fetched_row_groups,
+                                      fetched_rows)
         self.logger.info("Collected results from benchmark execution")
 
     def collect_results(self):
