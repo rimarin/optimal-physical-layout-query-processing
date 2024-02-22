@@ -6,7 +6,7 @@ TPCH_SF50 = 'tpch-sf50'
 TPCH_SF100 = 'tpch-sf100'
 OSM = 'osm'
 TAXI = 'taxi'
-DATASETS = [TPCH_SF10, TAXI, OSM]
+DATASETS = [TPCH_SF100, TAXI, OSM]
 
 NO_PARTITION = 'no-partition'
 SCALED = 'scaled'
