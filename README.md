@@ -38,6 +38,17 @@ Furthermore, for the benchmarking part:
     cmake -Bcmake-build-release
     cd cmake-build-release
     cmake --build .
+
+In order to run the partitioner in isolation:
+
+```
+../cmake-build-release/partitioner/partitioner <dataset_base_folder> <dataset_name> <partitioning_scheme> <partition_size> <comma_separated_columns>
+```
+
+For example:
+```
+../cmake-build-release/partitioner/partitioner benchmark/datasets/taxi taxi hilbert-curve 250000 PULocationID,DOLocationID
+```
     
 #### Benchmarks runner
 Adjust the settings in the file settings.py
