@@ -29,7 +29,7 @@ df['fetched_partitions'] = df[['fetched_partitions', 'total_partitions']].min(ax
 df['latency_avg'] = df['latency_avg'] * 1000
 
 # Compute additional information
-df['scan_ratio'] = (df['fetched_partitions'] / df['total_partitions']) * 100
+df['scan_ratio'] = (df['used_partitions'] / df['total_partitions']) * 100
 
 # Compute workload type
 df['workload_type'] = pd.Series(index=df.index)
@@ -217,6 +217,8 @@ def export_images():
             trace.update(showlegend=False)
             if (trace.name in names) else names.add(trace.name))
         title = plot.layout.title.text
+        if not os.path.exists(PLOTS_FOLDER):
+            os.makedirs(PLOTS_FOLDER)
         image_path = os.path.join(PLOTS_FOLDER, f"{title}.png")
         plot.write_image(image_path, scale=3, width=1500, height=1000)
 
