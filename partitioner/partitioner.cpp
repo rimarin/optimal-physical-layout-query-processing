@@ -73,7 +73,15 @@ int main(int argc, char **argv) {
 
     // Apply the partitioning
     if (!partitioningScheme->isFinished()){
-        arrow::Status status = partitioningScheme->partition();
+        try {
+            arrow::Status status = partitioningScheme->partition();
+            if (!status.ok()){
+                std::cout << "ERROR, PARTITIONING FAILED - Got status "
+                          << status.ToString() << " / " << status.message() << std::endl;
+            }
+        } catch (std::exception& e) {
+            std::cout << "ERROR, PARTITIONING FAILED - " << e.what() << std::endl;
+        }
     }
 
     // Check correctness

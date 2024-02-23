@@ -29,7 +29,7 @@ df['fetched_partitions'] = df[['fetched_partitions', 'total_partitions']].min(ax
 df['latency_avg'] = df['latency_avg'] * 1000
 
 # Compute additional information
-df['scan_ratio'] = (df['used_partitions'] / df['total_partitions']) * 100
+df['scan_ratio'] = (df['fetched_partitions'] / df['total_partitions']) * 100
 
 # Compute workload type
 df['workload_type'] = pd.Series(index=df.index)
