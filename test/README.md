@@ -1,4 +1,8 @@
-
+The unit tests have been designed to run fast and therefore check only small toy datasets.
+Unit tests involving the full-scale dataset are already present, but deactivated.
+Assertions are made on the number of rows and partitions.
+In the future it is reasonable to extend these correctness checks with queries over 
+the dataset, looking for the presence of specific values, or absences of duplicates.
 
 Manual testing tips:
 

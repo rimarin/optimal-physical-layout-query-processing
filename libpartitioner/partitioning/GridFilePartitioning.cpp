@@ -135,7 +135,8 @@ namespace partitioning {
         midValue = (maxValue + minValue) / 2;
         dimensionRanges1.at(columnIndex).first = minValue;
         dimensionRanges1.at(columnIndex).second = midValue;
-        // TODO: refactor this horrible patch
+        // TODO: replace with inferring types from schema. Timestamps and datetimes shall be detected
+        //  This is a temporary patch
         std::set<std::string> timeColumns = {"tpep_pickup_datetime", "tpep_dropoff_datetime",
                                              "created_at",
                                              "o_orderdate", "l_shipdate"};
