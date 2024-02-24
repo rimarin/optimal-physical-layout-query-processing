@@ -37,7 +37,7 @@ namespace partitioning {
         return arrow::Status::OK();
     }
 
-    arrow::Status HilbertCurvePartitioning::partitionBatch(const uint32_t &batchId,
+    arrow::Status HilbertCurvePartitioning::partitionBatch(const uint64_t &batchId,
                                                            std::shared_ptr<arrow::RecordBatch> &recordBatch,
                                                            std::shared_ptr<storage::DataReader> &dataReader) {
         std::vector<std::shared_ptr<arrow::Array>> batchColumns;
@@ -48,7 +48,6 @@ namespace partitioning {
         auto converter = common::ColumnDataConverter();
         auto columnData = converter.toInt64(batchColumns).ValueOrDie();
         std::shared_ptr<arrow::Array> partitionIdsArrow;
-        arrow::UInt32Builder int32Builder;
         auto hilbertCurve = structures::HilbertCurve();
         int numBits = 8;
         auto batchNumRows = recordBatch->num_rows();

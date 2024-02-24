@@ -32,8 +32,8 @@ namespace partitioning {
         void setPartitionSize(size_t rowsPerPartition);
         bool isFinished();
         // DuckDB config
-        static inline const std::string memoryLimit = "300GB";
-        static inline const std::string tempDirectory = "/tmp";
+        static inline const std::string memoryLimit = common::Settings::memoryLimit;
+        static inline const std::string tempDirectory = common::Settings::tempDirectory;
     private:
         bool canSkipPartitioning();
         partitioning::PartitioningType type = OTHER;

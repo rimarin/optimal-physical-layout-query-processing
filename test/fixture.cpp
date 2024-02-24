@@ -115,10 +115,10 @@ public:
         return false;
     };
 
-    static std::pair<uint32_t, uint32_t> getFolderResults(std::shared_ptr<storage::DataReader> &dataReader,
+    static std::pair<uint64_t, uint64_t> getFolderResults(std::shared_ptr<storage::DataReader> &dataReader,
                                                           std::filesystem::path &folder) {
-        uint32_t fileCount = 0;
-        uint32_t partitionsTotalRows = 0;
+        uint64_t fileCount = 0;
+        uint64_t partitionsTotalRows = 0;
         for (auto &fileSystemItem: std::filesystem::directory_iterator(folder)) {
             if (fileSystemItem.is_regular_file() &&
                 fileSystemItem.path().extension() == common::Settings::fileExtension) {

@@ -15,6 +15,7 @@
 namespace common {
     // Struct for storing the common configuration across the library components
     struct Settings{
+        // Parquet settings
         inline static const std::string fileExtension = ".parquet";
         inline static const std::string libraryName = "Optimal Layout Partitioner";
         // Row group size is the optimal one
@@ -24,6 +25,9 @@ namespace common {
         inline static const size_t bufferSize = 4096 * 4;
         inline static const parquet::ParquetVersion::type version = parquet::ParquetVersion::PARQUET_2_6;
         inline static const arrow::Compression::type compression = arrow::Compression::SNAPPY;
+        // DuckDB config
+        static inline const std::string memoryLimit = "300GB";
+        static inline const std::string tempDirectory = "/tmp";
     };
 }
 

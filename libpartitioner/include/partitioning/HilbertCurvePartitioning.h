@@ -41,7 +41,7 @@ namespace partitioning {
             uniquePartitionIds = {};
         };
         arrow::Status partition() override;
-        arrow::Status partitionBatch(const uint32_t &batchId,
+        arrow::Status partitionBatch(const uint64_t &batchId,
                                      std::shared_ptr<arrow::RecordBatch> &recordBatch,
                                      std::shared_ptr<storage::DataReader> &dataReader);
     private:

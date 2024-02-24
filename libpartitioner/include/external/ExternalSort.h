@@ -66,7 +66,10 @@ namespace external {
             auto loadQueryResult = con.Query(loadQuery);
 
             // Write table to disk
-            std::string exportQuery = "COPY (SELECT * FROM tbl) TO '" + outputPath.string() + "' (FORMAT PARQUET, COMPRESSION SNAPPY, ROW_GROUP_SIZE 131072)";
+            std::string exportQuery = "COPY (SELECT * FROM tbl) "
+                                      "TO '" + outputPath.string() + "' "
+                                      "(FORMAT PARQUET, COMPRESSION SNAPPY, "
+                                      " ROW_GROUP_SIZE " + std::to_string(common::Settings::rowGroupSize) + ")";
             auto exportQueryResult = con.Query(exportQuery);
             return arrow::Status::OK();
         }

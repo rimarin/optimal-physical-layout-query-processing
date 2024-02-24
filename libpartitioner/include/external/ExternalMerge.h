@@ -286,7 +286,7 @@ namespace external {
         }
 
         static arrow::Status sortMergeFiles(const std::filesystem::path &folder, const std::string &columnName,
-                                            const int32_t partitionSize){
+                                            const size_t partitionSize){
             if (partitionSize <= 0){
                 std::cout << "Cannot sort merge, invalid partition size" << std::endl;
                 return arrow::Status::Invalid("Invalid partition size");
@@ -321,8 +321,8 @@ namespace external {
                 }
             }
 
-            size_t index = 0;
-            size_t offset = 0;
+            int64_t index = 0;
+            int64_t offset = 0;
             while (totalSize > 0){
                 // Write table to disk, partition-sized blocks
                 std::string exportedFile = folder.string() + "/" + std::to_string(index) + ".parquet";

@@ -154,7 +154,9 @@ namespace partitioning {
         }
         std::string filterQuery1 = "COPY (SELECT * "
                                    "      FROM tbl " + whereClause +
-                                   "TO '" + destinationFile1.string() + "' (FORMAT PARQUET, COMPRESSION SNAPPY, ROW_GROUP_SIZE 131072)";
+                                   "TO '" + destinationFile1.string() + "' "
+                                   "(FORMAT PARQUET, COMPRESSION SNAPPY, "
+                                   " ROW_GROUP_SIZE " + std::to_string(common::Settings::rowGroupSize) + ")";
         auto filterQueryResult1 = con.Query(filterQuery1);
 
         auto destinationFile2 = subFolder / ("1" + fileExtension);
@@ -175,7 +177,9 @@ namespace partitioning {
         }
         std::string filterQuery2 = "COPY (SELECT * "
                                    "      FROM tbl " + whereClause +
-                                   "TO '" + destinationFile2.string() + "' (FORMAT PARQUET, COMPRESSION SNAPPY, ROW_GROUP_SIZE 131072)";
+                                   "TO '" + destinationFile2.string() + "' "
+                                   "(FORMAT PARQUET, COMPRESSION SNAPPY, "
+                                   " ROW_GROUP_SIZE " + std::to_string(common::Settings::rowGroupSize) + ")";
         auto filterQueryResult2 = con.Query(filterQuery2);
 
         computeLinearScales(destinationFile1, depth + 1, dimensionRanges1);

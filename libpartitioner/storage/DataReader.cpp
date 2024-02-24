@@ -60,13 +60,13 @@ namespace storage {
         return path;
     }
 
-    uint32_t DataReader::getNumRows() {
+    int64_t DataReader::getNumRows() {
         // TODO: maybe replace with DuckDB query metadata
         return metadata->num_rows();
     }
 
-    uint32_t DataReader::getExpectedNumBatches(){
-        return (uint32_t) std::ceil((float) getNumRows() / (float) common::Settings::batchSize);
+    int64_t DataReader::getExpectedNumBatches(){
+        return (int64_t) std::ceil((float) getNumRows() / (float) common::Settings::batchSize);
     }
 
     arrow::Result<std::shared_ptr<arrow::Table>> DataReader::getTable(std::filesystem::path &inputFile){
@@ -191,8 +191,8 @@ namespace storage {
         auto loadQueryResult = con.Query(loadQuery);
 
         // Extract median rows
-        auto numRows = getNumRows();
-        auto limit = (numRows % 2 == 0) ? 2 : 1;
+        int64_t numRows = getNumRows();
+        int64_t limit = (numRows % 2 == 0) ? 2 : 1;
 
         std::string limitQuery = "SELECT AVG(" + columnName + ") "
                                  "FROM tbl "
@@ -229,7 +229,9 @@ namespace storage {
                                   "      FROM tbl "
                                   "      WHERE " + columnName + " >= " + std::to_string(range.first) + " AND "
                                                  + columnName + " <= " + std::to_string(range.second) + ") "
-                                  "TO '" + destinationFile.string() + ".parquet' (FORMAT PARQUET, COMPRESSION SNAPPY, ROW_GROUP_SIZE 131072)";;
+                                  "TO '" + destinationFile.string() + ".parquet'"
+                                  "(FORMAT PARQUET, COMPRESSION SNAPPY, "
+                                  " ROW_GROUP_SIZE " + std::to_string(common::Settings::rowGroupSize) + ")";
         auto filterQueryResult = con.Query(filterQuery);
 
         return arrow::Status::OK();

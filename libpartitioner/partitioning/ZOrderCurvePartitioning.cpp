@@ -10,8 +10,8 @@ namespace partitioning {
         */
 
         // Read the table in batches
-        uint32_t batchId = 0;
-        uint32_t totalNumRows = 0;
+        uint64_t batchId = 0;
+        uint64_t totalNumRows = 0;
 
         while (true) {
 
@@ -37,7 +37,7 @@ namespace partitioning {
         return arrow::Status::OK();
     }
 
-    arrow::Status ZOrderCurvePartitioning::partitionBatch(const uint32_t &batchId,
+    arrow::Status ZOrderCurvePartitioning::partitionBatch(const uint64_t &batchId,
                                                            std::shared_ptr<arrow::RecordBatch> &recordBatch,
                                                            std::shared_ptr<storage::DataReader> &dataReader) {
         std::vector<std::shared_ptr<arrow::Array>> batchColumns;
@@ -48,7 +48,6 @@ namespace partitioning {
         auto converter = common::ColumnDataConverter();
         auto columnData = converter.toInt64(batchColumns).ValueOrDie();
         std::shared_ptr<arrow::Array> partitionIdsArrow;
-        arrow::UInt32Builder int32Builder;
         auto batchNumRows = recordBatch->num_rows();
         assert(columnData.size() == numColumns);
         assert(batchNumRows == columnData[0]->size());
