@@ -183,7 +183,7 @@ class BenchmarkInstance:
                             latency = float(line)
                             parsed_latencies.append(latency)
                     except Exception as e:
-                        self.logger.error(f"Error while parsing benchmark results: {str(e)}")
+                        self.logger.warning(f"Could not parse benchmark results: {str(e)}")
             else:
                 self.logger.error(f"Results log file does not exist: {results_file_path}")
             return parsed_latencies
