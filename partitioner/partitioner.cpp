@@ -101,11 +101,11 @@ int main(int argc, char **argv) {
             std::cout << "[Partitioner] Incorrect, no files created";
         }
         if (datasetNumRows != partitionsTotalRows){
-            std::cout << "[Partitioner] Incorrect, number of rows do not match";
-            std::cout << "[Partitioner] Expected " << datasetNumRows << " rows and found " << partitionsTotalRows;
+            std::cout << "[Partitioner] Incorrect, number of rows do not match" << std::endl;
+            std::cout << "[Partitioner] Expected " << datasetNumRows << " rows and found " << partitionsTotalRows << std::endl;
         }
         else{
-            std::cout << "[Partitioner] Good, at the least the number of rows match";
+            std::cout << "[Partitioner] Good, at the least the number of rows match" << std::endl;
         }
     }
 
