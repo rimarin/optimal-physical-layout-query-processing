@@ -46,16 +46,13 @@ df.loc[df['num_used_columns'] < df['num_partitioning_columns'], 'workload_type']
 df['column_match'] = [list(set(a).intersection(set(b)))
                       for a, b in zip(df['partitioning_columns'], df['used_columns'])]
 df['column_match_ratio'] = (df['column_match'].str.len() / df['used_columns'].str.len()) * 100
+
 # Discretize selectivity into intervals
 selectivity_groups = [0.001, 0.01, 0.1, 0.5, 1, 2.5, 5]
 rounding_logic = pd.Series(selectivity_groups)
 labels = rounding_logic.tolist()
 rounding_logic = pd.Series([-np.inf])._append(rounding_logic)  # add infinity as leftmost edge
 df['selectivity_group'] = pd.cut(df['selectivity'], rounding_logic, labels=labels).fillna(rounding_logic.iloc[-1])
-
-# Create subsets for specific analysis
-df_partition_size = df.groupby(['partition_size', 'partitioning']).agg({'latency_avg': 'mean'}).reset_index()
-df_selectivity = df.groupby(['selectivity', 'partitioning']).agg({'latency_avg': 'mean'}).reset_index()
 
 # -- Define plots
 
@@ -103,20 +100,29 @@ df['used_columns'] = df['used_columns'].apply(tuple)
 df['partitioning_columns'] = df['partitioning_columns'].apply(tuple)
 df_group_by_columns = df.groupby(['dataset', 'partitioning', 'num_used_columns', 'num_partitioning_columns']).agg(
     aggregates).reset_index()
-df_group_by_columns = df_group_by_columns.sort_values('num_partitioning_columns', ascending=True)
+df_group_by_columns = df_group_by_columns.sort_values(by=['num_partitioning_columns', 'num_used_columns'], ascending=True)
 impact_columns_latency = px.bar(df_group_by_columns, x="dataset", y="latency_avg", facet_col="num_partitioning_columns",
                                 facet_row="num_used_columns", color="partitioning", labels=PARTITIONINGS,
-                                color_discrete_sequence=partitioning_colors,
-                                barmode='group', category_orders={'partitioning': sorted(df['partitioning'].unique())},
+                                color_discrete_sequence=partitioning_colors, barmode='group',
+                                category_orders={
+                                    'partitioning': sorted(df['partitioning'].unique()),
+                                    'num_partitioning_columns': sorted(df['num_partitioning_columns'].unique()),
+                                    'num_used_columns': sorted(df['num_used_columns'].unique())
+                                },
                                 title=f'Impact of the columns combination on latency')
 impact_columns_scan_ratio = px.bar(df_group_by_columns, x="dataset", y="scan_ratio", facet_col="num_partitioning_columns",
                                    facet_row="num_used_columns", color="partitioning", labels=PARTITIONINGS,
                                    barmode='group', color_discrete_sequence=partitioning_colors,
-                                   category_orders={'partitioning': sorted(df['partitioning'].unique())},
+                                   category_orders={
+                                       'partitioning': sorted(df['partitioning'].unique()),
+                                       'num_partitioning_columns': sorted(df['num_partitioning_columns'].unique()),
+                                       'num_used_columns': sorted(df['num_used_columns'].unique())
+                                   },
                                    title=f'Impact of the columns combination on scan ratio')
 
 plots = [impact_scheme, impact_partition_size, impact_selectivity, impact_dataset_size,
-         impact_num_columns, impact_column_match, impact_workload, impact_columns_latency, impact_columns_scan_ratio]
+         impact_num_columns, impact_column_match, impact_workload]
+plots_facet = [ impact_columns_latency, impact_columns_scan_ratio]
 
 # Figure 1: latency by dataset for all schemes: bar plot
 df_scheme = df.groupby(['partitioning', 'dataset']).agg(aggregates).reset_index()
@@ -124,7 +130,7 @@ for y, metric in enumerate(metrics):
     sub_plot = px.bar(df_scheme, x="dataset", y=metric, color="partitioning",
                       labels=PARTITIONINGS, barmode='group',
                       color_discrete_sequence=partitioning_colors,
-                      category_orders={'partitioning': sorted(df['partitioning'].unique())},
+                      category_orders={'partitioning': sorted(df['partitioning'].unique()), 'dataset': DATASETS},
                       title=f'[{df}] Impact of the partitioning scheme on the {metric}').update_layout(
         yaxis_title=metric)
     for trace in range(len(sub_plot["data"])):
@@ -136,8 +142,7 @@ for i, dataset in enumerate(DATASETS):
     df_group_by_partitioning = df_dataset.groupby(['partitioning']).agg(aggregates).reset_index()
     df_group_by_partition_size = df_dataset.groupby(['partition_size', 'partitioning']).agg(
         aggregates).reset_index()
-    df_group_by_selectivity = df_dataset.groupby(['selectivity', 'partitioning']).agg(
-        aggregates).reset_index()
+    df_group_by_selectivity = df_dataset.groupby(['selectivity_group', 'partitioning']).agg(aggregates).reset_index()
     df_group_by_num_rows = df_dataset.groupby(['num_rows', 'partitioning']).agg(aggregates).reset_index()
     df_group_by_num_cols = df_dataset.groupby(['num_partitioning_columns', 'partitioning']).agg(
         aggregates).reset_index()
@@ -157,7 +162,7 @@ for i, dataset in enumerate(DATASETS):
     # Figure 3: latency by dataset for all schemes with increasing selectivity: line plot
     for y, metric in enumerate(metrics):
         sub_plot = px.line(df_group_by_selectivity,
-                           x="selectivity", y=metric, color="partitioning", markers=True, labels=PARTITIONINGS,
+                           x="selectivity_group", y=metric, color="partitioning", markers=True, labels=PARTITIONINGS,
                            color_discrete_sequence=partitioning_colors,
                            category_orders={'partitioning': sorted(df_dataset['partitioning'].unique())},
                            title=f'[{dataset}] Impact of the selectivity on the {metric}')
@@ -216,7 +221,7 @@ for i, dataset in enumerate(DATASETS):
 
 
 def export_images():
-    for plot in plots:
+    def export_plot(plot, width=1500, height=1000):
         names = set()
         plot.for_each_trace(
             lambda trace:
@@ -226,7 +231,12 @@ def export_images():
         if not os.path.exists(PLOTS_FOLDER):
             os.makedirs(PLOTS_FOLDER)
         image_path = os.path.join(PLOTS_FOLDER, f"{title}.png")
-        plot.write_image(image_path, scale=3, width=1500, height=1000)
+        plot.write_image(image_path, scale=3, width=width, height=height)
+
+    for _plot in plots:
+        export_plot(_plot)
+    for _facet_plot in plots_facet:
+        export_plot(_facet_plot, 1800, 1800)
 
 
 if __name__ == '__main__':
