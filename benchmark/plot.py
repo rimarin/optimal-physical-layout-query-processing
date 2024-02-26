@@ -33,9 +33,10 @@ df['scan_ratio'] = (df['fetched_partitions'] / df['total_partitions']) * 100
 
 # Compute workload type
 df['workload_type'] = pd.Series(index=df.index)
-df.loc[df['num_used_columns'] > df['num_partitioning_columns'], 'workload_type'] = "A"
-df.loc[df['num_used_columns'] == df['num_partitioning_columns'], 'workload_type'] = "B"
-df.loc[df['num_used_columns'] < df['num_partitioning_columns'], 'workload_type'] = "C"
+df['workload_type'] = df['workload_type'].astype('string')
+df.loc[df['num_used_columns'] > df['num_partitioning_columns'], 'workload_type'] = "Fewer dims than indexed (FD)"
+df.loc[df['num_used_columns'] == df['num_partitioning_columns'], 'workload_type'] = "As many as indexed (AD)"
+df.loc[df['num_used_columns'] < df['num_partitioning_columns'], 'workload_type'] = "More than indexed (MD)"
 
 df['column_match'] = [list(set(a).intersection(set(b)))
                       for a, b in zip(df['partitioning_columns'], df['used_columns'])]
@@ -64,7 +65,7 @@ for metric in metrics:
     aggregates[metric] = 'mean'
 
 # Figure 1: latency by dataset for all schemes: bar plot
-impact_scheme = make_subplots(rows=2, cols=1, column_titles=DATASETS,
+impact_scheme = make_subplots(rows=2, cols=1,
                               x_title='Scheme', shared_yaxes=True, shared_xaxes=True)
 impact_scheme.update_layout(title='Impact of partitioning scheme')
 # Figure 2: latency by dataset for all schemes with increasing partition size: line plot
