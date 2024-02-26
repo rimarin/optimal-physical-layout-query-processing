@@ -42,7 +42,7 @@ class BenchmarkInstance:
             self.config.time_to_partition = time_to_partition
             self.logger.info(f'Partitioner took {time_to_partition} seconds')
             if process.returncode != 0:
-                self.logger.error(f'Received return code {str(process.returncode)}')
+                self.logger.error(f'Received return code {str(process.returncode)} from partitioner')
                 self.logger.error(f'Error details: {str(process.stderr)}')
         except Exception as e:
             self.logger.error(f'Partitioning failed: {str(e)}')
@@ -157,10 +157,10 @@ class BenchmarkInstance:
                     timeout = 180  # s
                     process = subprocess.run(cmd, timeout=timeout)
                     if process.returncode != 0:
-                        self.logger.error(f"Received return code {str(process.returncode)}")
+                        self.logger.warning(f"Received return code {str(process.returncode)} from benchmark runner")
                         raise Exception("Benchmark did not succeed")
                 except Exception as e:
-                    self.logger.error(f"Error while calling benchmark runner, {str(e)}")
+                    self.logger.warning(f"Error while calling benchmark runner, {str(e)}")
                     if i < max_retries - 1:
                         self.logger.warning("Retrying...")
                         continue
