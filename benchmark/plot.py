@@ -33,6 +33,9 @@ df['fetched_partitions'] = df[['fetched_partitions', 'total_partitions']].min(ax
 # Convert latency to milliseconds
 df['latency_avg'] = df['latency_avg'] * 1000
 
+df['dataset'] = pd.Categorical(df['dataset'], ordered=True, categories=DATASETS)
+df = df.sort_values('dataset')
+
 # Compute additional information
 df['scan_ratio'] = (df['fetched_partitions'] / df['total_partitions']) * 100
 
@@ -122,7 +125,7 @@ impact_columns_scan_ratio = px.bar(df_group_by_columns, x="dataset", y="scan_rat
 
 plots = [impact_scheme, impact_partition_size, impact_selectivity, impact_dataset_size,
          impact_num_columns, impact_column_match, impact_workload]
-plots_facet = [ impact_columns_latency, impact_columns_scan_ratio]
+plots_facet = [impact_columns_latency, impact_columns_scan_ratio]
 
 # Figure 1: latency by dataset for all schemes: bar plot
 df_scheme = df.groupby(['partitioning', 'dataset']).agg(aggregates).reset_index()
