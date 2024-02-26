@@ -18,8 +18,13 @@ df = pd.read_csv(RESULTS_FILE, sep=';', on_bad_lines='skip',
                      "used_columns": lambda x: x.strip("[]").replace("'", "").split(", ")
                  })
 df.columns = df.columns.str.strip()
-# Drop invalid data (measured latency is 0)
+# Drop duplicates
+df = df.loc[df.astype(str).drop_duplicates().index]
+# Drop invalid data (measured latency is 0). Possibly includes TIMEOUT errors
 df = df[df['latency_avg'] != 0]
+# Align updated data format, if necessary
+if 'used_partitions' in df:
+    df = df.rename(columns={'used_partitions': 'fetched_partitions'})
 # Drop failed or incorrect partitioning. 1 partition could be possible only for very high partition sizes
 df = df[(df['total_partitions'] != 0) & ~((df['total_partitions'] == 1) & (df['partition_size'] < 250000))]
 df['fetched_partitions'] = df[['fetched_partitions', 'total_partitions']].min(axis=1)
