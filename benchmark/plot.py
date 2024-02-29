@@ -52,7 +52,7 @@ df['column_match'] = [list(set(a).intersection(set(b)))
 df['column_match_ratio'] = (df['column_match'].str.len() / df['used_columns'].str.len()) * 100
 
 # Discretize selectivity into intervals
-selectivity_groups = [0.001, 0.01, 0.1, 0.5, 1, 2.5, 5]
+selectivity_groups = [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 2, 3, 4, 5]
 rounding_logic = pd.Series(selectivity_groups)
 labels = rounding_logic.tolist()
 rounding_logic = pd.Series([-np.inf])._append(rounding_logic)  # add infinity as leftmost edge
