@@ -47,12 +47,18 @@ namespace common {
         // Columnar to row layout (given a columnar vectors of points)
         static std::vector<std::shared_ptr<Point>> toRows(std::vector<std::shared_ptr<common::Point>> &columnData) {
             std::vector<std::shared_ptr<Point>> points;
-            auto numColumns = columnData.size();
-            auto numRows = columnData[0]->size();
-            for (int i = 0; i < numRows; i++) {
+            size_t numColumns = columnData.size();
+            size_t numRows = columnData[0]->size();
+            for (size_t i = 0; i < numRows; i++) {
                 std::shared_ptr<Point> point = std::make_shared<Point>();
-                for (int j = 0; j < numColumns; j++) {
-                    point->emplace_back(columnData[j]->at(i));
+                for (size_t j = 0; j < numColumns; j++) {
+                    try{
+                        point->emplace_back(columnData[j]->at(i));
+                    }
+                    catch (std::exception& e) {
+                        std::cout << "Could not perform row conversion " << e.what() << std::endl;
+                        continue;
+                    }
                 }
                 points.emplace_back(point);
             }

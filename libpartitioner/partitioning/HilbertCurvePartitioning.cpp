@@ -59,10 +59,18 @@ namespace partitioning {
 
         // Convert columnar format to rows and compute Hilbert value for each for them
         // Append Hilbert values to one vector
-        for (int i = 0; i < batchNumRows; ++i) {
+        for (size_t i = 0; i < columnData[0]->size(); i++) {
             IntRow rowVector;
-            for (int j = 0; j < numColumns; ++j) {
-                rowVector.emplace_back(columnData[j]->at(i));
+            for (const auto& column : columnData) {
+                try{
+                    auto value = column->at(i);
+                    rowVector.emplace_back(value);
+                }
+                catch (std::exception& e) {
+                    std::cout << "Could not perform row conversion " << e.what() << std::endl;
+                    hilbertValues.emplace_back(0);
+                    continue;
+                }
             }
             rows.emplace_back(rowVector);
             auto coordinatesVector = IntRow(rowVector);

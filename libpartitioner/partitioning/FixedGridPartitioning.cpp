@@ -73,21 +73,29 @@ namespace partitioning {
         }
         auto columnData = converter.toDouble(batchColumns).ValueOrDie();
         size_t batchNumRows = columnData[0]->size();
+        size_t batchNumCols = columnData.size();
         batchColumns.clear();
 
         std::vector<uint64_t> cellIndexes = {};
-        for (int i = 0; i < batchNumRows; ++i){
+        for (size_t i = 0; i < batchNumRows; i++){
             uint64_t cellIndex = 0;
             uint64_t multiplier = 1;
-            for (int j = 0; j < numColumns; ++j){
-                auto dimensionDomain = columnToDomain[j];
-                auto dimensionNumCells = (uint64_t) std::ceil(dimensionDomain / cellWidth);
-                auto column = columnData[j];
-                double_t columnValue = column->at(i);
-                auto cellDimensionIndex = (uint64_t) std::floor(columnValue / cellWidth);
-                // assert(cellDimensionIndex < columnToDomain[j]);
-                cellIndex += cellDimensionIndex * multiplier;
-                multiplier *= dimensionNumCells;
+            for (size_t j = 0; j < batchNumCols; j++){
+                try{
+                    auto dimensionDomain = columnToDomain[j];
+                    auto dimensionNumCells = (uint64_t) std::ceil(dimensionDomain / cellWidth);
+                    auto column = columnData[j];
+                    double_t columnValue = column->at(i);
+                    auto cellDimensionIndex = (uint64_t) std::floor(columnValue / cellWidth);
+                    // assert(cellDimensionIndex < columnToDomain[j]);
+                    cellIndex += cellDimensionIndex * multiplier;
+                    multiplier *= dimensionNumCells;
+                }
+                catch (std::exception& e) {
+                    std::cout << "Could not compute cell index " << e.what() << std::endl;
+                    cellIndexes.emplace_back(0);
+                    continue;
+                }
             }
             cellIndexes.emplace_back(cellIndex);
         }
