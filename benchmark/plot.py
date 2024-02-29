@@ -102,7 +102,7 @@ impact_workload.update_layout(title='Impact of workload type')
 # Figure 8: latency by dataset for column combinations
 df['used_columns'] = df['used_columns'].apply(tuple)
 df['partitioning_columns'] = df['partitioning_columns'].apply(tuple)
-df_group_by_columns = df.groupby(['dataset', 'partitioning', 'num_used_columns', 'num_partitioning_columns']).agg(
+df_group_by_columns = df.groupby(['dataset', 'partitioning', 'num_used_columns', 'num_partitioning_columns'], observed=True).agg(
     aggregates).reset_index()
 df_group_by_columns = df_group_by_columns.sort_values(by=['num_partitioning_columns', 'num_used_columns'],
                                                       ascending=True)
@@ -151,7 +151,7 @@ plots = [impact_scheme, impact_partition_size, impact_selectivity, impact_datase
 plots_facet = [impact_columns_latency, impact_columns_scan_ratio, impact_columns_row_groups, impact_columns_rows]
 
 # Figure 1: latency by dataset for all schemes: bar plot
-df_scheme = df.groupby(['partitioning', 'dataset']).agg(aggregates).reset_index()
+df_scheme = df.groupby(['partitioning', 'dataset'], observed=True).agg(aggregates).reset_index()
 for y, metric in enumerate(metrics):
     sub_plot = px.bar(df_scheme, x="dataset", y=metric, color="partitioning",
                       labels=PARTITIONINGS, barmode='group',
@@ -165,16 +165,16 @@ for y, metric in enumerate(metrics):
 
 for i, dataset in enumerate(DATASETS):
     df_dataset = df[df['dataset'] == f'{dataset}']
-    df_group_by_partitioning = df_dataset.groupby(['partitioning']).agg(aggregates).reset_index()
-    df_group_by_partition_size = df_dataset.groupby(['partition_size', 'partitioning']).agg(
+    df_group_by_partitioning = df_dataset.groupby(['partitioning'], observed=True).agg(aggregates).reset_index()
+    df_group_by_partition_size = df_dataset.groupby(['partition_size', 'partitioning'], observed=True).agg(
         aggregates).reset_index()
-    df_group_by_selectivity = df_dataset.groupby(['selectivity_group', 'partitioning']).agg(aggregates).reset_index()
-    df_group_by_num_rows = df_dataset.groupby(['num_rows', 'partitioning']).agg(aggregates).reset_index()
-    df_group_by_num_cols = df_dataset.groupby(['num_partitioning_columns', 'partitioning']).agg(
+    df_group_by_selectivity = df_dataset.groupby(['selectivity_group', 'partitioning'], observed=True).agg(aggregates).reset_index()
+    df_group_by_num_rows = df_dataset.groupby(['num_rows', 'partitioning'], observed=True).agg(aggregates).reset_index()
+    df_group_by_num_cols = df_dataset.groupby(['num_partitioning_columns', 'partitioning'], observed=True).agg(
         aggregates).reset_index()
-    df_group_by_col_ratio = df_dataset.groupby(['column_match_ratio', 'partitioning']).agg(
+    df_group_by_col_ratio = df_dataset.groupby(['column_match_ratio', 'partitioning'], observed=True).agg(
         aggregates).reset_index()
-    df_group_by_workload = df_dataset.groupby(['workload_type', 'partitioning']).agg(aggregates).reset_index()
+    df_group_by_workload = df_dataset.groupby(['workload_type', 'partitioning'], observed=True).agg(aggregates).reset_index()
 
     # Figure 2: latency by dataset for all schemes with increasing partition size: line plot
     for y, metric in enumerate(metrics):
