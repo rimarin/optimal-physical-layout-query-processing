@@ -10,6 +10,7 @@ import plotly.express as px
 RESULTS_FOLDER = 'results/'
 RESULTS_FILE = RESULTS_FOLDER + 'results.csv'
 PLOTS_FOLDER = RESULTS_FOLDER + 'plots/'
+OPTIMAL_PARTITION_SIZE = 250000
 
 # Parse csv results and clean rows
 df = pd.read_csv(RESULTS_FILE, sep=';', on_bad_lines='skip',
@@ -21,7 +22,7 @@ df.columns = df.columns.str.strip()
 # Drop duplicates
 df = df.loc[df.astype(str).drop_duplicates().index]
 # Drop invalid data (measured latency is 0). Possibly includes TIMEOUT errors
-df = df[df['latency_avg'] != 0]
+df['latency_avg'] = df['latency_avg'].replace(0, np.NaN)
 # Align updated data format, if necessary
 if 'used_partitions' in df:
     df = df.rename(columns={'used_partitions': 'fetched_partitions'})
@@ -103,8 +104,10 @@ df['used_columns'] = df['used_columns'].apply(tuple)
 df['partitioning_columns'] = df['partitioning_columns'].apply(tuple)
 df_group_by_columns = df.groupby(['dataset', 'partitioning', 'num_used_columns', 'num_partitioning_columns']).agg(
     aggregates).reset_index()
-df_group_by_columns = df_group_by_columns.sort_values(by=['num_partitioning_columns', 'num_used_columns'], ascending=True)
-impact_columns_scan_ratio = px.bar(df_group_by_columns, x="dataset", y="scan_ratio", facet_col="num_partitioning_columns",
+df_group_by_columns = df_group_by_columns.sort_values(by=['num_partitioning_columns', 'num_used_columns'],
+                                                      ascending=True)
+impact_columns_scan_ratio = px.bar(df_group_by_columns, x="dataset", y="scan_ratio",
+                                   facet_col="num_partitioning_columns",
                                    facet_row="num_used_columns", color="partitioning", labels=PARTITIONINGS,
                                    barmode='group', color_discrete_sequence=partitioning_colors,
                                    category_orders={
