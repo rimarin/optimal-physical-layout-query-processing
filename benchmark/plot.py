@@ -113,6 +113,25 @@ impact_columns_scan_ratio = px.bar(df_group_by_columns, x="dataset", y="scan_rat
                                        'num_used_columns': sorted(df['num_used_columns'].unique())
                                    },
                                    title=f'Impact of the columns combination on scan ratio')
+impact_columns_row_groups = px.bar(df_group_by_columns, x="dataset", y="fetched_row_groups",
+                                   facet_col="num_partitioning_columns",
+                                   facet_row="num_used_columns", color="partitioning", labels=PARTITIONINGS,
+                                   barmode='group', color_discrete_sequence=partitioning_colors,
+                                   category_orders={
+                                       'partitioning': sorted(df['partitioning'].unique()),
+                                       'num_partitioning_columns': sorted(df['num_partitioning_columns'].unique()),
+                                       'num_used_columns': sorted(df['num_used_columns'].unique())
+                                   },
+                                   title=f'Impact of the columns combination on fetched row groups')
+impact_columns_rows = px.bar(df_group_by_columns, x="dataset", y="fetched_rows", facet_col="num_partitioning_columns",
+                             facet_row="num_used_columns", color="partitioning", labels=PARTITIONINGS,
+                             barmode='group', color_discrete_sequence=partitioning_colors,
+                             category_orders={
+                                 'partitioning': sorted(df['partitioning'].unique()),
+                                 'num_partitioning_columns': sorted(df['num_partitioning_columns'].unique()),
+                                 'num_used_columns': sorted(df['num_used_columns'].unique())
+                             },
+                             title=f'Impact of the columns combination on fetched rows')
 df_group_by_columns = df_group_by_columns[df_group_by_columns['latency_avg'] != 0]
 impact_columns_latency = px.bar(df_group_by_columns, x="dataset", y="latency_avg", facet_col="num_partitioning_columns",
                                 facet_row="num_used_columns", color="partitioning", labels=PARTITIONINGS,
@@ -126,13 +145,11 @@ impact_columns_latency = px.bar(df_group_by_columns, x="dataset", y="latency_avg
 
 plots = [impact_scheme, impact_partition_size, impact_selectivity, impact_dataset_size,
          impact_num_columns, impact_column_match, impact_workload]
-plots_facet = [impact_columns_latency, impact_columns_scan_ratio]
+plots_facet = [impact_columns_latency, impact_columns_scan_ratio, impact_columns_row_groups, impact_columns_rows]
 
 # Figure 1: latency by dataset for all schemes: bar plot
 df_scheme = df.groupby(['partitioning', 'dataset']).agg(aggregates).reset_index()
 for y, metric in enumerate(metrics):
-    # if metric == 'latency_avg':
-    #    df_scheme = df_scheme[df_scheme['latency_avg'] != 0]
     sub_plot = px.bar(df_scheme, x="dataset", y=metric, color="partitioning",
                       labels=PARTITIONINGS, barmode='group',
                       color_discrete_sequence=partitioning_colors,
