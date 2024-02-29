@@ -43,9 +43,12 @@ df['scan_ratio'] = (df['fetched_partitions'] / df['total_partitions']) * 100
 # Compute workload type
 df['workload_type'] = pd.Series(index=df.index)
 df['workload_type'] = df['workload_type'].astype('string')
-df.loc[df['num_used_columns'] > df['num_partitioning_columns'], 'workload_type'] = "Fewer dims than indexed (FD)"
-df.loc[df['num_used_columns'] == df['num_partitioning_columns'], 'workload_type'] = "As many as indexed (AD)"
-df.loc[df['num_used_columns'] < df['num_partitioning_columns'], 'workload_type'] = "More than indexed (MD)"
+# Fewer dims than indexed
+df.loc[df['num_used_columns'] > df['num_partitioning_columns'], 'workload_type'] = "FD"
+# As many as indexed
+df.loc[df['num_used_columns'] == df['num_partitioning_columns'], 'workload_type'] = "AD"
+# More than indexed
+df.loc[df['num_used_columns'] < df['num_partitioning_columns'], 'workload_type'] = "MD"
 
 df['column_match'] = [list(set(a).intersection(set(b)))
                       for a, b in zip(df['partitioning_columns'], df['used_columns'])]
@@ -145,6 +148,20 @@ impact_columns_latency = px.bar(df_group_by_columns, x="dataset", y="latency_avg
                                     'num_used_columns': sorted(df['num_used_columns'].unique())
                                 },
                                 title=f'Impact of the columns combination on latency')
+df_group_by_time = df.groupby(['dataset', 'partitioning', 'num_used_columns', 'num_partitioning_columns',
+                               'time_to_partition'], observed=True).agg(aggregates).reset_index()
+df_group_by_time = df_group_by_time.sort_values(by=['num_partitioning_columns', 'num_used_columns'], ascending=True)
+impact_partitioning_time = px.bar(df_group_by_time, x="dataset", y="time_to_partition",
+                                  facet_col="num_partitioning_columns",
+                                  color="partitioning", labels=PARTITIONINGS,
+                                  color_discrete_sequence=partitioning_colors, barmode='group',
+                                  category_orders={
+                                      'partitioning': sorted(df['partitioning'].unique()),
+                                      'num_partitioning_columns': sorted(df['num_partitioning_columns'].unique())
+                                  },
+                                  title=f'Impact of the partitioning time')
+for y, indexed_cols in enumerate(df['num_partitioning_columns'].unique()):
+    impact_partitioning_time.update_yaxes(type="log", row=1, col=y + 1)
 
 plots = [impact_scheme, impact_partition_size, impact_selectivity, impact_dataset_size,
          impact_num_columns, impact_column_match, impact_workload]
