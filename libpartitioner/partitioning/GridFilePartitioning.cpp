@@ -120,6 +120,7 @@ namespace partitioning {
         config.SetOption("memory_limit", memoryLimit);
         config.SetOption("temp_directory", tempDirectory);
         duckdb::DuckDB db(":memory:", &config);
+        config.options.preserve_insertion_order = false;
         duckdb::Connection con(db);
 
         // Load parquet file into memory

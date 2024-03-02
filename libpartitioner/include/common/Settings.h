@@ -21,12 +21,12 @@ namespace common {
         // Row group size is the optimal one
         inline static const int64_t rowGroupSize = 131072;
         // Adjusted depending on the hardware, generally matching the row group size
-        inline static const size_t batchSize = rowGroupSize * 5;
+        inline static const size_t batchSize = rowGroupSize * 7;
         inline static const size_t bufferSize = 4096 * 4;
         inline static const parquet::ParquetVersion::type version = parquet::ParquetVersion::PARQUET_2_6;
         inline static const arrow::Compression::type compression = arrow::Compression::SNAPPY;
         // DuckDB config
-        static inline const std::string memoryLimit = "350GB";
+        static inline const std::string memoryLimit = "300GB";
         static inline const std::string tempDirectory = "/tmp";
     };
 }

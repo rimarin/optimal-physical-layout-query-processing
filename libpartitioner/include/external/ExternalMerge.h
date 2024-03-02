@@ -296,6 +296,7 @@ namespace external {
             duckdb::DBConfig config;
             config.SetOption("memory_limit", partitioning::MultiDimensionalPartitioning::memoryLimit);
             config.SetOption("temp_directory", partitioning::MultiDimensionalPartitioning::tempDirectory);
+            config.options.preserve_insertion_order = false;
             duckdb::DuckDB db(":memory:", &config);
             duckdb::Connection con(db);
 
@@ -321,16 +322,18 @@ namespace external {
                 }
             }
 
-            int64_t index = 0;
-            int64_t offset = 0;
+            size_t index = 0;
+            size_t offset = 0;
             while (totalSize > 0){
                 // Write table to disk, partition-sized blocks
                 std::string exportedFile = folder.string() + "/" + std::to_string(index) + ".parquet";
                 std::string exportQuery = "COPY (SELECT * FROM tbl "
                                           "      LIMIT " + std::to_string(partitionSize) +
                                           "      OFFSET " + std::to_string(offset) + " )"
-                                          "TO '" + exportedFile + "' (FORMAT PARQUET, COMPRESSION SNAPPY, ROW_GROUP_SIZE 100000)";
+                                          "TO '" + exportedFile + "' (FORMAT PARQUET, COMPRESSION SNAPPY, "
+                                          " ROW_GROUP_SIZE " + std::to_string(common::Settings::rowGroupSize) + ")";
                 auto exportQueryResult = con.Query(exportQuery);
+                // std::cout << "Executed query: " << exportQuery << std::endl;
                 std::cout << "Written to disk " << exportedFile << std::endl;
                 offset += partitionSize;
                 if (totalSize < partitionSize){
