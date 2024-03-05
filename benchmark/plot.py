@@ -22,6 +22,7 @@ df.columns = df.columns.str.strip()
 # Drop duplicates
 df = df.loc[df.astype(str).drop_duplicates().index]
 # Drop invalid data (measured latency is 0). Possibly includes TIMEOUT errors
+# df = df[df['latency_avg'] != 0]
 df['latency_avg'] = df['latency_avg'].replace(0, np.NaN)
 # Align updated data format, if necessary
 if 'used_partitions' in df:
