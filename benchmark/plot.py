@@ -32,6 +32,8 @@ df = df[(df['total_partitions'] != 0) & ~((df['total_partitions'] == 1) & (df['p
 df['fetched_partitions'] = df[['fetched_partitions', 'total_partitions']].min(axis=1)
 # Set a fixed (optimal) partition size
 # df = df[df['partition_size'] == 100000]
+df = df[df['num_partitioning_columns'] != 2]
+df = df[df['num_used_columns'] <= 7]
 # Convert latency to milliseconds
 df['latency_avg'] = df['latency_avg'] * 1000
 
@@ -56,7 +58,7 @@ df['column_match'] = [list(set(a).intersection(set(b)))
 df['column_match_ratio'] = (df['column_match'].str.len() / df['used_columns'].str.len()) * 100
 
 # Discretize selectivity into intervals
-selectivity_groups = [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 2, 3, 4, 5]
+selectivity_groups = [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 2, 5]
 rounding_logic = pd.Series(selectivity_groups)
 labels = rounding_logic.tolist()
 rounding_logic = pd.Series([-np.inf])._append(rounding_logic)  # add infinity as leftmost edge
