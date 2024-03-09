@@ -163,10 +163,9 @@ impact_partitioning_time = px.bar(df_group_by_time, x="dataset", y="time_to_part
                                   },
                                   title=f'Impact of the partitioning time')
 for y, indexed_cols in enumerate(df['num_partitioning_columns'].unique()):
-    impact_partitioning_time.update_yaxes(type="log", row=1, col=y + 1)
+    impact_partitioning_time.update_yaxes(type="log", row=1, col=y + 1, exponentformat='power')
 
-plots = [impact_scheme, impact_partition_size, impact_selectivity, impact_dataset_size,
-         impact_num_columns, impact_column_match, impact_workload, impact_partitioning_time]
+plots = [impact_scheme, impact_num_columns, impact_selectivity, impact_workload, impact_partitioning_time]
 plots_facet = [impact_columns_latency, impact_columns_scan_ratio, impact_columns_row_groups, impact_columns_rows]
 
 # Figure 1: latency by dataset for all schemes: bar plot
@@ -180,7 +179,10 @@ for y, metric in enumerate(metrics):
         yaxis_title=metric)
     for trace in range(len(sub_plot["data"])):
         impact_scheme.add_trace(sub_plot["data"][trace], row=y + 1, col=1)
-        impact_scheme.update_yaxes(title_text=metric, type="log", row=y + 1, col=1)
+        if metric != 'scan_ratio':
+            impact_scheme.update_yaxes(title_text=metric, type="log", row=y + 1, col=1, exponentformat='power')
+        else:
+            impact_scheme.update_yaxes(title_text=metric, type="log", row=y + 1, col=1)
 
 for i, dataset in enumerate(DATASETS):
     df_dataset = df[df['dataset'] == f'{dataset}']
@@ -214,15 +216,17 @@ for i, dataset in enumerate(DATASETS):
                            title=f'[{dataset}] Impact of the selectivity on the {metric}')
         for trace in range(len(sub_plot["data"])):
             impact_selectivity.add_trace(sub_plot["data"][trace], row=y + 1, col=i + 1)
-            sub_plot.update_layout(dict(
+            sub_plot.update_layout(
                 xaxis=dict(
-                    tickmode='array',
-                    tickvals=selectivity_groups,
-                    ticktext=[str(selectivity) for selectivity in selectivity_groups]
-                ),
-                bargap=0
-            ))
-            impact_selectivity.update_yaxes(title_text=metric, type="log", row=y + 1, col=1)
+                    tickvals=selectivity_groups
+                )
+            )
+            impact_selectivity.update_xaxes(tickvals=selectivity_groups, type="log")
+            if metric != 'scan_ratio':
+                impact_selectivity.update_yaxes(title_text=metric, type="log", row=y + 1, col=1, exponentformat='power')
+            else:
+                impact_selectivity.update_yaxes(title_text=metric, type="log", row=y + 1, col=1)
+
     # Figure 4: latency by dataset for all schemes with dataset size: line plot
     for y, metric in enumerate(metrics):
         sub_plot = px.line(df_group_by_num_rows,
@@ -262,7 +266,10 @@ for i, dataset in enumerate(DATASETS):
             yaxis_title=metric)
         for trace in range(len(sub_plot["data"])):
             impact_workload.add_trace(sub_plot["data"][trace], row=y + 1, col=i + 1)
-            impact_workload.update_yaxes(title_text=metric, type="log", row=y + 1, col=i + 1)
+            if metric != 'scan_ratio':
+                impact_workload.update_yaxes(title_text=metric, type="log", row=y + 1, col=1, exponentformat='power')
+            else:
+                impact_workload.update_yaxes(title_text=metric, type="log", row=y + 1, col=1)
 
 
 def export_images():
