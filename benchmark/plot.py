@@ -105,10 +105,21 @@ impact_column_match.update_layout(title='Impact of column match ratio')
 impact_workload = make_subplots(rows=len(metrics), cols=len(DATASETS), column_titles=DATASETS,
                                 x_title='Workload type', shared_yaxes=True, shared_xaxes=True)
 impact_workload.update_layout(title='Impact of workload type')
+
+# Figure 3: latency by dataset for all schemes with increasing selectivity: line plot
+impact_match_taxi_3 = make_subplots(rows=len(metrics), cols=1,
+                                    x_title='Used columns in the query', shared_yaxes=True, shared_xaxes=True)
+impact_match_taxi_3.update_layout(title='Impact of column match (3 cols indexed)')
+
+impact_match_taxi_7 = make_subplots(rows=len(metrics), cols=1,
+                                    x_title='Used columns in the query', shared_yaxes=True, shared_xaxes=True)
+impact_match_taxi_7.update_layout(title='Impact of column match (7 cols indexed)')
+
 # Figure 8: latency by dataset for column combinations
 df['used_columns'] = df['used_columns'].apply(tuple)
 df['partitioning_columns'] = df['partitioning_columns'].apply(tuple)
-df_group_by_columns = df.groupby(['dataset', 'partitioning', 'num_used_columns', 'num_partitioning_columns'], observed=True).agg(
+df_group_by_columns = df.groupby(['dataset', 'partitioning', 'num_used_columns', 'num_partitioning_columns'],
+                                 observed=True).agg(
     aggregates).reset_index()
 df_group_by_columns = df_group_by_columns.sort_values(by=['num_partitioning_columns', 'num_used_columns'],
                                                       ascending=True)
@@ -122,6 +133,13 @@ impact_columns_scan_ratio = px.bar(df_group_by_columns, x="dataset", y="scan_rat
                                        'num_used_columns': sorted(df['num_used_columns'].unique())
                                    },
                                    title=f'Impact of the columns combination on scan ratio')
+
+df_group_by_columns_taxi_3 = df_group_by_columns[(df_group_by_columns['dataset'] == 'taxi') &
+                                                 (df_group_by_columns['num_partitioning_columns'] == 3)]
+
+df_group_by_columns_taxi_7 = df_group_by_columns[(df_group_by_columns['dataset'] == 'taxi') &
+                                                 (df_group_by_columns['num_partitioning_columns'] == 7)]
+
 impact_columns_row_groups = px.bar(df_group_by_columns, x="dataset", y="fetched_row_groups",
                                    facet_col="num_partitioning_columns",
                                    facet_row="num_used_columns", color="partitioning", labels=PARTITIONINGS,
@@ -166,7 +184,8 @@ for y, indexed_cols in enumerate(df['num_partitioning_columns'].unique()):
     impact_partitioning_time.update_yaxes(type="log", row=1, col=y + 1, exponentformat='power')
 
 plots = [impact_scheme, impact_num_columns, impact_selectivity, impact_workload, impact_partitioning_time]
-plots_facet = [impact_columns_latency, impact_columns_scan_ratio, impact_columns_row_groups, impact_columns_rows]
+plots_facet = [impact_columns_latency, impact_columns_scan_ratio, impact_columns_row_groups, impact_columns_rows,
+               impact_match_taxi_3, impact_match_taxi_7]
 
 # Figure 1: latency by dataset for all schemes: bar plot
 df_scheme = df.groupby(['partitioning', 'dataset'], observed=True).agg(aggregates).reset_index()
@@ -189,13 +208,15 @@ for i, dataset in enumerate(DATASETS):
     df_group_by_partitioning = df_dataset.groupby(['partitioning'], observed=True).agg(aggregates).reset_index()
     df_group_by_partition_size = df_dataset.groupby(['partition_size', 'partitioning'], observed=True).agg(
         aggregates).reset_index()
-    df_group_by_selectivity = df_dataset.groupby(['selectivity_group', 'partitioning'], observed=True).agg(aggregates).reset_index()
+    df_group_by_selectivity = df_dataset.groupby(['selectivity_group', 'partitioning'], observed=True).agg(
+        aggregates).reset_index()
     df_group_by_num_rows = df_dataset.groupby(['num_rows', 'partitioning'], observed=True).agg(aggregates).reset_index()
     df_group_by_num_cols = df_dataset.groupby(['num_partitioning_columns', 'partitioning'], observed=True).agg(
         aggregates).reset_index()
     df_group_by_col_ratio = df_dataset.groupby(['column_match_ratio', 'partitioning'], observed=True).agg(
         aggregates).reset_index()
-    df_group_by_workload = df_dataset.groupby(['workload_type', 'partitioning'], observed=True).agg(aggregates).reset_index()
+    df_group_by_workload = df_dataset.groupby(['workload_type', 'partitioning'], observed=True).agg(
+        aggregates).reset_index()
 
     # Figure 2: latency by dataset for all schemes with increasing partition size: line plot
     for y, metric in enumerate(metrics):
@@ -226,6 +247,36 @@ for i, dataset in enumerate(DATASETS):
                 impact_selectivity.update_yaxes(title_text=metric, type="log", row=y + 1, col=1, exponentformat='power')
             else:
                 impact_selectivity.update_yaxes(title_text=metric, type="log", row=y + 1, col=1)
+
+    for y, metric in enumerate(metrics):
+        sub_plot = px.line(df_group_by_columns_taxi_3,
+                           x="num_used_columns", y=metric, color="partitioning", markers=True,
+                           labels=PARTITIONINGS,
+                           color_discrete_sequence=partitioning_colors,
+                           category_orders={'partitioning': sorted(df_dataset['partitioning'].unique())},
+                           title=f'[{dataset}] Impact of the query columns on the {metric}')
+        for trace in range(len(sub_plot["data"])):
+            impact_match_taxi_3.add_trace(sub_plot["data"][trace], row=y + 1, col=1)
+            if metric != 'scan_ratio':
+                impact_match_taxi_3.update_yaxes(title_text=metric, type="log", row=y + 1, col=1,
+                                                 exponentformat='power')
+            else:
+                impact_match_taxi_3.update_yaxes(title_text=metric, type="log", row=y + 1, col=1)
+
+    for y, metric in enumerate(metrics):
+        sub_plot = px.line(df_group_by_columns_taxi_7,
+                           x="num_used_columns", y=metric, color="partitioning", markers=True,
+                           labels=sorted(PARTITIONINGS),
+                           color_discrete_sequence=partitioning_colors,
+                           category_orders={'partitioning': sorted(df['partitioning'].unique())},
+                           title=f'[{dataset}] Impact of the query columns on the {metric}')
+        for trace in range(len(sub_plot["data"])):
+            impact_match_taxi_7.add_trace(sub_plot["data"][trace], row=y + 1, col=1)
+            if metric != 'scan_ratio':
+                impact_match_taxi_7.update_yaxes(title_text=metric, type="log", row=y + 1, col=1,
+                                                 exponentformat='power')
+            else:
+                impact_match_taxi_7.update_yaxes(title_text=metric, type="log", row=y + 1, col=1)
 
     # Figure 4: latency by dataset for all schemes with dataset size: line plot
     for y, metric in enumerate(metrics):
